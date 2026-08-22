@@ -1,0 +1,46 @@
+# A record of misroutes.
+#
+# This does not reproduce how a model chooses. It is a proxy for finding
+# missing and duplicated signals, and "fixtures pass" does not mean "nothing
+# will be misrouted".
+
+- ask: "the app has no look and feel, everything is a generic default"
+  expect: design-direction
+- ask: "decide the typography before we build this"
+  expect: design-direction
+- ask: "we have hardcoded values everywhere, turn them into design tokens"
+  expect: design-tokens
+- ask: "set up dark mode and the naming grammar"
+  expect: design-tokens
+- ask: "the information architecture is confusing"
+  expect: design-ux
+- ask: "specify the screen states for this flow"
+  expect: design-ux
+- ask: "add transition choreography, the UI feels static"
+  expect: design-motion
+- ask: "what duration and easing should these use"
+  expect: design-motion
+- ask: "check this against WCAG and fix the contrast"
+  expect: design-a11y
+- ask: "keyboard users cannot reach the dialog"
+  expect: design-a11y
+- ask: "do a design review of this screen"
+  expect: design-critique
+- ask: "something feels off here and I cannot say what"
+  expect: design-critique
+- ask: "does this look good, or is the composition off"
+  expect: design-review
+- ask: "take a screenshot and tell me your first impression"
+  expect: design-review
+- ask: "the visual hierarchy is weak, nothing draws the eye"
+  expect: design-review
+# Neighbours that must keep winning. design-review's signals are the longest in
+# the set, and longest-match is the tie-break, so the boundary it introduced is
+# pinned from both sides or it is not pinned at all.
+- ask: "the layout composition feels off"
+  expect: design-critique
+- ask: "give me a UI audit of this screen"
+  expect: design-critique
+- ask: "does this meet the WCAG contrast requirement"
+  expect: design-a11y
+

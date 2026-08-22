@@ -1,0 +1,176 @@
+# Budgets and vocabulary. The validator reads thresholds from here and nowhere
+# else: a number copied into prose becomes a second definition that drifts.
+#
+# Raising a limit is the last resort. Try merging, deleting, compressing, and
+# relocating first (VALUES.md §3).
+
+# One declaration. Every namespaced name derives from it, and a rule checks
+# that they still agree.
+set: design
+prefix: design-             # <set>-
+shared_dir: _design         # _<set>
+
+# Every directory this set owns carries the set name — `<set>-*` or `_<set>` —
+# so that copying any of them into a shared skills directory cannot collide.
+# Prefixing only what gets installed would rest on a claim about every future
+# install script, and a sibling set's `cp -R <set>-* _common <skills dir>` is
+# what that claim looks like once it is wrong.
+#
+# Carrying the prefix is not what makes something installable: a skill is a
+# directory holding a SKILL.md, and only those are ever linked.
+# `skills/` holds everything the CLI reads. The set's own directories still
+# carry the set name.
+skills_dir: skills
+platform_dirs: [.git, .github, .claude, skills, docs]   # named by the platform, not by this set
+
+limits:
+  skill_md_lines: 128         # measured at adoption: 132-165, all over. Raised from 120
+                              # when the ground block was delivered into every skill: a
+                              # rule about every value in an output is worthless in a file
+                              # nobody opens while writing one
+  description_chars: 200      # the listing truncates past this
+  playbook_lines: 300         # measured max: 113
+  playbooks_per_skill: 8      # measured max: 5
+  shared_file_lines: 100
+  shared_lines_total: 480     # measured: 390 before PROVENANCE.md, 467 after. This set
+                              # carries a provenance contract the sibling sets do not: it
+                              # is the only one whose outputs are made of literal values
+  skills_max: 8               # 7 in use, 1 spare. It was briefly a spare this set
+                              # had and no listing could show: core + all seven
+                              # resolved to 12, the packs' ceiling exactly. That
+                              # was answered where it belonged — by splitting the
+                              # pack, not by shrinking the set
+  routes_max: 12
+  route_stages_max: 6
+  repo_md_lines_total: 5200   # measured: 4645
+
+# A listing under this many skills does not need packs. Crossing it is the
+# trigger to split the set into named subsets, not a reason to delete skills.
+listing:
+  packs_needed_above: 20
+
+permission_classes:
+  read-only:
+    tools: "Read, Grep, Glob, Bash"
+    writes: false
+  doc-write:
+    tools: "Read, Grep, Glob, Bash, Write"
+    writes: true
+  full:
+    tools: "Read, Grep, Glob, Bash, Write, Edit"
+    writes: true
+
+# A description naming a neighbour spends listing budget on a competitor's name
+# and puts that name into the material the engine matches against.
+# Boundaries live in capabilities.yaml `not:` instead.
+forbidden_description_terms:
+  - "Not for"
+  - "not for"
+  - "instead of"
+  - "rather than"
+
+# All three CLIs read the same SKILL.md, so any of them may be the one running
+# — the producing engine is a property of the run, not of this file. An earlier
+# version pinned `produced_by: claude` here, which quietly approved `checker:
+# codex` on a run that was itself codex.
+#
+# Detection was tried and does not work: codex launched from inside Claude Code
+# inherits `CLAUDECODE` and `CLAUDE_CODE_*`, so a nested run reads as its parent.
+# The caller states which engine is running; when it does not, the runner stops.
+engines:
+  runs_on: [claude, codex, agy]     # two or more, or no run can check itself out
+
+# What a refuting engine attacks in this domain, and what counts as having broken
+# the claim. The tool is the same in every set (`design-tools/refute.py`); the lens is
+# not, and a refuter with no domain framing is a second opinion rather than an
+# adversary.
+refutation:
+  lens: |
+    A claimed problem in an interface. Check the citation first: if a guideline or a
+    criterion is named, confirm it says that — WCAG numbers in particular get cited
+    from memory and drift. Then ask whether the thing called a defect is a convention
+    the product already uses deliberately, and whether any stated measurement
+    (contrast, target size, step) was computed or recalled.
+  refuted_when: >-
+    the named guideline does not say it, a stated measurement does not recompute,
+    or the pattern is a deliberate convention rather than a mistake
+
+vocabulary:
+  grounds: [token, threshold, measured, derived, platform, brief, ARBITRARY]
+  patterns: [linear, loop, report-only]
+  checkers: [other-engine]
+  evidence_levels: [measured, inspected, asserted]
+  residual_classes: [BLOCKED, OUT-OF-SCOPE, DEFERRED, UNSPECIFIED]
+  statuses: [DONE, PARTIAL, BLOCKED]
+  tiers: [T0, T1, T2]
+
+document_labels: [contract, guidance, deferred]
+# Patterns match the path from the repository root, so they carry `skills/`.
+label_by_path:
+  "skills/_design/ROUTING.md": guidance
+  "skills/_design/*.md": contract
+  "skills/*/SKILL.md": contract
+  "skills/*/playbooks/*.md": guidance
+  "skills/*/reference/*.md": deferred
+
+# Content that goes stale belongs in reference/, which carries no line budget
+# and is checked for freshness instead. These patterns must not appear in a
+# playbook, which is budgeted precisely because it is not supposed to rot.
+# Paths that belong to the host project, not to this set.
+external_paths: [".agents/", "CLAUDE.md", "AGENTS.md", "GEMINI.md", "settings.json"]
+
+rot_patterns:
+  - '\b(19|20)\d{2}-\d{2}\b'
+  - '\bv\d+\.\d+(\.\d+)?\b'
+  - '\bWCAG \d\.\d\b'
+
+# reference/ carries no line budget. It carries these headers instead, so a
+# reader can tell what a file claims and when anyone last checked it.
+reference_headers: ["Purpose:", "Read when:", "Verified:"]
+# A `Verified:` date records that someone looked once, and a date has no failure
+# mode. V31 requires the line to name what re-checks it — or to say plainly that
+# nothing does. An unchecked page is fine; an unchecked page that reads like a
+# checked one is not.
+verified_markers:
+  - "no automated check"      # the honest admission, and the common case
+  - "by running"
+  - "produced by running"
+  - "confirmed by running"
+  - "performing the operation"
+  - "quoted from"
+  - "recomputed"
+  - "re-run by"
+  - "re-runs"
+  - "re-derives"
+  - "re-checked"
+  - "re-verified"
+  - "make figures"
+  - "holds every"
+  - "holds the two"
+  - "holds them to"
+
+
+# Blocks copied verbatim into every SKILL.md. Naming a shared file is not the
+# same as reaching it: a contract kept only in _design/ goes unread on most
+# launches. render.py writes these back; the validator checks they match.
+# The one mechanism this set has that its siblings do not. The rule that checks
+# it is identical in all six sets; this block is the whole difference, which is
+# what keeps six copies of the validator from becoming six dialects.
+#
+# `required_of` names the skills that owe the mechanism — every skill here emits
+# literal values, so every skill owes one. `own_word` is the substring each must
+# carry outside the delivered block: the rule is stated for all, and owned in
+# each skill's own words.
+signature:
+  name: provenance
+  contract: PROVENANCE.md
+  vocabulary: grounds
+  required_of: [design-direction, design-tokens, design-ux, design-motion, design-a11y, design-critique,
+                design-review]
+  own_word: ARBITRARY
+
+delivered:
+  sizing:  { section: "Before starting" }
+  ground:  { section: "Before starting" }
+  values:  { section: "Decide first" }
+  report:  { section: "Verify with" }

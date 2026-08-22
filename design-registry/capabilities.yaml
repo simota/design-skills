@@ -1,0 +1,85 @@
+# What each skill owns, what it does not, and the words that select it.
+#
+# `not:` is the only place a boundary is written. Putting boundaries in
+# descriptions means every skill added rewrites its neighbours, and the
+# marginal cost of an addition stops being O(1).
+#
+# `signals` are the words a request actually uses. Each must appear literally
+# in that skill's description: the listing carries name and description only,
+# so a signal that lives here and nowhere else never reaches the engine.
+
+design-direction:
+  class: doc-write
+  does: [art-direction, reference-analysis, typography-intent, colour-intent, layout-system, brief]
+  not:
+    - what: "turning the direction into named values"
+      go: design-tokens
+    - what: "how the interface behaves"
+      go: design-ux
+    - what: "judging a screen that already exists"
+      go: design-critique
+  signals: [art direction, look and feel, typography, colour intent, layout system, design brief, generic default]
+
+design-tokens:
+  class: doc-write
+  does: [scales, semantic-layer, theming, dark-mode, naming-grammar, export, migration]
+  not:
+    - what: "choosing the aesthetic the values express"
+      go: design-direction
+    - what: "storing motion values before motion is designed"
+      go: design-motion
+  signals: [design tokens, scales, semantic layer, theming, dark mode, naming grammar, export, hardcoded values]
+
+design-ux:
+  class: doc-write
+  does: [information-architecture, flows, screen-states, forms, navigation, destructive-actions, cognitive-load]
+  not:
+    - what: "how the interface looks"
+      go: design-direction
+    - what: "the timing of a state change"
+      go: design-motion
+  signals: [information architecture, task flows, screen states, forms, navigation, destructive actions, cognitive load]
+
+design-motion:
+  class: doc-write
+  does: [duration, easing, choreography, feedback, loading, gesture, reduced-motion]
+  not:
+    - what: "storing the resulting values as named tokens"
+      go: design-tokens
+    - what: "which states exist in the first place"
+      go: design-ux
+  signals: [motion, duration and easing, transition, state-change feedback, loading, gesture, reduced motion]
+
+design-a11y:
+  class: doc-write
+  does: [wcag-conformance, contrast, focus, keyboard, target-size, semantics, inclusive-content]
+  not:
+    - what: "a general craft or usability review"
+      go: design-critique
+    - what: "writing the implementation that carries the semantics"
+      go: "a build skill outside this set"
+  signals: [accessibility, WCAG, contrast, focus visibility, keyboard, target size, semantics, inclusive content]
+
+design-critique:
+  class: read-only
+  does: [heuristic-evaluation, craft-audit, drift-detection, severity-ranking]
+  not:
+    - what: "producing the replacement design"
+      go: design-direction
+    - what: "adjudicating a conformance question the review raised"
+      go: design-a11y
+    - what: "the verdict on how the whole of it looks"
+      go: design-review
+  signals: [design review, UI audit, heuristic evaluation, craft, drift, severity, feels off]
+
+design-review:
+  class: read-only
+  does: [rendering, first-impression, principle-restatement, reference-comparison, aesthetic-verdict]
+  not:
+    - what: "itemising the measurable defects against a named standard"
+      go: design-critique
+    - what: "deciding the aesthetic in the first place"
+      go: design-direction
+    - what: "whether a contrast or focus problem conforms"
+      go: design-a11y
+  signals: [first impression, visual hierarchy, aesthetic verdict, screenshot, does this look good]

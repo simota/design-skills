@@ -1,0 +1,66 @@
+# Chains that recur, as control structure rather than prose.
+#
+# A chain of names expresses linear work only. Where a stage repeats until a
+# condition holds, the condition, the judge, and the hard stop are required —
+# without them "until it looks right" has no stopping rule.
+
+redesign:
+  pattern: linear
+  when: "a surface needs a point of view it does not have"
+  chain: [design-direction, design-ux, design-tokens, design-motion, design-a11y]
+  gate: "the brief names a standard before design-ux starts"
+
+new-system:
+  pattern: linear
+  when: "a product needs a design foundation"
+  chain: [design-direction, design-tokens, design-a11y]
+  gate: "colour roles are decided before any value is named"
+
+behaviour:
+  pattern: linear
+  when: "the structure or interaction of a screen is wrong"
+  chain: [design-ux, design-motion]
+
+accessibility-repair:
+  pattern: linear
+  when: "an interface fails for some of its users"
+  chain: [design-a11y, design-tokens]
+  gate: "each finding cites the criterion it fails before anything is changed"
+
+tokenise:
+  pattern: linear
+  when: "hardcoded values must become a system"
+  chain: [design-tokens]
+
+review:
+  pattern: report-only
+  when: "is this any good, what should change"
+  chain: [design-critique]
+  stops_at: "findings ranked by user impact, each with a fix and an owner. Nothing is redesigned"
+
+conformance-check:
+  pattern: report-only
+  when: "does this meet the accessibility bar"
+  chain: [design-a11y]
+  stops_at: "each criterion passed, failed, or not assessable at design time"
+
+critique-to-zero:
+  pattern: loop
+  when: "close every finding before this ships"
+  chain: [design-critique, design-ux]
+  oracle: "no open finding at severity major or above, and one full pass adds none"
+  checker: other-engine          # resolved at run time to one that is not running this
+  max_cycles: 4              # hand back rather than loop again
+
+look-check:
+  pattern: report-only
+  when: "does this look good, and how far off is it"
+  chain: [design-review]
+  stops_at: "one verdict on the whole, with the conditions it was formed under and what was not seen. Nothing is redesigned"
+
+look-then-itemise:
+  pattern: linear
+  when: "the whole reads wrong and the parts have to be named"
+  chain: [design-review, design-critique]
+  gate: "the verdict names which principle failed before the itemised pass starts"
+
