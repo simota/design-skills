@@ -271,6 +271,21 @@ def _(r):
             return
 
 
+@case("V34-undeclared")
+def _(r):
+    """A tool link nothing declares is a capability nobody decided to grant."""
+    (r / "skills/design-ux/render.py").symlink_to("../../design-tools/render.py")
+
+
+@case("V34-missing-tool")
+def _(r): sub(r / "design-registry/harness.yaml",
+              "  refute.py: all", "  refute.py: all\n  nosuch.py: all")
+
+
+@case("V34-none-declared")
+def _(r): sub(r / "design-registry/harness.yaml", "linked_tools:", "unlinked_tools:")
+
+
 @case("V35")
 def _(r): sub(r / f"{S}design-a11y/SKILL.md", "offered as `ARBITRARY` has not",
               "offered without a ground has not")

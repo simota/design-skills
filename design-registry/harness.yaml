@@ -95,6 +95,14 @@ refutation:
     the named guideline does not say it, a stated measurement does not recompute,
     or the pattern is a deliberate convention rather than a mistake
 
+# Tools a skill may run. Each is linked individually into the skills that can run
+# it; the tools directory is never linked whole, because a skill holding `Bash`
+# and all of it could edit the harness it is part of. A rule checks each link is
+# present exactly where the skill's class grants a shell, so a missing one is a
+# failure rather than an oversight.
+linked_tools:
+  refute.py: all
+
 vocabulary:
   grounds: [token, threshold, measured, derived, platform, brief, ARBITRARY]
   patterns: [linear, loop, report-only]
