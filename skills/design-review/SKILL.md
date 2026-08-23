@@ -59,9 +59,9 @@ Phases: `SEE → IMPRESSION → PRINCIPLE → REFERENCE → VERDICT`.
 | Turning an impression into something arguable | [principles](playbooks/principles.md) — the named visual principle it restates as |
 | Holding it against work that already succeeds | [comparison](reference/comparison.md) — a reference proves a thing is possible, never that it fits here |
 | Forming and phrasing the overall judgement | [verdict](playbooks/verdict.md) |
+| A finding spans places, an order, a disagreement, or a region | [visualise](playbooks/visualise.md) — a reader who has to reassemble it will skim it. ASCII by default, and the drawing carries the finding's rung, never a better one |
 | The impression restates as no principle and matches no reference | It is taste. Say so, mark it `ARBITRARY`, and never rank it as a defect |
-| The problem is a value, a count, or an alignment | That is measurable and belongs to `design-critique`. This skill judges the whole; that one itemises the parts |
-| Contrast or focus order is what the eye tripped on | Flag it and hand it to `design-a11y`. Looking wrong and failing a criterion are different claims |
+| The problem is a value, a count, an alignment, contrast, or focus order | Measurable, so not this skill's: values and counts go to `design-critique`, conformance to `design-a11y`. This skill judges the whole, and looking wrong is a different claim from failing a criterion |
 | The interface looks fine and the direction is still wrong | Say that plainly. Executing a poor brief well is a `design-direction` problem, and no amount of looking fixes it |
 | Nothing renders and no image exists | Stop. Report `BLOCKED` with what was tried. A verdict on an interface nobody saw is the failure this skill exists to prevent |
 | A claim here would be expensive to get wrong | [refute](refute.py) — put it to the engines that did not make it, asked to break it rather than to agree. Unrefuted is n engines finding nothing, never proof |
