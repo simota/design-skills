@@ -24,15 +24,20 @@ skills_dir: skills
 platform_dirs: [.git, .github, .claude, skills, docs]   # named by the platform, not by this set
 
 limits:
-  skill_md_lines: 128         # measured at adoption: 132-165, all over. Raised from 120
-                              # when the ground block was delivered into every skill: a
-                              # rule about every value in an output is worthless in a file
-                              # nobody opens while writing one
+  skill_md_lines: 140         # derived, not chosen: 90 for the skill's own words plus
+                              # the 50 lines of delivered contract every file in this
+                              # set now carries. The last raise (120 -> 128) was the
+                              # same move for a smaller block; the blocks have
+                              # grown since, and the cap had come to govern about
+                              # 78 lines of actual skill. Measured own-content max
+                              # in this set: 78 lines, in design-review
   description_chars: 200      # the listing truncates past this
   playbook_lines: 300         # measured max: 113
   playbooks_per_skill: 8      # measured max: 5
   shared_file_lines: 100
-  shared_lines_total: 480     # measured: 390 before PROVENANCE.md, 467 after. This set
+  shared_lines_total: 540   # every set sat at 95-98% of the old figure at once,
+                              # which is a budget that has stopped leaving room to
+                              # think rather than seven sets each being careless
                               # carries a provenance contract the sibling sets do not: it
                               # is the only one whose outputs are made of literal values
   skills_max: 8               # 7 in use, 1 spare. It was briefly a spare this set
@@ -42,7 +47,7 @@ limits:
                               # pack, not by shrinking the set
   routes_max: 12
   route_stages_max: 6
-  repo_md_lines_total: 5200   # measured: 4645
+  repo_md_lines_total: 5800  # raised with the two above; this set was at 90-97%
 
 # A listing under this many skills does not need packs. Crossing it is the
 # trigger to split the set into named subsets, not a reason to delete skills.
