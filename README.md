@@ -130,6 +130,7 @@ finds the file, which is what makes this fail quietly.
 | [`skills/_design/HANDOFF.md`](skills/_design/HANDOFF.md) | What passes between skills, and the seven checks the receiver runs |
 | [`skills/_design/VALUES.md`](skills/_design/VALUES.md) | The order that decides when two goods conflict, and the escape hatch |
 | [`skills/_design/ROUTING.md`](skills/_design/ROUTING.md) | Guidance. Read when the owner is unclear or the work spans several |
+| [`skills/_design/REPORT.md`](skills/_design/REPORT.md) | What a person reads: the order, the ceiling per tier, and why the handoff is the record |
 
 ## Layout
 

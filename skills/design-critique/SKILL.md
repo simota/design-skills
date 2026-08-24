@@ -121,3 +121,18 @@ marked "visual estimate, not measured" and is `inspected`, never dressed as fact
 The standard is named, every finding carries evidence, a severity, a class, a
 fix and an owner, the strengths are recorded, and everything not reviewed is
 listed as not reviewed.
+<!-- deliver:surface -->
+- **Say only what the moment needs.** Start: one line naming what will be done and what
+  is excluded. Mid-run: silence, unless the reader must act now — a divergence from what
+  was agreed, a path found blocked, a value that would land with no source. Progress is not
+  information, and a tool call is already visible. Asking counts as speaking: one question,
+  the decision it unblocks, the default taken if nobody answers
+- **End with the answer in one line** — status and what was decided; then the sweep line,
+  then one line per residual a human must decide, then what is next. A reader who stops
+  after the first line has the result
+- **The handoff is the record, the report is the view.** The brief, the per-decision grades
+  and the working log travel in the handoff and are shown when asked
+- **Ceiling: `T0` one line · `T1` six · `T2` ten**, plus the deliverable itself — linked,
+  never pasted. Over it means cutting content, not reformatting it: no restatement of the
+  request, no closing summary, no narration of what was opened (`_design/REPORT.md`)
+<!-- /deliver:surface -->

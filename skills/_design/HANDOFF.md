@@ -2,8 +2,9 @@
 # HANDOFF — passing work between design skills
 
 Every `T1` and `T2` run returns one, whether the next reader is another skill, a
-person, or a later session. It is the single place the facts live; the report a
-person reads is this object in prose, not a second set of claims.
+person, or a later session. It is the single place the facts live, and it is the
+**record, not the report**: what a person reads is a bounded view over it
+(`_design/REPORT.md`), never this object rendered field by field.
 
 **`T0` is the exception** (`_design/SIZING.md`): a one-skill, reversible,
 single-value change returns its one-line answer and no handoff. It still says
