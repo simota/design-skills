@@ -3,6 +3,7 @@
 
 Purpose: The brief's required fields, and what a blank one costs.
 Read when: starting the brief, or completing it for handoff.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-21 — no automated check.
 
 The brief is the deliverable. Fill every field; write "n/a — <reason>" rather than leaving a blank.

@@ -3,6 +3,7 @@
 
 Purpose: Generation rules for spacing, type, radius, elevation, and colour ramps.
 Read when: generating any scale, so the rule is written next to the values.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-21 — the type scale is recomputed from its own stated base and ratio by
 `make figures`, including the declared clamp. The other scales on this page are conventions and
 carry no check; only the type scale claims to follow from a rule, so only it can be falsified.

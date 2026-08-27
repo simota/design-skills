@@ -3,6 +3,7 @@
 
 Purpose: Moving an existing codebase onto tokens: audit, mapping, staging, deprecation.
 Read when: the values already exist and must become a system without breaking what users see.
+Source: Tailwind — the arbitrary-value syntax it accepts moves with its releases.
 Verified: 2026-08-21 — no automated check.
 
 Moving an existing codebase onto tokens. Measure first; the audit determines whether the system is right.

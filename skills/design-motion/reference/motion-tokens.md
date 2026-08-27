@@ -3,6 +3,7 @@
 
 Purpose: Named duration and easing values, plus the rule that assigns them.
 Read when: choosing a value, or naming one for `design-tokens` to store.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-21 — no automated check.
 
 Named values, plus the rule that assigns them. Store the results via `design-tokens`.

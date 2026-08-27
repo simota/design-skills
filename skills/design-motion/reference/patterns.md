@@ -3,6 +3,7 @@
 
 Purpose: Concrete transition specifications: trigger, properties, values, interrupt, reduced variant.
 Read when: specifying a named transition rather than inventing one.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-21 — no automated check.
 
 Concrete specifications. Each entry states trigger, properties, values, interrupt behaviour, and the reduced-motion variant.

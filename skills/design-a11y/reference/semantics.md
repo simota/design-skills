@@ -3,7 +3,7 @@
 
 Purpose: Names, roles, and states as design decisions, and which native element carries each.
 Read when: specifying what a control is called and announced as, or considering a custom widget.
-Source: WCAG 2.2 SC 4.1.2; WAI-ARIA Authoring Practices
+Source: WCAG 2.2 SC 4.1.2; ARIA and the APG patterns — the criterion and the patterns both move without this page.
 Verified: 2026-08-21 — no automated check.
 
 Structure and naming are design decisions. Specify them; do not leave them to be guessed at build time.
@@ -95,6 +95,8 @@ Rules:
 - The live region exists in the DOM before the content changes; injecting the region and its content together may not announce.
 - One `assertive` region at most; overuse makes the product unusable with a screen reader.
 - Never use a live region for something focus movement would communicate better.
+
+Name, role and value are what WCAG 2.2 SC 4.1.2 requires of every replacement.
 
 ## Common ARIA mistakes
 

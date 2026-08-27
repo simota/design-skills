@@ -3,7 +3,7 @@
 
 Purpose: The success criteria a designer can pass or fail before code exists.
 Read when: running conformance against the standard, or citing a criterion in a finding.
-Source: WCAG 2.2
+Source: WCAG 2.2 — the success criteria below are quoted from that version.
 Verified: 2026-08-21 — no automated check.
 
 The success criteria a designer can pass or fail *before* code exists. Cite the number and level in every finding.

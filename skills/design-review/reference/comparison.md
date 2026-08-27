@@ -3,6 +3,7 @@
 
 Purpose: How to hold a design against work that already succeeds, and what that comparison is allowed to prove.
 Read when: an impression has restated as a principle and the verdict needs a third leg.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-22 — no automated check.
 
 The third phase, and the easiest to do dishonestly. A comparison locates a gap

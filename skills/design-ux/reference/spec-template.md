@@ -3,6 +3,7 @@
 
 Purpose: The interaction spec's required sections, and who downstream consumes which.
 Read when: writing the deliverable, or checking one for completeness.
+Source: APG — the patterns it names move without this page.
 Verified: 2026-08-21 — no automated check.
 
 The `SPEC` phase deliverable. `design-critique` judges the built UI against this, and `design-a11y` consumes sections 6–7 — so the shape must be stable run to run. Fill every field; write "n/a — <reason>" rather than leaving a blank.

@@ -3,7 +3,7 @@
 
 Purpose: The semantic role catalogue and the interchange format.
 Read when: deciding which roles exist, or emitting structured token data.
-Source: DTCG design tokens format
+Source: DTCG, Tailwind, WCAG 2.2 — the format and the contrast exemption both move without this page.
 Verified: 2026-08-21 — no automated check.
 
 The semantic catalogue, plus the interchange format.
@@ -39,7 +39,7 @@ Fill this table for every project. `Resolves to` names a primitive; `Contrast` i
 Rules:
 - Every semantic state set (`danger`, `success`, `warning`, `info`) carries `text`, `bg`, and `border`. A set with only `text` forces implementers to invent the rest.
 - `--color-focus-ring` is never optional and is never `transparent` in any theme.
-- Disabled styling is a semantic pair too (`--color-text-disabled`, `--color-bg-disabled`); it is contrast-exempt under WCAG but must still be visibly distinct from enabled.
+- Disabled styling is a semantic pair too (`--color-text-disabled`, `--color-bg-disabled`); it is contrast-exempt under WCAG 2.2 but must still be visibly distinct from enabled.
 
 ## Typography semantics
 

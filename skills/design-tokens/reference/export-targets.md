@@ -3,7 +3,7 @@
 
 Purpose: The output shape each consumer expects, and which one a project actually needs.
 Read when: emitting tokens into a codebase.
-Source: the format documentation of each target
+Source: Tailwind, Style Dictionary, DTCG — the export formats of each, which move on their own release schedules.
 Verified: 2026-08-21 — no automated check.
 
 Emit the format the project actually consumes. Emitting all of them is noise.

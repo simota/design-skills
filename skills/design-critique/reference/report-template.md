@@ -3,6 +3,7 @@
 
 Purpose: The output structure and the tone rules that decide whether a report gets acted on.
 Read when: writing the report.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-21 — no automated check.
 
 The output structure. Tone rules matter as much as content — a report that reads as an attack does not get acted on.

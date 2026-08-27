@@ -3,7 +3,7 @@
 
 Purpose: What the reduced variant does, per pattern — a designed state, not an absence.
 Read when: specifying the reduced-motion behaviour of anything that moves.
-Source: CSS Media Queries Level 5, `prefers-reduced-motion`
+Source: WCAG 2.2 SC 2.3.3; CSS Media Queries Level 5 `prefers-reduced-motion` — both move without this page.
 Verified: 2026-08-21 — no automated check.
 
 `prefers-reduced-motion: reduce` is a designed variant, not a switch that deletes transitions.

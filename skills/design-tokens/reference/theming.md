@@ -3,6 +3,7 @@
 
 Purpose: How a theme remaps semantics, and what must be re-verified per theme.
 Read when: specifying dark mode, high contrast, or multi-brand.
+Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-21 — no automated check.
 
 A theme remaps semantic tokens onto different primitives. Nothing else changes.
