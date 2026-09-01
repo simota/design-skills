@@ -88,6 +88,8 @@ Phases: `PURPOSE → CHOREOGRAPHY → VALUES → REDUCED → HANDOFF`.
 - Never: use parallax, large-scale zoom, or spinning as decoration — these are
   vestibular triggers, not style choices
 - Never: animate more than roughly three elements independently in one moment
+- Never: comment a keyframe with what it already does. The comment here carries
+  the reason the property is animated at all, or the budget it was measured against
 
 ## Verify with
 

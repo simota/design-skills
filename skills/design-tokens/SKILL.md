@@ -89,6 +89,9 @@ Phases: `AUDIT → GRAMMAR → PRIMITIVES → SEMANTICS → THEMES → EXPORT`.
 - Never: invert a light palette to produce dark mode
 - Never: patch a missing token with an inline value or `!important` — add the token
 - Never: ship a token whose value fails its own stated contrast requirement
+- Never: comment a token with what its name already says (`/* blue */` over
+  `--color-blue-500`). The comment a token earns is what the name cannot carry —
+  the measured ratio, the deprecation path, the constraint behind a value
 
 ## Verify with
 

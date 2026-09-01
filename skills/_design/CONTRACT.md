@@ -78,6 +78,26 @@ Before reporting, run both halves and state both results:
 Report it in one line: `swept, 2 markers / 2 in open; 18 decisions / 18 graded`.
 **While either pair fails to match, the status is not `DONE`.**
 
+## Comments — the value says what, a comment says why
+
+A comment restating the declaration under it is a defect in the declaration,
+not a sentence missing from it: `/* blue */` over `--color-blue-500`, `/* fades
+in */` over an opacity keyframe. **The test is mechanical: cover the comment and
+read the declaration.** Nothing lost — delete the comment. Something lost — put
+it in the name, until the comment has become the name, and delete it anyway.
+
+What survives is what a value cannot carry, and this set already names most of
+it: **the computed contrast ratio beside a semantic pair, the deprecation
+path of a replaced token, the written reason for animating anything but
+`transform` and `opacity`**, and the outside constraint behind a number that
+looks arbitrary. Those are the record rather than commentary, and **deleting
+them is the opposite failure and costs more**. A `#TODO(agent):` marker and a
+licence header stay.
+
+**Nothing checks this automatically** — the sweep counts decisions, and the
+unit of evidence here is the decision, not the file. It is a reading pass over
+the files this run wrote, made before the sweep is reported.
+
 ## Boundary cases
 
 - **A contrast pair not computed** is `asserted`, whatever the palette looks like
