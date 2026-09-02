@@ -15,26 +15,23 @@ at build time by whoever hits it first.
 | The report | The answer, the line of evidence under it, what is unresolved | The person, now |
 
 The report is a **view over** the handoff, never a second copy of it in prose.
-Rendering the object field by field is how one decision arrives as a paragraph,
-and it is the failure this file was added to stop.
+Rendering the object field by field is how one decision arrives as a paragraph.
 
 ## The moments a run speaks
 
-Four, and no others. Each owes something different, and **what is right at one moment is
+Four. Each owes something different, and **what is right at one moment is
 noise at the next.**
 
-| Moment | What it owes | Ceiling |
+| Moment | What it owes | Shape |
 |---|---|---|
-| **Start** | What will be done and what is excluded, with the tier if it is not obvious | one line |
-| **A question** | The one decision that is blocked, and the default taken if nobody answers | one question, one line |
-| **Mid-run** | Nothing — unless the reader must act now: a divergence from what was agreed, a path found blocked, work that would grow the scope, a value that turns out to have no source and would land as `ARBITRARY` | one line each, or silence |
-| **End** | The report below | the ceiling below |
+| **Start** | What will be done and what is excluded, with the tier if it is not obvious | a sentence |
+| **A question** | The one decision that is blocked, and the default taken if nobody answers | one question |
+| **Mid-run** | What the reader can act on now: a divergence from what was agreed, a path found blocked, work that would grow the scope, a value that turns out to have no source and would land as `ARBITRARY` | one line each |
+| **End** | The report below | the length below |
 
-**Progress is not information.** "opening the screens", "now checking
-contrast", "found it" tell the reader nothing they can act on, and they cost
-the same attention as the line that matters. A tool call is already visible;
-narrating it a second time is the commonest way a run fills a screen while
-saying nothing.
+**The harness already shows which tool ran.** A mid-run line earns its place by
+carrying something the tool call did not: what was found, what it changes, what
+the reader now has to decide.
 
 **A question is not a status update.** Ask when guessing wrong would be
 expensive to undo, ask one thing, and say what happens if the answer never
@@ -42,28 +39,26 @@ comes.
 
 ## At the end — this order, every time
 
-1. **The answer, one line.** The status and what was decided or produced. A
+1. **The answer first.** The status and what was decided or produced. A
    reader who stops after this line has the result
-2. **The evidence, one line.** The sweep (`_design/CONTRACT.md`), which already
+2. **The evidence.** The sweep (`_design/CONTRACT.md`), which already
    carries the counts: `swept, 0 markers; 18 decisions / 18 graded`
-3. **What is unresolved** — one line per residual that needs a human decision.
+3. **What is unresolved** — each residual that needs a human decision.
    `BLOCKED` and `UNSPECIFIED` always. `DEFERRED` and `OUT-OF-SCOPE` are in the
    handoff and named here only if the reader would act on them today
-4. **What is next** — one line, or nothing if the answer is nothing
+4. **What is next** — or nothing if the answer is nothing
 
-A run with nothing unresolved reports lines 1 and 2 and stops.
+A run with nothing unresolved reports items 1 and 2 and stops.
 
-## Ceiling
+## Length
 
-| Tier (`_design/SIZING.md`) | The whole report |
-|---|---|
-| `T0` | one line |
-| `T1` | six lines |
-| `T2` | ten lines, plus the deliverable itself |
+The report is as short as the four items above allow. `T0` (`_design/SIZING.md`)
+is the answer alone; `T1` and `T2` add the sweep, the residuals and what is
+next, and `T2` links the deliverable. Nothing else belongs in it.
 
-**Over the ceiling means cutting content, not reformatting it.** A table, a
-nested list, and a heading per item are the three ways a report grows while
-appearing to have been tightened.
+**Too long means cutting content, not restructuring it.** A table earns its
+place when the reader must compare rows, a heading when they must navigate;
+neither is a way of making the same content look shorter.
 
 ## The deliverable is not the report
 
@@ -89,7 +84,7 @@ options, at whatever length that takes. **Cut noise, never risk.**
 - A restatement of the request, or of what the run was about to do
 - A closing summary of what was just said
 - Values the artifact already lists, or a walk through every token that changed
-- Narration of process: what was opened, what was tried first, which tool ran
+- Which tool ran, in what order — the record has it, and the harness showed it
 - Adjectives standing in for measurements, and confidence about things nobody
   doubted
 

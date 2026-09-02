@@ -51,15 +51,11 @@ When two findings share a severity:
 
 ## Report volume
 
-A report nobody acts on has failed.
-
-| Scope | Target |
-|-------|--------|
-| One screen | 5–10 findings |
-| One flow | 10–20 |
-| Whole product | 15–25, plus an aggregated drift table |
-
-When there are more findings than the target, aggregate: "Spacing values off the scale at 14 sites — see drift table" is one finding, not fourteen. Never drop Blockers or Serious findings to hit a count.
+A report nobody acts on has failed, and a report is acted on when each finding
+is one decision. Aggregate repeats: "Spacing values off the scale at 14 sites —
+see drift table" is one finding, not fourteen, and a whole-product review
+carries its drift as a table rather than as findings. Blockers and Serious
+findings are never folded away to make the list shorter.
 
 ## Common mis-rankings
 

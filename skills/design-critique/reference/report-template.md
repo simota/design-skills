@@ -71,7 +71,7 @@ Source: <link or file>
 - Do not soften a Blocker. Hedging a real barrier wastes everyone's time.
 - Do not inflate a Minor. Calling a 2px gap "critical" costs you credibility on the findings that matter.
 - Ask rather than assert when intent is unclear: "If the intent was X, then Y is a problem — was it?"
-- No sarcasm, no rhetorical questions, no "obviously".
+- Plain statements. The reader should never have to decode the tone to find the finding.
 
 ## Evidence quality
 

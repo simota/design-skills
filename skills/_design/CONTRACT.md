@@ -75,7 +75,7 @@ Before reporting, run both halves and state both results:
 2. **Coverage** — the decisions the deliverable promised, against the decisions
    that carry a grade
 
-Report it in one line: `swept, 2 markers / 2 in open; 18 decisions / 18 graded`.
+Report it as: `swept, 2 markers / 2 in open; 18 decisions / 18 graded`.
 **While either pair fails to match, the status is not `DONE`.**
 
 ## Comments — the value says what, a comment says why
