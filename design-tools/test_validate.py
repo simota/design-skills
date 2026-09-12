@@ -145,8 +145,8 @@ def _(r): sub(r / f"{S}_design/ROUTING.md", "(`_design/SIZING.md`)", "(`SIZING.m
 
 @case("V20")
 def _(r):
-    f = r / f"{S}_design/CONTRACT.md"
-    f.write_text(f.read_text(encoding="utf-8").replace("asserted", "claimed"), encoding="utf-8")
+    """The definition row becomes a mention; the word is still on the page."""
+    sub(r / f"{S}_design/CONTRACT.md", "| `asserted` |", "| asserted |")
 
 
 @case("V21")
@@ -311,6 +311,10 @@ def _(r): sub(r / f"{S}design-review/SKILL.md",
 
 @case("V36-none-declared")
 def _(r): sub(r / "design-registry/harness.yaml", "finding_visuals:", "unused_visuals:")
+
+
+@case("V38")
+def _(r): sub(r / f"{S}design-a11y/playbooks/content.md", "## ", "verdict: KEEP | DROP\n\n## ")
 
 
 @case("V37")

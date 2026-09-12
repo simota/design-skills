@@ -25,7 +25,7 @@ Every literal value in a deliverable names exactly one.
 |---|---|---|
 | `token` | It is a named value in the system | The token name |
 | `threshold` | A published requirement fixes it | Which one, and its number — `WCAG 1.4.3, 4.5:1` |
-| `measured` | Read off what already exists | What was measured, and where |
+| `measured` | As the evidence grade of that name (`_design/CONTRACT.md`): read off what already exists | What was measured, and where |
 | `derived` | Computed from a grounded value by a stated rule | The rule — `base x 1.25, fourth step` |
 | `platform` | A platform convention, cited | The convention and its source |
 | `brief` | The direction or the request fixes it | The line of the brief it comes from |

@@ -33,6 +33,8 @@ makes the dialogue mandatory:
 - The work would replace something a person already chose
 - Doing it wrong would be expensive to undo — a token grammar, a naming scheme,
   a navigation model, anything already shipped to users
+- A term in the request, the codebase or the design carries two meanings, or
+  one concept goes by two names, and the host's glossary does not settle it
 
 **Reading to find out is not executing.** The codebase, the existing screens,
 and the current tokens answer more questions than the person can. And never
@@ -51,6 +53,7 @@ excludes: [...]                   # what will not be decided. May not be empty
 baseline: "<the observed starting state the result is measured against>"
 standard: "<what the result is judged against>"   # brief, tokens, platform, heuristics
 open_questions: []                # execution does not begin until empty
+terms: {}                         # the names this run uses, spelled as the glossary spells them
 ```
 
 - **`standard` is design's baseline for judgement.** Critique without a stated
@@ -63,6 +66,22 @@ open_questions: []                # execution does not begin until empty
 - **Execution does not begin while `open_questions` is non-empty.** Deferring an
   unknown to "I'll decide while designing" is the shared entrance to both rework
   and scope creep
+
+## Terms — one name per concept, one concept per name
+
+The host's glossary is `.agents/glossary.md` when it exists. Read it before the
+brief is settled and write with its names only — tokens, components, states,
+report alike. A term the work has to coin goes into `terms`, and at `T1` or
+above it is proposed in the dialogue rather than invented on the way.
+
+**An ambiguous or inconsistent term is never resolved by a silent choice.**
+Two meanings for one word, or two names for one concept, is a question
+(`_design/REPORT.md`): one question, with the default named — the spelling the
+codebase already uses most. The answer lands in `terms` and is appended to the
+glossary as `term · means · not to be called`, so the next run inherits the
+decision rather than the ambiguity. A `T1` may create the glossary for its
+first settled term; a `T0` never does — it marks what it found `OUT-OF-SCOPE`
+and moves on.
 
 ## Constraints do not loosen mid-run
 

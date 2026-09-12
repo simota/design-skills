@@ -21,6 +21,7 @@ brief:                        # every field of the brief in _design/SIZING.md
   baseline: "<the observed starting state>"
   standard: "<what the result is judged against>"
   open_questions: []          # must be empty; a non-empty one never travels
+  terms: {}                   # the names this run used, as the glossary spells them
 status: DONE                  # DONE | PARTIAL | BLOCKED  (_design/CONTRACT.md)
 decided: "<what this stage settled, 1-3 lines>"
 evidence:

@@ -38,6 +38,10 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
   Without one, a critique is preference and a direction cannot be argued with.
   `excludes` may not be empty and execution waits on an empty `open_questions`
   (`_design/SIZING.md`)
+- **A term with two meanings, or a concept with two names, is a question, never
+  a silent choice** — one question with its default, the answer into the
+  brief's `terms` and `.agents/glossary.md`, and the glossary's names only from
+  then on (`_design/SIZING.md` § Terms)
 <!-- /deliver:sizing -->
 <!-- deliver:ground -->
 - **Every literal value names its ground.** One of `token`, `threshold`,

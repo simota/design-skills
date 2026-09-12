@@ -41,7 +41,10 @@ limits:
                               # proportion rule — and 100 was the figure from when there were
                               # five. Two compression passes over the file came back with the
                               # same content in fewer words and no fewer lines
-  shared_lines_total: 600   # raised by the sixth axis: REPORT.md arrived and
+  shared_lines_total: 620   # raised by 20 for the terms rule in SIZING.md — a term
+                              # with two meanings is a question, never a silent
+                              # choice — the same move as the sixth axis, for the
+                              # same reason. Before that, raised by the sixth axis: REPORT.md arrived and
                               # every set landed at 97-99% of the old figure at once,
                               # which is a budget that has stopped leaving room to think
                               # rather than seven sets each being careless. The room
