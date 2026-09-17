@@ -20,13 +20,13 @@ review turns into rationalisation.
 |---|---|---|
 | Focal point | "I did not know where to look" | More than one element competing for first place, or none claiming it |
 | Hierarchy | "Everything shouted" / "I missed the main action" | Whether importance and visual weight agree; the primary action carrying no more weight than its neighbours |
-| Contrast | "It felt flat" / "It felt loud" | The range actually in use between the quietest and loudest element. A design using a fifth of its range reads timid; one using all of it reads frantic |
+| Contrast | "It felt flat" / "It felt loud" | The range actually in use between the quietest and loudest element. Whether that range supports the intended emphasis is a judgement, not a universal ratio |
 | Grouping | "I could not tell what belonged together" | Whether proximity, enclosure and alignment tell the same story as the meaning does |
-| Alignment | "It felt sloppy" | Edges that nearly agree. Near-alignment reads worse than deliberate offset, because the eye reads it as error rather than intent |
+| Alignment | "It felt sloppy" | Edges that nearly agree. Check whether near-alignment conflicts with the intended grouping; deliberate offsets may work |
 | Rhythm | "It felt cramped" / "It drifted apart" | Whether the gaps repeat. Irregular spacing between peers is felt long before it is noticed |
 | Density | "It felt heavy" / "It felt empty" | The ratio of marked to unmarked area, and whether it matches the task. A dense tool and a sparse landing page are both correct, in their place |
 | Figure and ground | "The content sank into the page" | Whether surfaces separate. Cards, panels and overlays that share a value with what is behind them read as one plane |
-| Colour weight | "One thing dominated for no reason" | Saturated area against neutral area. A large saturated field outranks a small one whatever the intent was |
+| Colour weight | "One thing dominated for no reason" | Saturated area against neutral area. Describe which field dominated this viewing; area alone does not establish where users look |
 | Type voice | "It looked generic" / "It looked wrong for this" | Whether the typeface, weight range and case carry the product's register, or the framework's default |
 | Consistency of gesture | "It felt assembled rather than designed" | Radii, stroke weights, shadow depth and corner treatment agreeing across elements. Three vocabularies in one view read as three authors |
 
@@ -36,11 +36,12 @@ One line, in this shape:
 
 > **Impression** — the eye landed on the illustration and never found the
 > button. **Principle** — focal point: two elements compete, and the larger one
-> is not the action. **Evidence** — the illustration occupies roughly half the
-> first screenful; the primary action sits below it at body weight.
+> is not the action. **Observation** — the illustration dominates this viewing;
+> the primary action is below it and did not stand out to this reviewer.
 
-The evidence half is what separates this from an opinion. Where it can be
-counted, count it — that is the line between `inspected` and `measured`.
+This is a reasoned, `inspected` judgement, not a measured user response. Measure
+any countable supporting claim separately; a count does not prove the principle
+or make the verdict a defect. Missing measurements stay missing, not estimated.
 
 ## Traps
 

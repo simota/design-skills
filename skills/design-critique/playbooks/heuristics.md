@@ -13,7 +13,9 @@ Before evaluating, name what the design is judged against, in this order of pref
 4. Platform conventions (HIG, Material, web norms)
 5. General heuristics (below) — the weakest standard, used when nothing else exists
 
-If only (5) is available, say so. It changes how much weight the findings carry.
+If only (5) is available, say so. These are judgement lenses, not requirements
+the team adopted. The "failure" examples below are prompts to investigate:
+classify the actual evidence before reporting a defect or inconsistency.
 
 ## Core heuristics
 
@@ -34,8 +36,8 @@ Nielsen's ten, applied concretely.
 
 ## Purpose lens
 
-- Can you state the screen's job in one sentence after five seconds?
-- Is there exactly one primary action? If two look equal, the screen has two jobs.
+- What job does the screen communicate on initial inspection? Do not invent a timed user test.
+- For a task-oriented screen, does emphasis support the task? Passive and comparison screens may need no single privileged action.
 - Is the most important information the most visually prominent?
 - Would a first-time user know what to do next? Would a hundredth-time user be slowed by anything?
 
@@ -64,7 +66,7 @@ Designs pass review on ideal content and fail in production. Check against:
 - Missing avatars, broken images, and absent optional fields
 - A user with one permission level lower
 
-Any of these breaking the layout is a finding, not an edge case.
+An observed failure with applicable content is a finding. Unobserved cases are coverage gaps, not inferred defects.
 
 ## System drift
 

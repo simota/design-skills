@@ -31,8 +31,9 @@ brief.
 
 A value nothing fixes is `ARBITRARY`, and that is a legitimate answer recorded
 in the handoff, never an invented reason — design runs out of grounds long
-before it runs out of decisions. **A deliverable that is mostly `ARBITRARY` is
-a direction problem**, upstream, not a row of rationales
+before it runs out of decisions. Its frequency alone is not a direction problem:
+return upstream only when needed intent is undecided. Constraints and compliance
+checks are recorded separately from the chosen value's origin
 ([`_design/PROVENANCE.md`](skills/_design/PROVENANCE.md)).
 
 ## How it is put together
@@ -76,7 +77,8 @@ failing it, including two that make the checks vacuous rather than wrong.
 
 That is also how the type scale's clamp got written down: the ratio applied
 downward gives 13px and 11px, the table said 14 and 12, and nothing on the page
-admitted the departure. The values were right and the stated rule was not. A rule rejects a pinned version or
+admitted the departure. The check proves agreement with the stated rule, not the
+suitability or independent ground of its chosen inputs. A rule rejects a pinned version or
 a cited standard inside a playbook, which is what forced two files across the
 line while this was being set up.
 
@@ -86,8 +88,8 @@ threshold. `design-tools/validate.py` decides them and CI fails on a violation.
 
 ## Evidence, for work that cannot be run
 
-A design cannot be executed, so the grade is about **where the number came
-from**. `measured` — a ratio computed, distinct values counted, a state list
+Evidence grades describe the claim actually checked, separately from a value's
+origin. `measured` — a ratio computed, distinct values counted, a state list
 checked against the running UI. `inspected` — read and reasoned over, with the
 reason it could not be measured. `asserted` — the claim alone, which never
 supports completion. **Estimating a measurable value is `asserted`**: contrast,

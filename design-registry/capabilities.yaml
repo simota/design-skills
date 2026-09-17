@@ -16,9 +16,11 @@ design-direction:
       go: design-tokens
     - what: "how the interface behaves"
       go: design-ux
-    - what: "judging a screen that already exists"
+    - what: "itemising defects, inconsistencies or judgements about an existing interface"
       go: design-critique
-  signals: [art direction, look and feel, typography, colour intent, layout system, design brief, generic default]
+    - what: "judging how an existing rendering holds together as a whole"
+      go: design-review
+  signals: [art direction, look and feel, typography, colour intent, layout system, design brief]
 
 design-tokens:
   class: doc-write
@@ -70,16 +72,16 @@ design-critique:
       go: design-a11y
     - what: "the verdict on how the whole of it looks"
       go: design-review
-  signals: [design review, UI audit, heuristic evaluation, craft, drift, severity, feels off]
+  signals: [UI issues, defects, inconsistencies, judgement calls, list differences, severity, UI audit, craft, drift]
 
 design-review:
   class: read-only
   does: [rendering, first-impression, principle-restatement, reference-comparison, aesthetic-verdict]
   not:
-    - what: "itemising the measurable defects against a named standard"
+    - what: "itemising individual defects, inconsistencies or defensible judgements"
       go: design-critique
-    - what: "deciding the aesthetic in the first place"
+    - what: "choosing or changing the intended aesthetic"
       go: design-direction
     - what: "whether a contrast or focus problem conforms"
       go: design-a11y
-  signals: [first impression, visual hierarchy, aesthetic verdict, screenshot, does this look good]
+  signals: [as a whole, first impression, visual hierarchy, composition, aesthetic verdict, does this look good, holds together]

@@ -1,135 +1,65 @@
 <!-- design:guidance -->
 # Craft Audit
 
-The measurable layer. Findings here are evidenced by values, not impressions.
+Inspect the artifact, then classify the claim. A measurable property is not
+necessarily a measurable defect. These lenses do not create product requirements.
 
-## Alignment
+## What the evidence supports
 
-| Check | Failure |
-|-------|---------|
-| Shared left edge | Elements in a column starting at 16px, 17px, and 20px |
-| Optical vs geometric | Icons centred geometrically that read off-centre; circles and triangles need optical adjustment |
-| Baseline alignment | Text and icons in a row sitting on different baselines |
-| Grid adherence | Elements off the column grid without a reason |
-| Edge consistency | Card content insets differing across peer cards |
+| Kind | Required basis | Treatment |
+|---|---|---|
+| Measurable defect | Observed functional failure or a measured violation of an applicable requirement | `defect`; name the failure, source and conditions |
+| System inconsistency | Actual departure from an adopted token, component or documented convention | `inconsistency`; cite the system and check deliberate exceptions |
+| Conformance question | A suspected accessibility failure with its available evidence | Flag for `design-a11y`; it adjudicates the applicable criterion and exceptions |
+| Defensible judgement | Concrete observation, task or intent, reasoning and trade-off | `judgement`, `inspected`; naming a heuristic does not turn it into a defect |
+| Pure taste | Preference with no product-specific basis | Label taste; do not rank it as a defect or require its preferred replacement |
 
-## Spacing rhythm
+No adopted system? Use the judgement lens without inventing one. A numerical
+difference becomes an inconsistency only when the system requires agreement.
+The evidence for a problem and the ground of a proposed replacement are separate.
 
-- Spacing values should come from the scale. List every off-scale value found, with its count.
-- Related elements sit closer than unrelated ones. If the gap above a label equals the gap below it, the grouping is ambiguous.
-- Vertical rhythm should be consistent between peer sections.
-- Padding is symmetric unless there is a stated optical reason.
-- Nested radii: inner radius should equal outer minus padding, or the corners read wrong.
+## Craft lenses
 
-## Typography detail
+| Area | Measure or inspect | Boundary to respect |
+|---|---|---|
+| Alignment | Actual positions, baselines and adopted grid; visible offsets | Optical centring is judgement unless a required alignment is demonstrably broken |
+| Spacing | Resolved values, off-system sites, grouping of related content | Symmetry, tighter grouping and regular rhythm are not universal requirements |
+| Typography | Resolved family, size, weight, line height; clipping with real content | Line length, weight count, tracking and heading wraps depend on script, typeface and task |
+| Colour | Actual source pairs and role mappings in each in-scope theme | Contrast adjudication belongs to `design-a11y`; hue preference and ramp evenness are not conformance |
+| Composition and density | What competes or groups in the observed view, against the intended task | Dense comparison tools need not become sparse; "clean", "modern" and "premium" are not defect classes |
+| Surfaces | Adopted radii, shadows, borders and layering; visible occlusion | Concentric corners and stronger shadows on higher layers are choices, not universal geometry rules |
+| Icons | Adopted library conventions, accessible purpose and actual rendering | Mixed sources or optical sizes alone do not prove a defect |
+| Responsive behaviour | Real content, in-scope viewports, zoom and input modes | Do not infer behaviour at unobserved sizes or turn a screenshot's image pixels into CSS dimensions |
 
-| Check | Failure |
-|-------|---------|
-| Scale adherence | Sizes off the type scale |
-| Line length | Body copy beyond ~75 characters, or UI text below ~45 |
-| Line height | Same value across very different sizes |
-| Weight range | More than three or four weights in use |
-| Synthetic styling | Faux bold or faux italic on a family lacking the cut |
-| Tracking | Display sizes at default tracking, reading loose |
-| Orphans and widows | A single word on the last line of a heading |
-| Numerals | Proportional figures in a table column that should be tabular |
-| Case | ALL CAPS in long strings; small-caps faked by scaling |
+Record the property, actual values, source location, relevant system definition
+and site count before judging. Count only what was inspected; do not invent a
+coverage percentage. A missing source means the measurement is unavailable.
 
-## Colour and contrast
+## Screenshot-only work
 
-- Every text pair measured (hand off to `design-a11y` for adjudication).
-- Semantic colours consistently applied — danger never used for emphasis.
-- Neutral ramp perceptually even; no step that jumps.
-- Accent used for one job.
-- Both themes checked independently.
+Actual image-pixel measurements and visible counts may be `measured`, scoped to
+that image and method. They do not establish computed CSS, true contrast pairs,
+keyboard operation, motion, other themes or other viewports.
 
-## Elevation and depth
+A guessed spacing, size or ratio is `asserted`, not `inspected`. Request the
+source or mark the numerical question not assessable. A qualitative grouping or
+hierarchy concern can still be `inspected` when its observation and reasoning
+are stated. Do not pad it with invented numbers.
 
-- Shadow values from the scale, not one-offs.
-- Elevation is consistent with the z-order: a higher layer never has a lighter shadow.
-- In dark themes, elevation reads via surface lightness or borders, not shadow alone.
-- Borders and shadows are not both doing the same job on one element.
+## State and accessibility checks
 
-## Iconography
+For applicable states, inspect feedback, recovery, retained input, exits and
+partial failure. Missing promised behaviour is `UNSPECIFIED`; enumerate it and
+route design decisions to `design-ux`. Passive screens need not gain actions,
+and a spinner is not defective merely because a skeleton is another option.
 
-- Consistent stroke width, corner radius, and grid across the set.
-- Consistent optical size — a 24px circle icon reads larger than a 24px square one.
-- Meaningful icons reach 3:1 contrast.
-- Icon-only controls have labels or tooltips.
-- Mixed icon libraries in one interface is a finding.
+Raise observed or suspected accessibility concerns with their evidence, then
+hand conformance to `design-a11y`. It checks the criterion, level, applicability
+and exceptions. Do not maintain a second threshold table here or call an
+unavailable build-time test a pass.
 
-## Responsive and zoom
+## Reporting
 
-| Test | Check |
-|------|-------|
-| 320px width | No horizontal scroll (SC 1.4.10); nothing clipped |
-| 400% browser zoom | Content reflows rather than scrolling in two directions |
-| 200% text zoom | No clipping or overlap (SC 1.4.4) |
-| Text spacing override | Survives line-height 1.5×, letter 0.12em, word 0.16em (SC 1.4.12) |
-| Landscape phone | Usable; modals not taller than the viewport |
-| Very wide | Content does not stretch to unreadable line lengths |
-| Touch vs pointer | Hover-only affordances have a touch equivalent |
-
-## Inventory method
-
-Record before judging. A table of observed values makes drift undeniable.
-
-| Property | Values observed | System defines | Off-system count |
-|----------|-----------------|----------------|------------------|
-| Card padding | 16, 20, 24 | 16, 24 | 1 (20px, 3 sites) |
-| Border radius | 4, 6, 8, 12 | 4, 8, 12 | 1 (6px, 2 sites) |
-| Text sizes | 12, 13, 14, 16, 20 | 12, 14, 16, 19, 23 | 2 (13px, 20px) |
-| Greys | 6 distinct | 4 in ramp | 2 |
-| Shadows | 4 distinct | 3 in scale | 1 |
-
-From a live UI, gather this with DevTools or by scanning the stylesheet; from a mockup, by inspecting the source file. If you cannot measure, say the finding is visual-only and mark it a `judgement`.
-
-## State checks
-
-Standalone list — sufficient without `design-ux` installed. Hand off to it when it is available.
-
-| State | Fails when |
-|-------|-----------|
-| Empty (first use) | Absent, or a bare "No data" with no explanation and no action |
-| Empty (filtered) | Not distinguished from first use; no way to clear the filter |
-| Loading (initial) | Spinner where a skeleton belongs; layout jumps when content arrives |
-| Loading (refresh) | Existing content blanked while refetching |
-| Partial | One failed region blanks the whole screen |
-| Error | Generic text; no cause, no next action; user input discarded |
-| Permission denied | Rendered as a generic error; no route to request access |
-| Offline | Undefined, or a blocking modal |
-| Success | Generic ("Saved") where the specific object was available |
-| Destructive pending | No undo, or an undo window with no stated duration |
-
-## Accessibility checks
-
-Standalone list — enough to raise a finding without `design-a11y` installed. Route anything found to it for adjudication; it owns the SC-level verdict.
-
-| Check | Threshold |
-|-------|-----------|
-| Body text contrast | 4.5:1 (SC 1.4.3 AA) |
-| Large text (≥24px, or ≥18.66px bold) | 3:1 |
-| Control boundaries, meaningful icons, focus ring | 3:1 (SC 1.4.11 AA) |
-| Colour independence | Every meaning carried by colour has a second channel (SC 1.4.1 A) |
-| Focus visible | Every interactive element has a designed focus state (SC 2.4.7 AA) |
-| Focus not obscured | Focused element not hidden behind sticky headers (SC 2.4.11 AA) |
-| Target size | 24×24 CSS px, or 24px spacing (SC 2.5.8 AA) |
-| Labels | Every input has a visible label; placeholder is not the label (SC 3.3.2 A) |
-| Reflow | No horizontal scroll at 320px / 400% zoom (SC 1.4.10 AA) |
-
-Compute contrast, never estimate it: convert each channel to linear (`c/12.92` if `c<=0.04045`, else `((c+0.055)/1.055)^2.4`), take `L = 0.2126R + 0.7152G + 0.0722B`, then `(L_light+0.05)/(L_dark+0.05)`. Record both source values beside the result.
-
-## Detail checks
-
-Fast checks that catch a surprising amount:
-
-- [ ] Focus states designed for every interactive element
-- [ ] Hover states not the only affordance
-- [ ] Disabled states visually distinct and explained
-- [ ] Loading states present and layout-stable
-- [ ] Long content truncation designed (with the full value reachable)
-- [ ] Images have defined aspect ratios so layout does not shift
-- [ ] Scrollable regions have visible boundaries
-- [ ] Sticky elements do not obscure focused content
-- [ ] Nothing depends on a hover to be discoverable
-- [ ] The design shows real content, not lorem ipsum
+Use the existing finding classes, severity by supported user impact, evidence,
+and an owner. Preserve useful strengths. A judgement remains open to disagreement;
+pure taste does not enter a defect-closing loop as a release blocker.

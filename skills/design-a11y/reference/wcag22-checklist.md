@@ -1,12 +1,15 @@
 <!-- design:deferred -->
 # WCAG 2.2 — Design-Relevant Checklist
 
-Purpose: The success criteria a designer can pass or fail before code exists.
+Purpose: Design-relevant checks, separated from build-time conformance.
 Read when: running conformance against the standard, or citing a criterion in a finding.
-Source: WCAG 2.2 — the success criteria below are quoted from that version.
-Verified: 2026-08-21 — no automated check.
+Source: WCAG 2.2 — summaries, not verbatim criteria; check applicability and exceptions.
+Verified: 2026-09-17 — report-example applicability inspected against SC 2.5.8 and 2.4.11;
+no automated check of conformance decisions. Other checklist summaries were not revalidated.
 
-The success criteria a designer can pass or fail *before* code exists. Cite the number and level in every finding.
+A specification can settle design intent, not prove that the built interface implements it.
+Cite the criterion and level for conformance findings; mark implementation-dependent checks
+not assessable at design time, rather than passing them from the specification alone.
 
 ## Perceivable
 
@@ -78,9 +81,17 @@ SC 4.1.1 Parsing was removed in WCAG 2.2.
 
 | SC | Level | Severity | Location | Fails because | Design-level fix |
 |----|-------|----------|----------|---------------|------------------|
-| 1.4.3 | AA | Serious | Settings → muted labels | `#9aa0a6` on `#ffffff` = 2.64:1 | Muted text must reach 4.5:1 on canvas; `#6b7280` (4.83:1) clears it. Hand the value to `design-tokens` to apply. |
-| 2.4.11 | AA | Serious | Any page with sticky header | Focused row scrolls under the 64px header | Add `scroll-margin-top: 72px` to focusable rows |
-| 2.5.8 | AA | Moderate | Table row action icons | 20×20 hit area, 4px apart | Enlarge hit area to 24×24 and space 8px; visual icon may stay 20px |
+| 1.4.3 | AA | Serious | Settings → muted labels | `#9aa0a6` on `#ffffff` = 2.64:1 | Muted text must reach 4.5:1 here. `#6b7280` (4.83:1) is a compliant example, not a required colour; its choice is `ARBITRARY` unless an independent source fixes it. Pass the chosen value and ground to `design-tokens`. |
+| 2.4.11 | AA | Serious | Any page with sticky header | Focused control is entirely hidden by author-created sticky chrome | Measure the required clearance and specify it with its ground. The criterion fixes no universal scroll margin |
+| 2.5.8 | AA | Moderate | Table row action icons | Abutting 20×20 CSS px targets; assessment circles intersect and no exception applies | A 24×24 CSS px hit area meets the size condition. No additional 8px gap is required by this criterion |
+
+These are illustrative findings, not measurements of a real product. A horizontal row of
+20×20 CSS px targets with 4px gaps can pass the spacing exception; assess all neighbouring
+targets rather than declaring failure from target size alone. See the opened explanations
+for [SC 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) and
+[SC 2.4.11](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html).
+For a real fix, settle its value from the actual artifact or record it as `UNSPECIFIED`;
+these examples do not authorise implementers to invent the missing clearance.
 
 ## Beyond the checklist
 

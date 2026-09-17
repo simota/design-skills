@@ -15,40 +15,36 @@ Phases: `PURPOSE → CHOREOGRAPHY → VALUES → REDUCED → HANDOFF`.
 
 ## Before starting
 
-- **Name the job first.** Every animation answers one of: *where did that come
-  from*, *did my action register*, *what changed*, *what is happening now*.
-  Motion with no answer is removed, not tuned
+- **Name the job first**: orientation, feedback, continuity, status, or an
+  expressive purpose the brief actually authorises. Remove motion with no purpose
 - **Find out what is already moving.** A new curve added beside three existing
   ones makes the interface feel less coherent, not more
 - **Establish whether motion carries personality here.** If the direction has
   not been set, that is a question for a person, not a default
 <!-- deliver:sizing -->
-- **Size it before anything else**, first match wins. `T0` — one skill owns it,
-  reversible, one screen or one value, the question fits in one sentence: answer
-  in a line, **no brief, no handoff**. `T1` — a `T0` condition fails: settle the
-  brief first. `T2` — two or more skills own parts of it: route it. `T0` drops
-  the paperwork, never the evidence. Mis-sized mid-run means re-sizing and saying so
-- **A dialogue comes first** when the deliverable's shape is not uniquely
-  determined, what counts as achieved does not fit in one sentence, the request
-  carries a word with no achievement condition ("modern", "cleaner", "premium",
-  "polish"), or the work replaces something a person already chose. Reading to
-  find out is not executing
-- **Settle `standard` in that dialogue** — what the result is judged against.
-  Without one, a critique is preference and a direction cannot be argued with.
-  `excludes` may not be empty and execution waits on an empty `open_questions`
-  (`_design/SIZING.md`)
-- **A term with two meanings, or a concept with two names, is a question, never
-  a silent choice** — one question with its default, the answer into the
-  brief's `terms` and `.agents/glossary.md`, and the glossary's names only from
-  then on (`_design/SIZING.md` § Terms)
+- **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
+  result — answer with grounds and evidence, **no brief, no handoff**. A screen
+  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
+- **Read before asking.** Dialogue is required for unresolved scope, achievement
+  conditions or authority to change a prior choice, not for facts the request or
+  artifacts already settle. Unresolved "premium" or "cleaner" still needs a basis
+- **Bound the brief.** State `standard` or a fallback judgement basis, meaningful
+  `axes` (one may suffice), and `excludes` when `delivers` does not already bound
+  scope. `open_questions` holds scope/authority gaps; clear it before executing.
+  Promised design decisions are made during the work, never silently left to build
+- **Use the host glossary.** Ask about material ambiguity, record settled `terms`;
+  read-only runs propose glossary changes, never write them (`_design/SIZING.md`)
 <!-- /deliver:sizing -->
 <!-- deliver:ground -->
-- **Every literal value names its ground.** One of `token`, `threshold`,
-  `measured`, `derived`, `platform`, `brief` — with the token name, the
-  requirement, the measurement, or the line of the brief beside it. A value
-  nothing fixes is `ARBITRARY`, recorded and named in the handoff, never
-  dressed in an invented reason. **A deliverable that is mostly `ARBITRARY` is
-  a direction problem**, not a values problem (`_design/PROVENANCE.md`)
+- **Every literal value names its ground**: `token`, `threshold`, `measured`,
+  `derived`, `platform`, or `brief`, with its actual source beside it. Nothing
+  fixes it: `ARBITRARY`, even with a taste rationale. Record it in the handoff
+  (inline at `T0`); its frequency alone never requires a direction redo
+- **Origin is not conformance.** A limit constrains a choice; satisfying it does
+  not ground the chosen value. Record the test separately. `derived` requires
+  grounded inputs, including scale choices; naming a token or copying an example
+  does not supply them (`_design/PROVENANCE.md`)
 <!-- /deliver:ground -->
 
 ## Decide first
@@ -58,13 +54,11 @@ Phases: `PURPOSE → CHOREOGRAPHY → VALUES → REDUCED → HANDOFF`.
 | Deciding whether an animation earns its place | [purpose](playbooks/purpose.md) |
 | Specifying a concrete transition | [patterns](reference/patterns.md) — trigger, properties, values, interrupt behaviour, reduced variant |
 | Choosing or naming duration and easing values | [motion-tokens](reference/motion-tokens.md) |
-| Specifying the reduced-motion variant | [reduced-motion](reference/reduced-motion.md) — a designed variant, not a switch that deletes transitions |
-| The change is small and local | Fast — 100-150ms. Large and full-screen — 300-400ms. **One global duration for everything is why interfaces feel wrong** |
-| Something enters, leaves, or moves between | Entering decelerates, leaving accelerates, moving does both. Linear is for continuous progress only |
-| Motion is being used to cover latency | Remove the latency. Where it cannot be removed, design the wait as its own state |
-| A response is under 100ms | It needs no indicator at all |
+| Specifying reduced motion | [reduced-motion](reference/reduced-motion.md) — static or instant may be the designed variant; preserve the state and information |
+| Choosing timing or response | Start from the existing set or a cited platform specification; duration, curve or spring parameters follow the interaction, not a universal band |
+| Waiting or feedback states are undecided | `design-ux` decides them; specify their transitions only after that decision, without inventing progress or hiding latency |
 | A claim here would be expensive to get wrong | [refute](refute.py) — put it to the engines that did not make it, asked to break it rather than to agree. Unrefuted is n engines finding nothing, never proof |
-| Choosing a duration or an easing curve | `measured` from what exists, or `derived` from the set's scale. A curve copied from memory is `ARBITRARY` — the platform's published value is `platform`, and it has a source |
+| Choosing concrete motion values | Cite the actual source. A scale needs grounded inputs; copied examples or recalled curves are `ARBITRARY`. Specify the chosen values anyway; do not leave them to implementation |
 <!-- deliver:values -->
 - Ties break by `_design/VALUES.md`, read top to bottom: honesty over speed ·
   mechanism over intent · subtraction over addition · the decision over the
@@ -77,56 +71,52 @@ Phases: `PURPOSE → CHOREOGRAPHY → VALUES → REDUCED → HANDOFF`.
 ## Always / Never
 
 - Always: state the job of an animation before specifying any value
-- Always: specify the reduced-motion variant alongside the full one
+- Always: specify reduced behaviour alongside full motion; static feedback may suffice
 - Always: say what happens when the animation is **interrupted**. A user action
   during an animation takes precedence
-- Always: preserve spatial continuity — what enters from the right leaves to the right
-- Always: get permission first when a single non-looping transition would exceed
-  500ms, when a gesture would override a platform-standard one, or when the
-  platform is physics-based rather than curve-based
-- Never: animate anything but `transform` and `opacity` without a written reason
-  and a measured budget
-- Never: ship an animation with no `prefers-reduced-motion` variant
+- Always: preserve the navigation or gesture's spatial model; a fixed-edge sheet
+  and a forward/back route transition need not have the same exit rule
+- Always: get permission before overriding a platform gesture or an agreed
+  motion identity; physics-based motion alone is not an approval gate
+- Prefer `transform` and `opacity`; other properties need a reason and a cost
+  check on a running artifact. A design-only spec states that check is still pending
 - Never: block input while an animation plays
-- Never: animate on load for content the user came to read
-- Never: use parallax, large-scale zoom, or spinning as decoration — these are
-  vestibular triggers, not style choices
-- Never: animate more than roughly three elements independently in one moment
+- Never: delay access to requested reading content for an entrance animation
+- Treat parallax, large-scale zoom and spinning as risks to assess, not a
+  conformance verdict; prefer static decoration and route adjudication to `design-a11y`
 - Never: comment a keyframe with what it already does. The comment here carries
   the reason the property is animated at all, or the budget it was measured against
 
 ## Verify with
 
-Durations, easings, and the property list are values read off the spec
-(evidence: `measured`). Whether the motion *reads* as its stated job is
-`inspected`, and the spec says which claim is which.
+Reading declared values from the spec is `measured` evidence of those declarations,
+not their suitability or runtime performance. Judge the stated purpose as
+`inspected`; measure runtime claims on a running artifact or mark them unverified.
 
 - **Every transition specifies four things or it is incomplete**: trigger,
   properties, interrupt behaviour, reduced variant. A missing one is `UNSPECIFIED`
 <!-- deliver:report -->
-- **Grade every claim**: `measured` (a value read off the artifact) supports
-  completion; `inspected` (read and reasoned over) only where nothing can be
-  measured and the entry says why; `asserted` never does. **Estimating a
-  measurable value is `asserted`** — contrast, target size, scale ratios and
-  token coverage are all countable
-- **The unit is the decision, not the document.** Each decision the deliverable
-  promised carries a grade or sits in the residuals as `UNSPECIFIED`, and a
-  decision in neither is what gets invented at build time by whoever hits it first
+- **Grade each claim**: `measured` supports only what was actually measured;
+  `inspected` is for non-measurable judgement, with its reason and limits;
+  `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
+  `inspected`. A count, convention or preference alone does not establish a defect
+- **The unit is the decision, not the document.** Each promised decision carries
+  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
   claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
-- **Every residual is `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`**
-  and appears in the handoff's `open`; a run holding `Write` also leaves a
-  `#TODO(agent):` marker carrying that class in the document it produced
-- **Never omit the sweep** — markers against `open`, promised decisions against
-  graded ones: `swept, 0 markers; 18 decisions / 18 graded`. While either pair
-  disagrees the status is not `DONE` (`_design/CONTRACT.md`)
+- **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
+  in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
+  At `T0`, name any residual inline without creating a handoff
+- **Never omit coverage**: markers against `open`, promised decisions against
+  graded ones. Report the sweep at `T1`/`T2`; at `T0` evidence its one decision
+  inline. A mismatch forbids `DONE` (`_design/CONTRACT.md`)
 <!-- /deliver:report -->
 
 ## Done when
 
-Every animation names its job, carries duration and easing from the named set,
-specifies its interrupt and reduced-motion behaviour, and touches only
-compositor properties or explains why not.
+Every animation names its job and concrete timing/curve or spring parameters
+with grounds, specifies interruption and reduced behaviour, and records the
+reason and verification status for any non-compositor properties.
 <!-- deliver:surface -->
 - **Write to the reader when they can act on it.** Start: what will be done and what is
   excluded. Mid-run: a divergence from what was agreed, a path found blocked, a value that

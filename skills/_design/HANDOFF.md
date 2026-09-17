@@ -7,7 +7,7 @@ person, or a later session. It is the single place the facts live, and it is the
 (`_design/REPORT.md`), never this object rendered field by field.
 
 **`T0` is the exception** (`_design/SIZING.md`): a one-skill, reversible,
-single-value change returns its one-line answer and no handoff. It still says
+single-decision request returns its answer and no handoff. It still says
 where the number came from — `T0` drops the paperwork, never the evidence.
 
 ## The object
@@ -15,12 +15,12 @@ where the number came from — `T0` drops the paperwork, never the evidence.
 ```yaml
 brief:                        # every field of the brief in _design/SIZING.md
   goal: "<one sentence describing the state once achieved>"
-  delivers: "<a single artifact>"
+  delivers: "<one bounded outcome>"
   axes: [...]                 # every one must hold
-  excludes: [...]             # may not be empty
-  baseline: "<the observed starting state>"
+  excludes: [...]             # may be empty when delivers bounds the scope
+  baseline: "<observed starting state, or n/a with reason>"
   standard: "<what the result is judged against>"
-  open_questions: []          # must be empty; a non-empty one never travels
+  open_questions: []          # scope/authority settled; undecided deliverables go in open
   terms: {}                   # the names this run used, as the glossary spells them
 status: DONE                  # DONE | PARTIAL | BLOCKED  (_design/CONTRACT.md)
 decided: "<what this stage settled, 1-3 lines>"
@@ -36,10 +36,11 @@ next: "<the skill that should receive this, or none>"
   Rewriting the brief downstream is the main route by which scope creeps, and in
   design it is invisible: the artifact still looks like the thing that was asked for
 - **The keys of `evidence` are decisions, not files** (`_design/CONTRACT.md`).
-  A document arriving with one entry is a document whose decisions were not counted
-- **`standard` travels or the receiver cannot judge anything.** A critique with
-  no standard is preference; a token set with no direction behind it is
-  descriptive, and the handoff says which it is
+  One entry is enough only for one promised decision; a file-level grade must
+  not hide several decisions
+- **`standard` travels with its authority.** A fallback judgement basis is not
+  an adopted requirement. A token set with no direction behind it is descriptive,
+  and the handoff says so
 - **`open` carries a class and the class decides what happens.** `BLOCKED` and
   `UNSPECIFIED` stop the chain and go back to the human; `DEFERRED` and
   `OUT-OF-SCOPE` travel as record, so the receiver learns what was already

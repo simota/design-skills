@@ -1,6 +1,6 @@
 ---
 name: design-direction
-description: "Deciding how a UI should look and feel before it is built: art direction, typography, colour intent, layout system, and a written design brief. Use when output lands on a generic default."
+description: "Choosing a UI's look and feel: art direction, typography, colour intent, layout system and design brief. Use to set or change the intended aesthetic, including an existing product."
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 <!-- design:contract -->
@@ -24,32 +24,29 @@ Phases: `BRIEF → REFERENCE → DIRECTION → SPEC → HANDOFF`.
 - **Read the product's existing surfaces** if any exist. A direction that
   ignores what is already shipped is a redesign proposal wearing a brief's name
 <!-- deliver:sizing -->
-- **Size it before anything else**, first match wins. `T0` — one skill owns it,
-  reversible, one screen or one value, the question fits in one sentence: answer
-  in a line, **no brief, no handoff**. `T1` — a `T0` condition fails: settle the
-  brief first. `T2` — two or more skills own parts of it: route it. `T0` drops
-  the paperwork, never the evidence. Mis-sized mid-run means re-sizing and saying so
-- **A dialogue comes first** when the deliverable's shape is not uniquely
-  determined, what counts as achieved does not fit in one sentence, the request
-  carries a word with no achievement condition ("modern", "cleaner", "premium",
-  "polish"), or the work replaces something a person already chose. Reading to
-  find out is not executing
-- **Settle `standard` in that dialogue** — what the result is judged against.
-  Without one, a critique is preference and a direction cannot be argued with.
-  `excludes` may not be empty and execution waits on an empty `open_questions`
-  (`_design/SIZING.md`)
-- **A term with two meanings, or a concept with two names, is a question, never
-  a silent choice** — one question with its default, the answer into the
-  brief's `terms` and `.agents/glossary.md`, and the glossary's names only from
-  then on (`_design/SIZING.md` § Terms)
+- **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
+  result — answer with grounds and evidence, **no brief, no handoff**. A screen
+  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
+- **Read before asking.** Dialogue is required for unresolved scope, achievement
+  conditions or authority to change a prior choice, not for facts the request or
+  artifacts already settle. Unresolved "premium" or "cleaner" still needs a basis
+- **Bound the brief.** State `standard` or a fallback judgement basis, meaningful
+  `axes` (one may suffice), and `excludes` when `delivers` does not already bound
+  scope. `open_questions` holds scope/authority gaps; clear it before executing.
+  Promised design decisions are made during the work, never silently left to build
+- **Use the host glossary.** Ask about material ambiguity, record settled `terms`;
+  read-only runs propose glossary changes, never write them (`_design/SIZING.md`)
 <!-- /deliver:sizing -->
 <!-- deliver:ground -->
-- **Every literal value names its ground.** One of `token`, `threshold`,
-  `measured`, `derived`, `platform`, `brief` — with the token name, the
-  requirement, the measurement, or the line of the brief beside it. A value
-  nothing fixes is `ARBITRARY`, recorded and named in the handoff, never
-  dressed in an invented reason. **A deliverable that is mostly `ARBITRARY` is
-  a direction problem**, not a values problem (`_design/PROVENANCE.md`)
+- **Every literal value names its ground**: `token`, `threshold`, `measured`,
+  `derived`, `platform`, or `brief`, with its actual source beside it. Nothing
+  fixes it: `ARBITRARY`, even with a taste rationale. Record it in the handoff
+  (inline at `T0`); its frequency alone never requires a direction redo
+- **Origin is not conformance.** A limit constrains a choice; satisfying it does
+  not ground the chosen value. Record the test separately. `derived` requires
+  grounded inputs, including scale choices; naming a token or copying an example
+  does not supply them (`_design/PROVENANCE.md`)
 <!-- /deliver:ground -->
 
 ## Decide first
@@ -64,9 +61,9 @@ Phases: `BRIEF → REFERENCE → DIRECTION → SPEC → HANDOFF`.
 | References conflict | Do not average them. Averaging is how directions become generic — scope each to a surface, or make them two of the three considered |
 | No references were supplied | Derive them from the product category, and record in the brief that they were inferred |
 | Greenfield, no brand to inherit | The normal case, not a blocker. Derive adjectives from audience and category; record the absent identity as an assumption |
-| A choice has no reason attached | It is a default in disguise. Either find the reason or make a different choice |
+| A choice has no reason attached | State the intended effect and trade-off; do not invent a source that fixes its literal values |
 | A claim here would be expensive to get wrong | [refute](refute.py) — put it to the engines that did not make it, asked to break it rather than to agree. Unrefuted is n engines finding nothing, never proof |
-| A value in the brief has no ground | Say so as `ARBITRARY` and move on. **This set's grounds mostly originate here** — a downstream deliverable full of `ARBITRARY` is this skill's output being thin, not that skill's failure |
+| A value in the brief has no ground | Record `ARBITRARY`. Settled intent can leave values unconstrained; their number alone is not evidence of a thin direction |
 <!-- deliver:values -->
 - Ties break by `_design/VALUES.md`, read top to bottom: honesty over speed ·
   mechanism over intent · subtraction over addition · the decision over the
@@ -105,22 +102,20 @@ says so rather than implying more.
 - **A direction is falsifiable or it is decoration.** State what would show it
   wrong: which adjective it would fail to convey, on which surface
 <!-- deliver:report -->
-- **Grade every claim**: `measured` (a value read off the artifact) supports
-  completion; `inspected` (read and reasoned over) only where nothing can be
-  measured and the entry says why; `asserted` never does. **Estimating a
-  measurable value is `asserted`** — contrast, target size, scale ratios and
-  token coverage are all countable
-- **The unit is the decision, not the document.** Each decision the deliverable
-  promised carries a grade or sits in the residuals as `UNSPECIFIED`, and a
-  decision in neither is what gets invented at build time by whoever hits it first
+- **Grade each claim**: `measured` supports only what was actually measured;
+  `inspected` is for non-measurable judgement, with its reason and limits;
+  `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
+  `inspected`. A count, convention or preference alone does not establish a defect
+- **The unit is the decision, not the document.** Each promised decision carries
+  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
   claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
-- **Every residual is `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`**
-  and appears in the handoff's `open`; a run holding `Write` also leaves a
-  `#TODO(agent):` marker carrying that class in the document it produced
-- **Never omit the sweep** — markers against `open`, promised decisions against
-  graded ones: `swept, 0 markers; 18 decisions / 18 graded`. While either pair
-  disagrees the status is not `DONE` (`_design/CONTRACT.md`)
+- **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
+  in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
+  At `T0`, name any residual inline without creating a handoff
+- **Never omit coverage**: markers against `open`, promised decisions against
+  graded ones. Report the sweep at `T1`/`T2`; at `T0` evidence its one decision
+  inline. A mismatch forbids `DONE` (`_design/CONTRACT.md`)
 <!-- /deliver:report -->
 
 ## Done when

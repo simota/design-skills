@@ -4,9 +4,12 @@
 Purpose: Named duration and easing values, plus the rule that assigns them.
 Read when: choosing a value, or naming one for `design-tokens` to store.
 Source: none — nothing outside this page can move what it states.
-Verified: 2026-08-21 — no automated check.
+Verified: 2026-09-17 — reviewed as illustrative values, not external authority; no automated check.
 
-Named values, plus the rule that assigns them. Store the results via `design-tokens`.
+Illustrative house values, not universal limits or published platform values.
+Choosing these examples is `ARBITRARY` unless an independent source fixes the
+choice. A calculated step still needs grounded base and step policy. Select and
+record concrete values, then use `design-tokens` for naming and storage.
 
 ## Duration
 
@@ -18,7 +21,7 @@ Named values, plus the rule that assigns them. Store the results via `design-tok
 --duration-slower:  400ms;
 ```
 
-Assignment rule — pick by **travel distance and area changed**, not by component type:
+Illustrative associations to compare in context; travel distance and area do not uniquely fix timing:
 
 | Change | Token |
 |--------|-------|
@@ -28,7 +31,7 @@ Assignment rule — pick by **travel distance and area changed**, not by compone
 | Half-screen: modal, drawer, sheet | `slow` |
 | Full screen: route, page-level | `slower` |
 
-Exit duration is **one scale step below entry** — 300→200, 200→150, 150→100. Entering asks for attention; leaving should get out of the way. (Stated as a step, not a ratio: a 0.75× rule yields 225ms, which is not on the scale.)
+Choose exit behaviour for the interaction, including reversal and interruption. No universal step-down or entry/exit ratio is implied by this example scale.
 
 ## Easing
 
@@ -40,7 +43,7 @@ Exit duration is **one scale step below entry** — 300→200, 200→150, 150→
 --ease-emphasis: cubic-bezier(0.34, 1.56, 0.64, 1);
 ```
 
-Assignment rule:
+Illustrative pairings, not restrictions on other curves or physics-based responses:
 
 | Situation | Easing |
 |-----------|--------|
@@ -50,20 +53,14 @@ Assignment rule:
 | Continuous, indeterminate | `linear` |
 | One confirming or celebratory moment | `emphasis` |
 
-`--ease-out` is the default. When unsure, use it — decelerating motion reads as responsive because most of the travel happens immediately.
+Use the existing response model where applicable. A reference pairing is not evidence that it suits this interaction.
 
 ## Spring alternative (native)
 
-On iOS and Android, springs describe motion better than curves, especially for gesture-driven interaction where the spring inherits the gesture's velocity.
-
-| Token | Response | Damping | Feels |
-|-------|----------|---------|-------|
-| `spring-snappy` | 0.25 | 1.0 | Crisp, no overshoot |
-| `spring-default` | 0.35 | 0.9 | Slight settle |
-| `spring-gentle` | 0.5 | 1.0 | Soft, deliberate |
-| `spring-bouncy` | 0.4 | 0.7 | Visible overshoot; use once |
-
-Match a curve-based web spec to a spring-based native spec by feel, not by numbers — a 300ms `ease-out` is roughly `spring-default`.
+A velocity-driven gesture may need a spring model. Name the actual platform API,
+parameter meanings, units and source. A curve duration has no universal conversion
+to a spring's parameters. Compare rendered behaviour, then record the concrete
+chosen model and parameters; do not leave the conversion to the implementer.
 
 ## Delay and stagger
 
@@ -75,9 +72,9 @@ Match a curve-based web spec to a spring-based native spec by feel, not by numbe
 
 Rules:
 - Stagger reveals order, so use it only where order carries meaning.
-- Total stagger across a group must not exceed ~200ms. Beyond that, the last item feels broken.
-- Cap the staggered set at ~6 items; animate the rest as a group.
-- Never stagger a list the user is scrolling through.
+- Measure total group delay and input availability where an artifact runs.
+- Choose the grouping for the task; there is no universal element-count cap.
+- Do not delay access to content the user is already scrolling through.
 
 ## Loop durations
 

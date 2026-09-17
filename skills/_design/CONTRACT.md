@@ -6,8 +6,9 @@ satisfying this has reported a wish.
 
 ## Evidence grades
 
-Design output cannot be run, so the grade is about **where the number came
-from**, not whether a program executed.
+Grade the claim actually supported by the artifact. Reading a declared value
+is not measuring runtime behaviour; measuring a count is not proving that the
+count is wrong or that a visual judgement is true.
 
 | Grade | Means | Supports `DONE`? |
 |---|---|---|
@@ -68,7 +69,8 @@ a redesign nobody agreed to.
 
 ## The completion sweep — never omitted
 
-Before reporting, run both halves and state both results:
+Before reporting, run both halves. `T0` includes coverage and evidence in its
+answer; it creates no handoff or separate sweep report. Other tiers state both results:
 
 1. **Markers introduced by this run** — every one appears in `open` with a
    matching class

@@ -24,23 +24,20 @@
   expect: design-a11y
 - ask: "keyboard users cannot reach the dialog"
   expect: design-a11y
-- ask: "do a design review of this screen"
-  expect: design-critique
-- ask: "something feels off here and I cannot say what"
-  expect: design-critique
 - ask: "does this look good, or is the composition off"
   expect: design-review
 - ask: "take a screenshot and tell me your first impression"
   expect: design-review
 - ask: "the visual hierarchy is weak, nothing draws the eye"
   expect: design-review
-# Neighbours that must keep winning. design-review's signals are the longest in
-# the set, and longest-match is the tie-break, so the boundary it introduced is
-# pinned from both sides or it is not pinned at all.
-- ask: "the layout composition feels off"
-  expect: design-critique
+# Neighbours that must keep winning; this remains a lexical proxy, not a model test.
 - ask: "give me a UI audit of this screen"
   expect: design-critique
 - ask: "does this meet the WCAG contrast requirement"
   expect: design-a11y
-
+# Discovered failures: screenshot selected a whole-verdict owner for itemisation;
+# "feels off" selected itemisation when the request asked about the whole.
+- ask: "List spacing inconsistencies and text-size problems in this screenshot, by location."
+  expect: design-critique
+- ask: "The colour feels off. Does this screen look calm and hold together as a whole?"
+  expect: design-review

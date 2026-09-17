@@ -34,7 +34,7 @@ tokenise:
 
 review:
   pattern: report-only
-  when: "is this any good, what should change"
+  when: "itemise individual issues, inconsistencies or judgements and who should address them"
   chain: [design-critique]
   stops_at: "findings ranked by user impact, each with a fix and an owner. Nothing is redesigned"
 
@@ -62,5 +62,5 @@ look-then-itemise:
   pattern: linear
   when: "the whole reads wrong and the parts have to be named"
   chain: [design-review, design-critique]
-  gate: "the verdict names which principle failed before the itemised pass starts"
+  gate: "pass the scoped verdict and its observations with their evidence grades; a whole-screen judgement is not proof of an itemised defect"
 

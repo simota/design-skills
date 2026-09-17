@@ -1,7 +1,7 @@
 <!-- design:guidance -->
 # Purpose
 
-Motion earns its place by doing a job. Name the job first; the values follow from it.
+Motion earns its place by doing a job. The job constrains values; it does not uniquely determine or ground them.
 
 ## The four jobs
 
@@ -18,9 +18,9 @@ If a proposed animation does not map to one of these, it is decoration. Decorati
 
 Ask, in order:
 
-1. Remove the animation entirely — is anything now confusing? If no, remove it.
-2. Halve the duration — is anything lost? If no, keep the shorter one.
-3. State the interaction's per-session frequency and check it against the Frequency table below — animations are designed once and experienced thousands of times, so frequency sets the duration ceiling.
+1. Remove the animation — does this lose necessary information or an expressly agreed expressive purpose? If neither, remove it.
+2. Compare a shorter version where a prototype exists. State what was observed, not a duration justified by habit.
+3. Use measured usage frequency or the brief when assessing cumulative delay; where neither exists, say it is unknown.
 4. Does it delay the user's next action? If yes, it must be interruptible or removed.
 
 ## Expressive vs functional
@@ -29,24 +29,22 @@ Set the restraint level from the direction, and hold it.
 
 | Level | Motion budget | Fits |
 |-------|--------------|------|
-| Functional | Feedback and orientation only; ≤200ms typical | Professional tools, dense products, high-frequency use |
-| Balanced | Adds continuity transitions; one emphasis moment per flow | General product UI |
+| Functional | Feedback and orientation without delaying the next action | Professional tools, dense products, high-frequency use |
+| Balanced | Adds continuity and selective emphasis where it serves the task | General product UI |
 | Expressive | Choreographed entries, staggered reveals, emphasis easing | Marketing, onboarding, consumer moments |
 
 A product may be functional in the app shell and expressive in marketing. State the boundary.
 
-## Frequency governs duration
+## Frequency and duration
 
-| Frequency | Duration ceiling |
-|-----------|-----------------|
-| Many times per session (toggles, hovers, rows) | 150ms |
-| Several times per session (modals, drawers) | 300ms |
-| Once per session (onboarding, first success) | 400ms, expressive permitted |
-| Once ever (first-run celebration) | Longer permitted, must be skippable |
+Repeated delay accumulates, but frequency alone fixes no duration ceiling.
+A project budget needs its source and conditions. Keep any remaining choice
+explicitly `ARBITRARY`, and test the proposed interaction rather than inventing
+usage counts or a universal timing limit.
 
 ## Anti-patterns
 
-| Pattern | Why it fails |
+| Pattern | Risk to inspect, not an automatic conformance verdict |
 |---------|--------------|
 | Scroll-triggered fade-in on body content | Delays reading; the content is why they came |
 | Loading animation longer than the load | Motion inventing latency |

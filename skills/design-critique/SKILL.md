@@ -1,6 +1,6 @@
 ---
 name: design-critique
-description: "Reviewing an interface and reporting what to change: design review, UI audit, heuristic evaluation, craft and drift findings ranked by severity, with fixes. Report-only. Use when something feels off."
+description: "Itemising UI issues: defects, inconsistencies and judgement calls; list differences with evidence, severity, fixes and owners. Use for a UI audit of craft or drift. Report-only."
 allowed-tools: Read, Grep, Glob, Bash
 ---
 <!-- design:contract -->
@@ -16,40 +16,36 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
 ## Before starting
 
 - **Establish the standard and name it** — the brief, the token system, the
-  spec, platform convention, or stated heuristics. **Critique without a standard
-  is preference.** Where none exists, descend the ladder and say which rung you
-  landed on rather than stalling
+  spec, platform convention, or stated heuristics. Without an adopted standard,
+  name the fallback lens and report reasoned judgements, not invented requirements
 - **Get the artifact, not a description of it.** Reviewing a summary reviews the
   summary. Where only a screenshot exists, say so: values become estimates
 - **Scope it before looking** — which screens, states, breakpoints, themes. What
   is outside that list is reported as not reviewed, never as fine
 <!-- deliver:sizing -->
-- **Size it before anything else**, first match wins. `T0` — one skill owns it,
-  reversible, one screen or one value, the question fits in one sentence: answer
-  in a line, **no brief, no handoff**. `T1` — a `T0` condition fails: settle the
-  brief first. `T2` — two or more skills own parts of it: route it. `T0` drops
-  the paperwork, never the evidence. Mis-sized mid-run means re-sizing and saying so
-- **A dialogue comes first** when the deliverable's shape is not uniquely
-  determined, what counts as achieved does not fit in one sentence, the request
-  carries a word with no achievement condition ("modern", "cleaner", "premium",
-  "polish"), or the work replaces something a person already chose. Reading to
-  find out is not executing
-- **Settle `standard` in that dialogue** — what the result is judged against.
-  Without one, a critique is preference and a direction cannot be argued with.
-  `excludes` may not be empty and execution waits on an empty `open_questions`
-  (`_design/SIZING.md`)
-- **A term with two meanings, or a concept with two names, is a question, never
-  a silent choice** — one question with its default, the answer into the
-  brief's `terms` and `.agents/glossary.md`, and the glossary's names only from
-  then on (`_design/SIZING.md` § Terms)
+- **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
+  result — answer with grounds and evidence, **no brief, no handoff**. A screen
+  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
+- **Read before asking.** Dialogue is required for unresolved scope, achievement
+  conditions or authority to change a prior choice, not for facts the request or
+  artifacts already settle. Unresolved "premium" or "cleaner" still needs a basis
+- **Bound the brief.** State `standard` or a fallback judgement basis, meaningful
+  `axes` (one may suffice), and `excludes` when `delivers` does not already bound
+  scope. `open_questions` holds scope/authority gaps; clear it before executing.
+  Promised design decisions are made during the work, never silently left to build
+- **Use the host glossary.** Ask about material ambiguity, record settled `terms`;
+  read-only runs propose glossary changes, never write them (`_design/SIZING.md`)
 <!-- /deliver:sizing -->
 <!-- deliver:ground -->
-- **Every literal value names its ground.** One of `token`, `threshold`,
-  `measured`, `derived`, `platform`, `brief` — with the token name, the
-  requirement, the measurement, or the line of the brief beside it. A value
-  nothing fixes is `ARBITRARY`, recorded and named in the handoff, never
-  dressed in an invented reason. **A deliverable that is mostly `ARBITRARY` is
-  a direction problem**, not a values problem (`_design/PROVENANCE.md`)
+- **Every literal value names its ground**: `token`, `threshold`, `measured`,
+  `derived`, `platform`, or `brief`, with its actual source beside it. Nothing
+  fixes it: `ARBITRARY`, even with a taste rationale. Record it in the handoff
+  (inline at `T0`); its frequency alone never requires a direction redo
+- **Origin is not conformance.** A limit constrains a choice; satisfying it does
+  not ground the chosen value. Record the test separately. `derived` requires
+  grounded inputs, including scale choices; naming a token or copying an example
+  does not supply them (`_design/PROVENANCE.md`)
 <!-- /deliver:ground -->
 
 ## Decide first
@@ -57,7 +53,7 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
 | Situation | How to proceed |
 |---|---|
 | Running the evaluation | [heuristics](playbooks/heuristics.md) — run each lens deliberately; findings from different lenses do not substitute for each other |
-| Inspecting alignment, spacing, type detail, or responsive behaviour | [craft-audit](playbooks/craft-audit.md) — the measurable layer |
+| Inspecting alignment, spacing, type detail, or responsive behaviour | [craft-audit](playbooks/craft-audit.md) — distinguish measured observations, system departures and judgement |
 | Ranking what you found | [severity](playbooks/severity.md) — by user impact, never by how obvious the finding was |
 | Writing the report | [report-template](reference/report-template.md) — tone rules matter as much as content; a report that reads as an attack does not get acted on |
 | Only one screen of a flow is available | Review it and list the rest as not reviewed. Never infer a flow defect from one screen |
@@ -66,7 +62,7 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
 | The whole misreads, and the itemised findings do not explain why | That is a verdict on the rendered result, and `design-review` owns it. Itemising parts does not add up to it |
 | The design departs from convention deliberately | It may have a reason you cannot see. Ask before ranking it a defect |
 | A claim here would be expensive to get wrong | [refute](refute.py) — put it to the engines that did not make it, asked to break it rather than to agree. Unrefuted is n engines finding nothing, never proof |
-| A finding proposes a value | Ground it like any other. **A critique that says "use 24px" and cannot say why 24 has produced an opinion, not a finding** — `ARBITRARY` is the honest label when it is taste |
+| A finding proposes a value | Ground the replacement separately from the finding. An `ARBITRARY` proposed value neither proves nor invalidates the evidenced problem |
 <!-- deliver:values -->
 - Ties break by `_design/VALUES.md`, read top to bottom: honesty over speed ·
   mechanism over intent · subtraction over addition · the decision over the
@@ -88,36 +84,35 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
   revision — this is not politeness
 - Never: edit anything. Report-only means report-only, and a review that quietly
   changed the design cannot be trusted as a review
-- Never: present taste as defect, or critique against a standard the team never adopted
+- Never: present taste as defect, or a fallback heuristic as a standard the team adopted
 - Never: give feedback with no evidence — "feels cluttered", "needs polish"
 - Never: list forty minor findings and bury the two that matter
 
 ## Verify with
 
-A finding on the measurable layer carries the values it came from (evidence:
-`measured`). From a screenshot alone, values are estimates — the finding is
-marked "visual estimate, not measured" and is `inspected`, never dressed as fact.
+Measure countable claims from an available source and name its scope (`measured`).
+Guessed screenshot values are `asserted`, not `inspected`; unavailable values are
+not assessable. A reasoned qualitative concern may be `inspected` without numbers.
+A measured difference is a defect only with evidence of failure, not just difference.
 
 - **A finding that survives no check is `asserted` and does not go in the report**
 - **State the coverage**: what was read, which lenses ran, and what a review of
   this artifact cannot see — production data, real content, the deployed client
 <!-- deliver:report -->
-- **Grade every claim**: `measured` (a value read off the artifact) supports
-  completion; `inspected` (read and reasoned over) only where nothing can be
-  measured and the entry says why; `asserted` never does. **Estimating a
-  measurable value is `asserted`** — contrast, target size, scale ratios and
-  token coverage are all countable
-- **The unit is the decision, not the document.** Each decision the deliverable
-  promised carries a grade or sits in the residuals as `UNSPECIFIED`, and a
-  decision in neither is what gets invented at build time by whoever hits it first
+- **Grade each claim**: `measured` supports only what was actually measured;
+  `inspected` is for non-measurable judgement, with its reason and limits;
+  `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
+  `inspected`. A count, convention or preference alone does not establish a defect
+- **The unit is the decision, not the document.** Each promised decision carries
+  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
   claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
-- **Every residual is `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`**
-  and appears in the handoff's `open`; a run holding `Write` also leaves a
-  `#TODO(agent):` marker carrying that class in the document it produced
-- **Never omit the sweep** — markers against `open`, promised decisions against
-  graded ones: `swept, 0 markers; 18 decisions / 18 graded`. While either pair
-  disagrees the status is not `DONE` (`_design/CONTRACT.md`)
+- **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
+  in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
+  At `T0`, name any residual inline without creating a handoff
+- **Never omit coverage**: markers against `open`, promised decisions against
+  graded ones. Report the sweep at `T1`/`T2`; at `T0` evidence its one decision
+  inline. A mismatch forbids `DONE` (`_design/CONTRACT.md`)
 <!-- /deliver:report -->
 
 ## Done when
