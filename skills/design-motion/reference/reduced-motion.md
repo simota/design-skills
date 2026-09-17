@@ -1,98 +1,64 @@
 <!-- design:deferred -->
 # Reduced Motion
 
-Purpose: What the reduced variant does, per pattern — a designed state, not an absence.
-Read when: specifying the reduced-motion behaviour of anything that moves.
-Source: WCAG 2.2 SC 2.3.3; CSS Media Queries Level 5 `prefers-reduced-motion` — both move without this page.
-Verified: 2026-08-21 — no automated check.
+Purpose: Preserve state and information when reducing or removing motion.
+Read when: specifying reduced-motion behaviour, including a static variant.
+Source: WCAG 2.2 SC 2.3.3; CSS Media Queries Level 5 `prefers-reduced-motion`.
+Verified: 2026-09-17 — checked the named sources for reduced behaviour; no automated check.
 
-`prefers-reduced-motion: reduce` is a designed variant, not a switch that deletes transitions.
+A reduced variant is a decided behaviour, not necessarily another animation.
+Instant changes and static feedback are valid when information and operation survive.
+No duration or opacity effect is guaranteed suitable for every user.
 
-## What the preference means
+## Substitution choices
 
-Users set it for vestibular disorders, migraine, motion sickness, attention needs, or simple preference. The triggering factor is **large-area movement, parallax, scaling, and rotation** — not motion in general. A 100ms opacity fade is not a trigger.
+| Full motion | Reduced behaviour to decide |
+|-------------|-----------------------------|
+| Slide, zoom or scale | Instant placement, or a justified reduced effect |
+| Staggered reveal | Content available together |
+| Skeleton shimmer | Static placeholders |
+| Spinner | Static indicator and status text |
+| Parallax | Fixed layers |
+| Background video | Poster frame, play on request |
+| Auto-advance | Manual control |
+| Error shake | Static error indication; retain the UX-specified focus behaviour |
+| List reorder or route transition | Immediate final state with any required context |
+| Progress | Actual state without decorative motion |
 
-## Substitution table
+Use the preference exposed by the target platform. On the web, CSS Media Queries
+Level 5 defines `prefers-reduced-motion`; on native platforms, consult the actual
+platform documentation before naming an API or treating a setting as equivalent.
 
-| Full motion | Reduced variant |
-|-------------|-----------------|
-| Slide in from edge | Cross-fade, 100ms |
-| Scale + fade modal | Fade only, 100ms |
-| Staggered list reveal | All at once, or instant |
-| Skeleton shimmer | Static neutral blocks |
-| Spinner | Static indicator plus text |
-| Parallax | None — the layer is fixed |
-| Auto-playing background video | Static poster frame, play on request |
-| Carousel auto-advance | Manual control only |
-| Error shake | Static error styling plus focus move |
-| FLIP list reorder | Instant reposition |
-| Route transition | Instant |
-| Progress bar | Keep — it conveys real state; remove any shimmer on it |
+## State must not depend on animation completion
 
-## Implementation shape
+Removing an animation must not strand the UI. State transitions and completion
+of work are independent of animation-end events. Do not rely on an almost-zero
+duration to guarantee callbacks. Specify what cancellation, interruption and
+instant completion do, including any announcement or focus destination owned by UX.
 
-Prefer a token-level override so every consumer inherits it:
+## Conformance and guidance have different authority
 
-```css
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --duration-instant: 0.01ms;
-    --duration-fast:    0.01ms;
-    --duration-base:    0.01ms;
-    --duration-slow:    0.01ms;
-    --duration-slower:  0.01ms;
-  }
-}
-```
+WCAG 2.2 SC 2.3.3 addresses disabling non-essential interaction-triggered motion
+at Level AAA. It does not prescribe an alternative animation or a safe duration.
+Ask `design-a11y` to adjudicate applicable criteria, including pausing movement
+and flash limits, with their conditions and exceptions. A reduced-motion variant
+alone is not a conformance verdict.
 
-Then re-introduce the deliberate short fades where they aid comprehension:
+Large moving areas, parallax, zoom and rotation deserve particular scrutiny;
+this is risk guidance, not permission to fabricate a criterion failure or a
+universal safety threshold. Prefer a static choice where motion adds no needed information.
 
-```css
-@media (prefers-reduced-motion: reduce) {
-  .modal { transition: opacity 100ms linear; transform: none; }
-  .skeleton { animation: none; }
-}
-```
+## Verify
 
-Notes:
-- `0.01ms` rather than `0` keeps `transitionend` and `animationend` handlers firing, so state machines depending on them do not stall.
-- Never gate functionality on an animation completing — under reduced motion the callback may effectively be immediate.
-- On native, read `UIAccessibility.isReduceMotionEnabled` (iOS) or `Settings.Global.TRANSITION_ANIMATION_SCALE` (Android) and branch the same way.
+Exercise full and reduced behaviour on the target platform or an appropriate
+emulation. Record the artifact, preference, state changes and input tested.
+A design-only spec can be inspected for completeness; runtime behaviour remains
+unverified until exercised. Neither a screenshot nor a stated variant proves it runs.
 
-## Vestibular safety (applies to everyone, not only the preference)
+- Retain all required states, information and controls.
+- Specify interruption and the instant path without animation-end dependencies.
+- Keep progress tied to actual work, not elapsed animation time.
+- Record missing runtime tests rather than reporting a pass.
 
-Two lists, because they carry different authority. This skill designs against both but **adjudicates neither** — flag anything in the first list for `design-a11y`, which owns SC 2.2.2 / 2.3.1 / 2.3.3.
-
-**Conformance (WCAG 2.2) — flag for `design-a11y` verification:**
-
-- Nothing may flash more than three times per second (SC 2.3.1, Level A).
-- Motion that starts without user action and lasts more than 5s needs a pause, stop, or hide control (SC 2.2.2, Level A).
-- Non-essential motion triggered by interaction can be disabled (SC 2.3.3, Level AAA).
-
-**House guidance (not conformance, no citable source) — apply by default, drop when the direction argues otherwise:**
-
-- Avoid full-bleed movement; the larger the moving area, the stronger the trigger.
-- Avoid large-scale zoom and rotation on big surfaces.
-- Avoid parallax between layers.
-
-## Testing
-
-| Platform | How to enable |
-|----------|---------------|
-| macOS | System Settings → Accessibility → Display → Reduce motion |
-| iOS | Settings → Accessibility → Motion → Reduce Motion |
-| Windows | Settings → Accessibility → Visual effects → Animation effects off |
-| Android | Settings → Accessibility → Remove animations |
-| Chrome DevTools | Rendering panel → Emulate CSS media `prefers-reduced-motion` |
-
-Test both variants for every animated moment specified. A reduced variant that was never run is a guess.
-
-## Checklist
-
-- [ ] Every animation in the spec has a stated reduced variant
-- [ ] No functionality depends on an animation completing
-- [ ] No loop runs under reduced motion
-- [ ] Progress indicators still convey state
-- [ ] Nothing flashes more than 3×/second in either variant (SC 2.3.1 — flag for `design-a11y`)
-- [ ] Auto-playing motion over 5s has a pause control (SC 2.2.2 — flag for `design-a11y`)
-- [ ] Both variants tested on a real device or emulated media
+Sources checked: [WCAG SC 2.3.3 explanation](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html)
+and [CSS preference definition](https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion).

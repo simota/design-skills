@@ -4,9 +4,12 @@
 Purpose: Concrete transition specifications: trigger, properties, values, interrupt, reduced variant.
 Read when: specifying a named transition rather than inventing one.
 Source: none — nothing outside this page can move what it states.
-Verified: 2026-08-21 — no automated check.
+Verified: 2026-09-17 — reviewed the example/requirement boundary; no automated check.
 
-Concrete specifications. Each entry states trigger, properties, values, interrupt behaviour, and the reduced-motion variant.
+Illustrative specifications, not universal defaults. Their literal choices are
+`ARBITRARY` when copied without an independent ground. Adapt and explicitly settle
+trigger, properties, concrete values, interruption and reduced behaviour; static
+feedback is allowed. UX owns the underlying states and feedback semantics.
 
 ## Spec format
 
@@ -27,12 +30,12 @@ Concrete specifications. Each entry states trigger, properties, values, interrup
 - Backdrop: `opacity` 0→1, 200ms `ease-out`.
 - Panel: `opacity` 0→1 and `scale` 0.97→1 with `translateY` 8px→0, 300ms `ease-out`.
 - Exit: reverse, 200ms `ease-in`.
-- Never animate `width`/`height`; the panel is sized before it appears.
+- Prefer sizing the panel before it appears; a purposeful resize needs a measured layout-cost check on a running artifact.
 - Focus moves in on open, returns to the trigger on close. Escape closes at any point during the animation.
 
 ### Drawer / sheet
 - `translateX` (or `translateY` for bottom sheets) from the edge it belongs to, 300ms `ease-out`.
-- Enters from the same edge it exits to — always. Breaking this destroys orientation.
+- For a fixed-edge sheet, use its anchored edge on entry and exit. Other navigation models may require different paths.
 - Gesture-driven drawers follow the finger 1:1, then complete with velocity-matched motion on release.
 
 ### Dropdown / popover
@@ -73,7 +76,7 @@ Concrete specifications. Each entry states trigger, properties, values, interrup
 
 ### Toggle / switch
 - Thumb `translateX`, 150ms `ease-out`. Track colour over the same duration.
-- The thumb leads; colour follows. Simultaneous change reads flat.
+- Compare coordinated thumb and colour changes; simultaneity is not inherently a defect.
 
 ### Success confirmation
 - One `emphasis`-eased moment, ≤400ms, then settle. Checkmark draw or scale-in.
@@ -93,12 +96,14 @@ Concrete specifications. Each entry states trigger, properties, values, interrup
 - Under reduced motion: static neutral blocks, no shimmer.
 
 ### Spinner
-- 800ms–1s `linear` rotation. Only for indeterminate waits under 10s.
-- Beyond 10s, switch to determinate progress with steps or percentage.
+- The loop above is an illustrative choice, not a wait-duration requirement.
+- UX owns the waiting state. Elapsed time does not make unknown progress measurable;
+  show a percentage only when actual progress data supports it.
 
 ### Progress
-- `linear` easing, since it maps to real time.
-- Never animate backwards. If an estimate was wrong, hold and continue.
+- Present actual progress, which need not advance uniformly with time.
+- Do not hide a correction or rollback to preserve an animation. Reflect the state
+  and explain it; motion must not fabricate completion or a percentage.
 
 ## Gestures
 
@@ -116,4 +121,4 @@ Gesture-driven motion must be reversible mid-gesture. If the user changes their 
 
 - In an app shell, prefer no route transition. The cost is paid on every navigation.
 - Where used: cross-fade 150ms, or a shared-element transition when a specific object persists across the two views.
-- Never a full-screen slide for lateral navigation between peers — it implies a hierarchy that is not there.
+- Choose a path that matches the actual navigation model; lateral peers can be spatial without implying a parent/child hierarchy.

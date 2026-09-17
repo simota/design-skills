@@ -38,7 +38,9 @@ Independent of severity, mark each finding:
 | `inconsistency` | Violates the project's own system or its own prior decisions |
 | `judgement` | A defensible alternative view; the current choice is not wrong |
 
-A `judgement` finding is never above Moderate. If you cannot classify a finding as defect or inconsistency, it is a judgement — say so rather than inflating it.
+A `judgement` finding is never above Moderate and needs a concrete observation and
+a defensible reason. Not being a defect does not make a preference defensible;
+label pure taste separately rather than turning it into a ranked finding.
 
 ## Tie-breaks
 
@@ -65,5 +67,5 @@ findings are never folded away to make the list shorter.
 | A confusing primary action as Moderate | Serious or Blocker — it is the screen's job |
 | A missing empty state as Minor | Moderate at least — it is a state real users will hit first |
 | Failing contrast on body text as Minor | Serious — it excludes users |
-| Personal taste as a defect | Note, classified `judgement` |
+| Personal taste as a defect | Label taste separately; it is not a ranked finding or a release blocker |
 | Twelve instances of one problem as twelve findings | One aggregated finding with a count |

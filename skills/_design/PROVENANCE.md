@@ -14,8 +14,8 @@ remembers whether it was chosen. The output reads as a system while being a
 pile of coincidences, and the next person cannot tell which values are load
 bearing, so they change none of them.
 
-**Taste is not the problem. Untraceable taste is.** A value chosen on judgement
-is grounded the moment the judgement is written next to it.
+**Taste is not the problem. Untraceable taste is.** Recording a judgement makes
+it traceable, not grounded: if nothing fixes the value, it remains `ARBITRARY`.
 
 ## The six grounds
 
@@ -23,12 +23,12 @@ Every literal value in a deliverable names exactly one.
 
 | Ground | Means | What must appear beside the value |
 |---|---|---|
-| `token` | It is a named value in the system | The token name |
-| `threshold` | A published requirement fixes it | Which one, and its number — `WCAG 1.4.3, 4.5:1` |
+| `token` | It resolves to an existing system value | The token name, definition and theme |
+| `threshold` | The value is a published requirement's limit | The source, criterion, limit and applicable case |
 | `measured` | As the evidence grade of that name (`_design/CONTRACT.md`): read off what already exists | What was measured, and where |
-| `derived` | Computed from a grounded value by a stated rule | The rule — `base x 1.25, fourth step` |
-| `platform` | A platform convention, cited | The convention and its source |
-| `brief` | The direction or the request fixes it | The line of the brief it comes from |
+| `derived` | Computed from grounded inputs by a stated rule | Input sources, including scale factor, step and rounding policy, and the calculation |
+| `platform` | A platform source actually specifies the value | The opened source, version where relevant, and applicable context |
+| `brief` | The direction or request explicitly fixes the value | The originating line; writing a chosen value into the brief is not an independent source |
 
 `ARBITRARY` is the seventh case and is not a ground: the value works, nothing
 fixes it, and nothing above applies. It is recorded, never hidden.
@@ -39,9 +39,9 @@ Values travel in tables, so the ground travels in a column:
 
 | Value | Ground | Source |
 |---|---|---|
-| `--space-3: 12px` | `derived` | 4px base, third step |
-| `#1B4DE4` | `threshold` | 4.51:1 on `--bg-canvas` (WCAG 1.4.3) |
-| `220ms` | `measured` | the existing drawer, timed |
+| computed scale step | `derived` | grounded base and step policy, source locations, calculation |
+| chosen colour | `ARBITRARY` | no source fixes this colour; record its measured contrast separately |
+| observed duration | `measured` | the actual timed transition, conditions and result |
 | `radius 10px` | `ARBITRARY` | reads right at this size; nothing fixes it |
 
 Prose deliverables carry the same thing inline. The form is not the point; the
@@ -54,24 +54,26 @@ runs out of grounds long before it runs out of decisions, and pretending
 otherwise produces invented justifications, which are worse than an honest
 blank.
 
-Two things follow. **Every `ARBITRARY` value is stated in the handoff**, so the
-receiver knows which numbers are safe to move. And **a deliverable whose values
-are mostly `ARBITRARY` is a direction problem, not a values problem** — the
-grounds are missing because the brief never fixed anything, and the fix is
-upstream in `design-direction`, not a row of invented rationales.
+**Record every `ARBITRARY` value in the handoff, or inline at `T0`.** It is a
+settled choice, not automatically an unresolved decision or permission to ignore
+constraints. Its frequency alone is not a direction problem. Return upstream
+only when an intent needed for this work is actually undecided.
 
 ## Boundary cases
 
 - **A ground written after the value was chosen** is still a ground, if it is
   true. The test is whether it *fixes* the value — whether a different value
   would violate it. "It felt balanced" fixes nothing and is `ARBITRARY`
-- **`token` requires the token to exist.** Naming a token that has not been
-  defined is `ARBITRARY` with a better-looking source
+- **`token` requires a resolvable definition.** Naming a new primitive does not
+  ground its underlying value; preserve that value's origin through aliases
+- **`derived` does not launder a choice.** An ungrounded base, factor or policy
+  leaves the proposed value `ARBITRARY`; record the formula anyway
 - **Copying from a reference implementation** is `measured` only when the
   reference was actually opened and read. Recalling what a well-known product
   does is `ARBITRARY`
-- **A report-only skill grounds its proposed values too.** A critique that says
-  "use 24px here" and cannot say why 24 has produced an opinion, not a finding
-- **One value, one ground.** Where two apply, the stricter one wins: a token
-  that also satisfies a threshold is `threshold`, because that is the one a
-  future change can break
+- **A report-only skill grounds its proposed values too.** The evidence for a
+  finding and the origin of its proposed replacement value are separate claims
+- **One value, one ground; constraints are separate.** Meeting a contrast floor
+  does not fix a colour. Keep its actual origin (including `token` or `ARBITRARY`)
+  and record the applicable limit and computed test separately. A later true
+  source may be recorded; a rationale that merely permits the value is not one

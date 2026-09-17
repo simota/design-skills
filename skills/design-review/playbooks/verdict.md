@@ -33,8 +33,8 @@ Reference alone is envy, and principle alone is an audit nobody felt.
 
 ## Phrasing
 
-- **Describe, then judge.** "The primary action is the third-heaviest element on
-  the screen, so the eye reaches it last" beats "the hierarchy is bad"
+- **Describe, then judge.** Name what stood out and what was missed in this
+  viewing. A visual-weight rank does not measure eye order or predict every user
 - **Say the strengths with the same specificity.** "It looks nice overall" is
   the same non-statement as "it looks off", and it is the half that gets deleted
   in the next revision because nobody knew it was load bearing

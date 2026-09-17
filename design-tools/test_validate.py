@@ -89,8 +89,8 @@ def _(r): sub(r / "design-registry/capabilities.yaml", "signals: [motion, durati
 
 @case("V10")
 def _(r): sub(r / "design-registry/fixtures.yaml",
-              '- ask: "do a design review of this screen"\n  expect: design-critique',
-              '- ask: "do a design review of this screen"\n  expect: design-tokens')
+              '- ask: "give me a UI audit of this screen"\n  expect: design-critique',
+              '- ask: "give me a UI audit of this screen"\n  expect: design-tokens')
 
 
 @case("V11")
@@ -128,7 +128,7 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Done when", "## Finished when")
 
 
 @case("V17")
-def _(r): sub(r / f"{S}design-ux/SKILL.md", "- **Grade every claim**", "- **Grade some claims**")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "- **Grade each claim**", "- **Grade some claims**")
 
 
 @case("V18")
@@ -287,8 +287,8 @@ def _(r): sub(r / "design-registry/harness.yaml", "linked_tools:", "unlinked_too
 
 
 @case("V35")
-def _(r): sub(r / f"{S}design-a11y/SKILL.md", "offered as `ARBITRARY` has not",
-              "offered without a ground has not")
+def _(r): sub(r / f"{S}design-a11y/SKILL.md", "including `ARBITRARY`; record",
+              "including an ungrounded one; record")
 
 
 @case("V36")
@@ -321,7 +321,7 @@ def _(r): sub(r / f"{S}design-a11y/playbooks/content.md", "## ", "verdict: KEEP 
 def _(r):
     """A page that leans on a declared source and does not say so."""
     sub(r / f"{S}design-a11y/reference/wcag22-checklist.md",
-        'Source: WCAG 2.2 — the success criteria below are quoted from that version.',
+        'Source: WCAG 2.2 — summaries, not verbatim criteria; check applicability and exceptions.',
         "Source: none — nothing outside this page can move what it states.")
 
 

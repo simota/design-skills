@@ -26,11 +26,10 @@ is a reading of that file, not a second copy of it.
 **None of these write implementation code.** A design deliverable is a decision
 with its grounds; the build belongs to a skill outside this set.
 
-**Who decides a value.** Four skills produce numbers, so one rule settles it:
-*the skill that decides a value owns it until it is named*, and **`design-tokens`
-owns any value that outlives one screen**. A duration chosen while specifying a
-transition is `design-motion`'s; the same duration stored as `motion.duration.fast`
-is `design-tokens`'.
+**Decision authority is not storage ownership.** The specialist decides the value;
+`design-tokens` owns its reusable name, mapping and export. Naming a duration does
+not authorise changing its motion behaviour. `design-a11y` adjudicates conformance;
+token resolution and pair measurements support that judgement, not replace it.
 
 ## Disambiguation
 
@@ -40,13 +39,13 @@ goes. These rows say *how to tell which case you are in*.
 | Both plausible | Decided by |
 |---|---|
 | direction vs tokens | Is the aesthetic settled? Unsettled → direction. Settled, needs values → tokens |
-| direction vs critique | Does the thing exist yet? Exists → critique. Being decided → direction |
+| direction vs critique | New or revised aesthetic decisions → direction. Itemised evaluation of what exists → critique; existence alone does not decide |
 | ux vs motion | Does the question name a state, or the passage between two? State → ux. Passage → motion |
 | ux vs a11y | Is the failure "nobody can use this" or "some people cannot"? Everyone → ux. Some → a11y |
 | a11y vs critique | **critique flags, a11y adjudicates.** A review may note a contrast risk; whether it conforms is a11y's to decide |
 | critique vs anything | critique never produces the replacement. It says what is wrong and hands the fix to the owner |
 | review vs critique | **review judges the whole, critique itemises the parts.** Is the question "does this hold together" or "what is wrong here"? |
-| review vs direction | Does something rendered exist? Rendered → review. Being decided → direction. A verdict of `holds, thin` is review handing it back to direction |
+| review vs direction | A verdict on a rendering → review. Choosing or changing its intended aesthetic → direction. A poor verdict does not authorise redesign |
 | tokens vs motion | Motion decides the value; tokens decide its name and where it lives |
 
 ## Chains

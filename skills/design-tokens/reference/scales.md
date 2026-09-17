@@ -9,6 +9,9 @@ Verified: 2026-08-21 — the type scale is recomputed from its own stated base a
 carry no check; only the type scale claims to follow from a rule, so only it can be falsified.
 
 Every scale comes from a stated rule. Write the rule next to the values.
+These house examples do not independently ground a project's base, ratio, clamp,
+step count or breakpoint. Unless another source fixes those choices, record
+`ARBITRARY`; recomputing the table proves arithmetic, not their suitability.
 
 ## Spacing
 
