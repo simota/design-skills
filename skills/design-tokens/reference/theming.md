@@ -49,6 +49,7 @@ Verify every text pair again after remapping. A pair passing in light says nothi
   --color-bg-canvas:   var(--gray-0);
   --color-text-primary: var(--gray-950);
   --color-action-bg:    var(--accent-600);
+  --color-on-action:    var(--gray-0);
 }
 
 @media (prefers-color-scheme: dark) {
