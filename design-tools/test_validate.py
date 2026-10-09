@@ -61,6 +61,14 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how an interface behaves"
 def _(r): (r / f"{S}design-ghost").mkdir(); (r / f"{S}design-ghost/SKILL.md").write_text("x")
 
 
+@case("V3-name")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "name: design-ux", "name: design-behaviour")
+
+
+@case("V3-yaml")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "description: \"", "description: \"\"")
+
+
 @case("V4")
 def _(r): (r / f"{S}design-ux/playbooks/orphan.md").write_text("<!-- design:guidance -->\n")
 

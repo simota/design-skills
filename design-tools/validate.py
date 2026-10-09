@@ -64,15 +64,19 @@ def read(p: Path) -> str:
 
 
 def frontmatter(text: str) -> dict:
+    """The frontmatter as the CLI reads it: YAML, or nothing at all.
+
+    A line-by-line split accepted what a YAML loader rejects, so a skill whose
+    listing never loads still passed every rule that reads its description.
+    """
     if not text.startswith("---\n"):
         return {}
-    body = text.split("---\n", 2)[1]
-    out = {}
-    for line in body.splitlines():
-        if ":" in line:
-            k, _, v = line.partition(":")
-            out[k.strip()] = v.strip().strip('"')
-    return out
+    try:
+        data = yaml.safe_load(text.split("---\n", 2)[1])
+    except yaml.YAMLError:
+        return {}
+    return {k: "" if v is None else str(v) for k, v in data.items()} \
+        if isinstance(data, dict) else {}
 
 
 def sections(text: str) -> dict[str, str]:
@@ -121,6 +125,14 @@ def v2_description_terms():
 
 
 def v3_roster():
+    # The listing is keyed by `name`; a name that is not the directory is a
+    # skill the roster below counts and the engine selects under another word.
+    for d in SKILL_DIRS:
+        fm = frontmatter(read(d / "SKILL.md"))
+        if not fm:
+            fail("V3", f"{d.name}/SKILL.md has no frontmatter a YAML loader accepts")
+        elif fm.get("name") != d.name:
+            fail("V3", f"{d.name}/SKILL.md is named {fm.get('name')!r}, not {d.name!r}")
     declared = set(k for k in CAP if k.startswith(PREFIX))
     if declared != set(SKILLS):
         fail("V3", f"capabilities.yaml vs disk: only in yaml={sorted(declared - set(SKILLS))} "
