@@ -22,7 +22,7 @@ feedback is allowed. UX owns the underlying states and feedback semantics.
 | Exit | 200ms `ease-in` |
 | Interrupt | Reverse from current position; never restart |
 | Reduced | Opacity only, 100ms |
-| Focus | Moves to modal on open, returns to trigger on close |
+| Focus | As `design-ux` specified; animation never delays it |
 
 ## Overlays
 

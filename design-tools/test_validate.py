@@ -128,8 +128,8 @@ def _(r):
 
 @case("V13-stages")
 def _(r): sub(r / "design-registry/routes.yaml",
-              "chain: [design-direction, design-ux, design-tokens, design-motion, design-a11y]",
-              "chain: [design-direction, design-ux, design-tokens, design-motion, design-a11y, "
+              "chain: [design-direction, design-ux, design-motion, design-tokens, design-a11y]",
+              "chain: [design-direction, design-ux, design-motion, design-tokens, design-a11y, "
               "design-critique, design-review]")
 
 

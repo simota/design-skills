@@ -48,13 +48,13 @@ comes.
    handoff and named here only if the reader would act on them today
 4. **What is next** — or nothing if the answer is nothing
 
-A run with nothing unresolved reports items 1 and 2 and stops.
+A run with nothing unresolved skips item 3.
 
 ## Length
 
 The report is as short as the four items above allow. `T0` (`_design/SIZING.md`)
-is the answer alone; `T1` and `T2` add the sweep, the residuals and what is
-next, and `T2` links the deliverable. Nothing else belongs in it.
+is the answer with its ground and evidence; `T1` and `T2` add the sweep, the
+residuals and what is next, and link the deliverable. Nothing else belongs in it.
 
 **Too long means cutting content, not restructuring it.** A table earns its
 place when the reader must compare rows, a heading when they must navigate;
@@ -64,7 +64,7 @@ neither is a way of making the same content look shorter.
 
 A brief, a token set, a flow, a critique is an artifact with a location. The
 report says where it is and what it says in one line; it does not reproduce it.
-Pasting the artifact into the report is how the ceiling gets defeated honestly.
+Pasting the artifact into the report keeps it short in form only.
 
 ## Not bigger than it is
 

@@ -80,7 +80,7 @@ Check specifically: embedded media players, third-party widgets, iframes, and cu
 
 ## Target size (SC 2.5.8 AA)
 
-Minimum 24×24 CSS px, **or** 24px of spacing between adjacent target centres.
+Minimum 24×24 CSS px, **or** the spacing exception below.
 
 | Exception | Applies when |
 |-----------|--------------|
@@ -90,7 +90,7 @@ Minimum 24×24 CSS px, **or** 24px of spacing between adjacent target centres.
 | User agent control | Size is browser-determined and unstyled |
 | Equivalent | The same function is available at a conforming size elsewhere |
 
-Practical guidance beyond AA: 44×44 CSS px for touch (matching iOS HIG); Material recommends 48×48 dp. The *visual* control may be smaller — enlarge the hit area with padding or a pseudo-element instead of growing the icon.
+Practical guidance beyond AA: 44×44 CSS px for touch (the iOS HIG's 44×44 pt; also SC 2.5.5 at AAA); Material recommends 48×48 dp. The *visual* control may be smaller — enlarge the hit area with padding or a pseudo-element instead of growing the icon.
 
 Adjacent targets must not overlap. Abutting 20px row action icons (no gap) are the most common 2.5.8 failure; at 4px gaps they pass on the spacing exception.
 

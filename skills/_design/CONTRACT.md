@@ -31,14 +31,14 @@ Not the document. A brief, a token table, or a spec is one file and twenty
 decisions, and a file-level grade hides the nineteen that were never made.
 
 Every decision the deliverable promised either carries a grade or appears in
-the residuals as `UNSPECIFIED`. **A decision in neither is what gets invented
+`open` with its class — `UNSPECIFIED` when no other applies. **A decision in neither is what gets invented
 at build time**, by whoever hits it first, without knowing it was a decision.
 
 ## Status
 
 | Status | Condition |
 |---|---|
-| `DONE` | Every promised decision made, every measurable claim measured, zero `UNSPECIFIED` |
+| `DONE` | Every promised decision made, every measurable claim measured, no `BLOCKED` or `UNSPECIFIED` in `open` |
 | `PARTIAL` | Everything else that produced work — a single `UNSPECIFIED` lands here |
 | `BLOCKED` | Could not proceed. Say what was tried and what stopped it |
 
@@ -48,7 +48,7 @@ decision reads identical to one that made it.
 ## Residuals
 
 Anything left behind is classified and recorded in the handoff's `open` list
-with the place a reader would next look for it.
+(inline in the answer at `T0`) with the place a reader would next look for it.
 
 | Class | Means |
 |---|---|
@@ -72,8 +72,8 @@ a redesign nobody agreed to.
 Before reporting, run both halves. `T0` includes coverage and evidence in its
 answer; it creates no handoff or separate sweep report. Other tiers state both results:
 
-1. **Markers introduced by this run** — every one appears in `open` with a
-   matching class
+1. **Markers** — every `open` entry has its marker placed (`written: true`) or
+   its place named (`written: false`), with a matching class
 2. **Coverage** — the decisions the deliverable promised, against the decisions
    that carry a grade
 

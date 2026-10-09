@@ -62,7 +62,7 @@ terms: {}                         # the names this run uses, spelled as the glos
 - **Make the boundary explicit** in `delivers` and, where needed, `excludes`
 - **Resolve `open_questions` before executing.** These are scope and authority
   questions, not the design decisions the work was commissioned to make. Every
-  promised decision must be settled before `DONE`, or recorded as `UNSPECIFIED`
+  promised decision is made for `DONE`; one left unmade goes in `open` with its class
 
 ## Terms — one name per concept, one concept per name
 
@@ -79,7 +79,7 @@ is `OUT-OF-SCOPE`; ambiguity blocking its own decision requires re-sizing.
 
 ## Constraints do not loosen mid-run
 
-`axes`, `standard`, `baseline`, and `excludes` are fixed at the start. About to
+Every brief field but `terms` is fixed at the start. About to
 break one — stop and hand back. **An axis quietly dropped to make the result
 defensible is the most expensive kind of false report**, because the artifact
 still looks finished.

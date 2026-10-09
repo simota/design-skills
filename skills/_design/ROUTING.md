@@ -66,8 +66,8 @@ right" has no stopping rule and the loop ends when someone gets tired.
   receives it whole and it does not change mid-run (`_design/SIZING.md`)
 - **A stage's output is a handoff** (`_design/HANDOFF.md`), and the next stage
   runs the seven receiver checks before starting
-- **Never run a deciding skill on work classified as report-only.** "Review this"
+- **On a report-only route, no stage goes past its `stops_at`.** "Review this"
   does not authorise a redesign, and neither does finding something obviously wrong
-- **A chain wanting a seventh stage is mis-scoped.** Split the request instead
+- **A chain longer than `route_stages_max` is mis-scoped.** Split the request instead
 - Stages run in order. Two skills deciding the same values concurrently produces
   a contradiction, not a design

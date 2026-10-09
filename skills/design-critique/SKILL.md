@@ -19,13 +19,13 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
   spec, platform convention, or stated heuristics. Without an adopted standard,
   name the fallback lens and report reasoned judgements, not invented requirements
 - **Get the artifact, not a description of it.** Reviewing a summary reviews the
-  summary. Where only a screenshot exists, say so: values become estimates
+  summary. Where only a screenshot exists, say so: pixel measurements are scoped to that image; guessed values are `asserted`
 - **Scope it before looking** — which screens, states, breakpoints, themes. What
   is outside that list is reported as not reviewed, never as fine
 <!-- deliver:sizing -->
 - **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
   result — answer with grounds and evidence, **no brief, no handoff**. A screen
-  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  with several promised decisions is not `T0`. `T1`: one skill, a `T0` condition fails;
   settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
 - **Read before asking.** Dialogue is required for unresolved scope, achievement
   conditions or authority to change a prior choice, not for facts the request or
@@ -60,6 +60,7 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
 | The intent is unclear | Ask rather than assert: "if the intent was X, then Y is a problem — was it?" |
 | The finding is about contrast or keyboard operation | Flag it and hand it to `design-a11y`. This skill flags; that one adjudicates |
 | The whole misreads, and the itemised findings do not explain why | That is a verdict on the rendered result, and `design-review` owns it. Itemising parts does not add up to it |
+| Starting from a `design-review` verdict | Treat its observations as leads with their grades, not as findings; the standard still comes first |
 | The design departs from convention deliberately | It may have a reason you cannot see. Ask before ranking it a defect |
 | A claim here would be expensive to get wrong | [refute](refute.py) — put it to the engines that did not make it, asked to break it rather than to agree. Unrefuted is n engines finding nothing, never proof |
 | A finding proposes a value | Ground the replacement separately from the finding. An `ARBITRARY` proposed value neither proves nor invalidates the evidenced problem |
@@ -67,9 +68,9 @@ Phases: `STANDARD → INVENTORY → EVALUATE → RANK → REPORT`.
 - Ties break by `_design/VALUES.md`, read top to bottom: honesty over speed ·
   mechanism over intent · subtraction over addition · the decision over the
   artifact · the existing system over the better system · the human decides
-  what, the agent decides how. Against all of them: **a harness that is correct
-  and avoided has failed** — when the ceremony costs more than the decision, say
-  so rather than performing it
+  what, the agent decides how. Outside the ranking: **a harness that is correct
+  and avoided has failed** — when a checkable condition in `_design/VALUES.md`
+  holds, say so, name the rule suspended and record the gap
 <!-- /deliver:values -->
 
 ## Always / Never
@@ -104,9 +105,9 @@ A measured difference is a defect only with evidence of failure, not just differ
   `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
   `inspected`. A count, convention or preference alone does not establish a defect
 - **The unit is the decision, not the document.** Each promised decision carries
-  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
+  a grade or an `open` class; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
-  claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
+  claim measured, no `BLOCKED`/`UNSPECIFIED` in `open`) / `PARTIAL` / `BLOCKED` (say what was tried)
 - **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
   in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
   At `T0`, name any residual inline without creating a handoff
@@ -130,8 +131,8 @@ listed as not reviewed.
   then one line per residual a human must decide, then what is next. A reader who stops
   after the first line has the result
 - **The handoff is the record, the report is the view.** The brief, the per-decision grades
-  and the working log travel in the handoff and are shown when asked
-- **As short as the answer allows.** `T0` is the answer alone; `T1` and `T2` add only the
+  and the whole `open` list travel in the handoff and are shown when asked
+- **As short as the answer allows.** `T0` is the answer with its ground and evidence; `T1` and `T2` add only the
   sweep, the residuals and what is next, with the deliverable linked, never pasted. Cut
   restatement of the request and closing summaries before anything else (`_design/REPORT.md`)
 - **Not bigger than it is.** The requested scope is the deliverable; thought

@@ -22,17 +22,18 @@ brief:                        # every field of the brief in _design/SIZING.md
   standard: "<what the result is judged against>"
   open_questions: []          # scope/authority settled; undecided deliverables go in open
   terms: {}                   # the names this run used, as the glossary spells them
-status: DONE                  # DONE | PARTIAL | BLOCKED  (_design/CONTRACT.md)
+status: PARTIAL               # DONE | PARTIAL | BLOCKED  (_design/CONTRACT.md)
 decided: "<what this stage settled, 1-3 lines>"
 evidence:
   "<decision>": { level: measured, how: "<what was measured and what it showed>" }
+arbitrary: ["<value> — <file>:<section>"]   # every ARBITRARY value (_design/PROVENANCE.md)
 open:
   - { what: "...", class: UNSPECIFIED, marker: "<file>:<section>", written: true }
-swept: "1 marker / 1 in open; 18 decisions / 18 graded"
+swept: "swept, 1 marker / 1 in open; 2 decisions / 1 graded"
 next: "<the skill that should receive this, or none>"
 ```
 
-- **`brief` travels whole and is not modifiable** — every field, not a subset.
+- **`brief` travels whole; only `terms` may grow**, append-only — every field, not a subset.
   Rewriting the brief downstream is the main route by which scope creeps, and in
   design it is invisible: the artifact still looks like the thing that was asked for
 - **The keys of `evidence` are decisions, not files** (`_design/CONTRACT.md`).

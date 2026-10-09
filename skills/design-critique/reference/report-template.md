@@ -96,4 +96,4 @@ A fix is specific enough that an implementer would not need to ask a follow-up q
 
 ## When you cannot measure
 
-Working from a screenshot with no source, mark findings honestly: "visual estimate — values not measurable from the supplied image". Do not present an estimate as a measurement. Request the source file or a live URL if precision matters to the decision.
+Working from a screenshot with no source, measure image pixels and scope them to that image, or mark the numerical question not assessable and request the source file or a live URL. An estimate is not reported as a finding.

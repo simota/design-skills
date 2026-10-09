@@ -33,6 +33,8 @@
 # Neighbours that must keep winning; this remains a lexical proxy, not a model test.
 - ask: "give me a UI audit of this screen"
   expect: design-critique
+- ask: "list inconsistencies in the composition"
+  expect: design-critique
 - ask: "does this meet the WCAG contrast requirement"
   expect: design-a11y
 # Discovered failures: screenshot selected a whole-verdict owner for itemisation;

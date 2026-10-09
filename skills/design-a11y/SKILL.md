@@ -1,6 +1,6 @@
 ---
 name: design-a11y
-description: "Designing for accessibility: WCAG conformance at the design layer, contrast, focus visibility, keyboard operability, target size, semantics, and inclusive content. Use to fix an issue at its root."
+description: "Designing for accessibility: WCAG conformance at the design layer, contrast, focus visibility, keyboard operability, target size, semantics, and inclusive content. Use to check or specify a fix."
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 <!-- design:contract -->
@@ -21,12 +21,12 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
   discovering that after the design is decided is a redesign
 - **Get the real values, not a screenshot.** A ratio estimated from an image is
   `asserted`, whatever it looks like
-- **Check both themes exist before scoping.** Each theme is verified
-  independently; a pass in one says nothing about the other
+- **Check which themes exist before scoping.** Each theme is verified
+  independently; a pass in one says nothing about another
 <!-- deliver:sizing -->
 - **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
   result — answer with grounds and evidence, **no brief, no handoff**. A screen
-  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  with several promised decisions is not `T0`. `T1`: one skill, a `T0` condition fails;
   settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
 - **Read before asking.** Dialogue is required for unresolved scope, achievement
   conditions or authority to change a prior choice, not for facts the request or
@@ -67,9 +67,9 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
 - Ties break by `_design/VALUES.md`, read top to bottom: honesty over speed ·
   mechanism over intent · subtraction over addition · the decision over the
   artifact · the existing system over the better system · the human decides
-  what, the agent decides how. Against all of them: **a harness that is correct
-  and avoided has failed** — when the ceremony costs more than the decision, say
-  so rather than performing it
+  what, the agent decides how. Outside the ranking: **a harness that is correct
+  and avoided has failed** — when a checkable condition in `_design/VALUES.md`
+  holds, say so, name the rule suspended and record the gap
 <!-- /deliver:values -->
 
 ## Always / Never
@@ -78,10 +78,11 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
 - Always: compute the ratio and record **both source values** beside it
 - Always: give every non-decorative image, icon, and control its intended
   accessible name — the name is a design decision, not a build detail
-- Always: specify focus order, focus destination for every state change, and a
+- Always: check the focus order and destinations `design-ux` specified (specify any
+  it left open), and a
   visible indicator never entirely obscured by sticky chrome (2.4.11; 2.4.12 at AAA)
 - Always: check target size and spacing for every interactive element, and
-  verify light and dark independently
+  verify each in-scope theme independently
 - Always: get permission first when the required level is unstated on a
   regulated product, when a fixed brand colour cannot reach the bar, or when a
   custom widget has no standard equivalent
@@ -105,9 +106,9 @@ and says why it could not be measured.
   `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
   `inspected`. A count, convention or preference alone does not establish a defect
 - **The unit is the decision, not the document.** Each promised decision carries
-  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
+  a grade or an `open` class; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
-  claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
+  claim measured, no `BLOCKED`/`UNSPECIFIED` in `open`) / `PARTIAL` / `BLOCKED` (say what was tried)
 - **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
   in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
   At `T0`, name any residual inline without creating a handoff
@@ -120,7 +121,7 @@ and says why it could not be measured.
 
 Every criterion in scope is passed, failed, or recorded as not assessable at
 design time; every failure cites its number, its measured values, and a fix at
-the right layer; and both themes were checked separately.
+the right layer; and every in-scope theme was checked separately.
 <!-- deliver:surface -->
 - **Write to the reader when they can act on it.** Start: what will be done and what is
   excluded. Mid-run: a divergence from what was agreed, a path found blocked, a value that
@@ -131,8 +132,8 @@ the right layer; and both themes were checked separately.
   then one line per residual a human must decide, then what is next. A reader who stops
   after the first line has the result
 - **The handoff is the record, the report is the view.** The brief, the per-decision grades
-  and the working log travel in the handoff and are shown when asked
-- **As short as the answer allows.** `T0` is the answer alone; `T1` and `T2` add only the
+  and the whole `open` list travel in the handoff and are shown when asked
+- **As short as the answer allows.** `T0` is the answer with its ground and evidence; `T1` and `T2` add only the
   sweep, the residuals and what is next, with the deliverable linked, never pasted. Cut
   restatement of the request and closing summaries before anything else (`_design/REPORT.md`)
 - **Not bigger than it is.** The requested scope is the deliverable; thought
