@@ -19,7 +19,7 @@ here raises. Nothing returns a default verdict, nothing degrades to "assume
 fine": an engine missing from PATH, an engine that starts and produces no
 parseable object, a response that does not match the schema — each is an error
 with the engine's own words attached, because the alternative is a green run
-that verified nothing (DESIGN §5.4b).
+that verified nothing.
 
 Engine quirks, re-checked by `make engines` rather than dated:
 
@@ -181,6 +181,13 @@ def main() -> int:
         return selftest()
     if not (a.prompt_file and a.schema):
         print("need --prompt-file and --schema", file=sys.stderr)
+        return 2
+    # Naming the checker is not stating who is running. Without --running the
+    # exclusion below has nothing to compare against, and a checker named
+    # by the engine that made the work would pass straight through.
+    if not a.running:
+        print("need --running: the engine running this is stated, never assumed",
+              file=sys.stderr)
         return 2
     try:
         engine = a.engine or other_than(a.running)

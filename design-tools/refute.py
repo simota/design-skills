@@ -13,7 +13,7 @@ to default to refuted when uncertain — a claim that cannot survive a hostile
 reading is exactly what this exists to catch, and the cost of a false refutation
 is one argument while the cost of a false pass is a shipped defect.
 
-**Independence is counted by source, not by voice** (`DESIGN.md` §5.4b). Two
+**Independence is counted by source, not by voice.** Two
 verdicts from one engine are one verdict. The pool is therefore `runs_on` minus
 whichever engine is running, and the count is printed with every result: with
 three engines declared, a claim gets at most **two** independent readings.
@@ -122,6 +122,17 @@ def main() -> int:
     claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
     if isinstance(claims, dict):
         claims = [claims]
+    # A malformed claim is refused before any engine is asked, so a run never
+    # spends two engines' time and then dies on the third claim's missing key.
+    if not isinstance(claims, list) or not claims:
+        print(f"{a.claims} holds no claims; expected a JSON list of "
+              "{id, claim, [evidence], [where]}", file=sys.stderr)
+        return 2
+    bad = [i for i, c in enumerate(claims)
+           if not (isinstance(c, dict) and isinstance(c.get("claim"), str) and c["claim"].strip())]
+    if bad:
+        print(f"{a.claims}: entries {bad} carry no `claim` text", file=sys.stderr)
+        return 2
     try:
         pool = refuters(a.running)
     except engine.EngineError as e:

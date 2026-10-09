@@ -79,7 +79,7 @@ def check_contrast() -> int:
     """Every recorded pair: does the stated ratio follow from the two colours,
     and does the stated verdict follow from the ratio and the requirement?"""
     page = SKILLS / "design-a11y/reference/contrast.md"
-    rows = pair_rows(page.read_text())
+    rows = pair_rows(page.read_text(encoding="utf-8"))
     if not rows:
         fail("contrast.md", "no recording table found — "
                             "the checker has stopped checking anything")
@@ -119,7 +119,7 @@ def check_type_scale() -> int:
     """The page states a base and a ratio. Every step above the base must be the
     ratio applied and rounded; steps the page declares clamped are exempt."""
     page = SKILLS / "design-tokens/reference/scales.md"
-    text = page.read_text()
+    text = page.read_text(encoding="utf-8")
     head = SCALE_HEAD.search(text)
     if not head:
         fail("scales.md", "no `<base>px / <ratio> ratio` column header found")

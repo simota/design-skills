@@ -59,7 +59,7 @@ Rules: `rem` for anything that should respond to the user's font size (type, spa
 }
 ```
 
-Tailwind derives utility names from the token names, so the grammar here *is* the class API. Decide it deliberately: `--color-text-primary` yields `text-text-primary`, which stutters — prefer `--color-primary` under Tailwind's own namespace rules. This is the rule-8 exception to `naming.md`'s anti-pattern list: the framework's grammar wins when the project adopts it.
+Tailwind derives utility names from the token names, so the grammar here *is* the class API. Decide it deliberately: `--color-text-primary` yields `text-text-primary`, which stutters — prefer `--color-primary` under Tailwind's own namespace rules. This is the rule-8 exception to `playbooks/naming.md`'s anti-pattern list: the framework's grammar wins when the project adopts it.
 
 ## Style Dictionary
 
