@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write
 What the product should look and feel like, and **why** — the adjectives it must
 convey, the typeface roles, the colour strategy, the composition system, and
 what it deliberately refuses to do. The deliverable is a written brief that a
-later reader can argue with. Not values, not code.
+later reader can argue with. Not token names, not code.
 
 Phases: `BRIEF → REFERENCE → DIRECTION → SPEC → HANDOFF`.
 
@@ -90,7 +90,7 @@ Phases: `BRIEF → REFERENCE → DIRECTION → SPEC → HANDOFF`.
   and say what you did not copy
 - Never: default to the templated look — one sans everywhere, a purple-blue
   gradient, uniform cards on white — unless the brief argues for it
-- Never: decide token names or values here
+- Never: decide token names or token structure here
 
 ## Verify with
 

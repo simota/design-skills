@@ -27,7 +27,7 @@ Run these before presenting a direction.
 | Substitution | Rewrite the one-line thesis with a named competitor substituted — does it still read true? | It still reads true |
 | Reason audit | Can you state a reason for the typeface, the accent, the radius, the density? | Any "it looked good" |
 | Restraint | What does this direction refuse? | The list is empty |
-| Memory | Write the one-sentence description, then list which of the three considered directions it could equally describe | More than zero |
+| Memory | Write the one-sentence description, then list which of the other two considered directions it could equally describe | More than zero |
 | Layer coverage | Are all six direction layers decided? | Surface or Restraint is blank |
 
 ## Sources of distinctness

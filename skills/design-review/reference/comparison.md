@@ -6,7 +6,7 @@ Read when: an impression has restated as a principle and the verdict needs a thi
 Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-22 — no automated check.
 
-The third phase, and the easiest to do dishonestly. A comparison locates a gap
+The third leg, and the easiest to do dishonestly. A comparison locates a gap
 precisely; it also imports a whole product's constraints if nobody says it must
 not.
 

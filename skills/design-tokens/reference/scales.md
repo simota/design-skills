@@ -93,7 +93,7 @@ Notes:
 
 Rule: pick steps in a perceptual space (OKLCH/LCH) with even lightness spacing, then convert.
 
-- 9–11 steps for neutrals; 9 for each chromatic ramp.
+- 9–11 steps for every ramp; `0` (white) is allowed as the neutral's lightest step.
 - Hold chroma roughly constant across the mid-range; taper it at the extremes or the ends look muddy.
 - Number by lightness: `50` lightest → `950` darkest. Keep the direction identical across all ramps.
 - Verify the ramp against both the lightest and darkest planned surface.

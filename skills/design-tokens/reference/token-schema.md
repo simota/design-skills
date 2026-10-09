@@ -50,7 +50,7 @@ Rules:
 | `--text-label-*` | Form labels, table headers |
 | `--text-code-*` | Mono family, tabular figures |
 
-Group the five properties as a composite token where the export format supports it (DTCG `typography` type, Tailwind `fontSize` tuple); otherwise emit them as a named cluster.
+Group the five properties as a composite token where the export format supports it (DTCG `typography` type; Tailwind's `fontSize` tuple carries four of the five, family separately); otherwise emit them as a named cluster.
 
 ## W3C DTCG format
 
@@ -75,6 +75,9 @@ The interchange format for tool-agnostic token files.
   "space": {
     "4": { "$type": "dimension", "$value": { "value": 16, "unit": "px" } }
   },
+  "font": {
+    "ui": { "$type": "fontFamily", "$value": ["Inter", "system-ui", "sans-serif"] }
+  },
   "text": {
     "body": {
       "$type": "typography",
@@ -93,7 +96,7 @@ The interchange format for tool-agnostic token files.
 Rules:
 - `$value` references use `{dot.path}` — that is how the alias graph stays machine-checkable.
 - `$description` carries the contrast result and usage note. Do not let it degrade into a restatement of the name.
-- `$type` is required on leaves; group-level `$type` inheritance is allowed but state it once at the group.
+- `$type` resolves from the token, else its alias target, else the nearest group; state it once at the group where possible.
 
 ## Validation checks
 

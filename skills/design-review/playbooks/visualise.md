@@ -47,7 +47,7 @@ checking them against each other.
 
 ## The floor
 
-A diagram carries the same rung as the finding it belongs to. It never raises
+A diagram carries the same evidence grade as the finding it belongs to. It never raises
 one, and three things keep it a finding rather than an illustration:
 
 - **`labelled`** — every mark names something that was opened. A region, a file,
@@ -75,7 +75,7 @@ numbered marks and the findings referring to the numbers beats one map each.
 - **A hierarchy order** when the finding is that the eye goes to the wrong thing
   first: the intended order against the order the render actually produces,
   as two ranked lists side by side
-- **A rhythm ruler** for spacing findings — the measured gaps in sequence, so a
-  value that breaks the scale is visible rather than argued
+- **A rhythm ruler** when the rhythm impression needs showing — the gaps as seen
+  in sequence; a value off the scale goes to design-critique
 - **A state row** when the finding is that one state was designed and the others
   were not: the states across, and the ones with no design as blanks

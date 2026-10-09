@@ -68,7 +68,7 @@ design-critique:
   not:
     - what: "producing the replacement design"
       go: design-direction
-    - what: "adjudicating a conformance question the review raised"
+    - what: "adjudicating a conformance question the critique raised"
       go: design-a11y
     - what: "the verdict on how the whole of it looks"
       go: design-review

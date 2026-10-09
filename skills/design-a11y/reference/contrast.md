@@ -3,7 +3,7 @@
 
 Purpose: The ratios the standard requires, how to compute them, and what to do when a pair fails.
 Read when: checking any colour pair, or repairing one that fails.
-Source: WCAG 2.2 SC 1.4.3, 1.4.11 — the ratios below are that version's; the luminance formula is unchanged since 2.0.
+Source: WCAG 2.2 SC 1.4.3, 1.4.11 — the ratios below are that version's; the luminance formula is unchanged since 2.0 apart from the 0.03928 → 0.04045 threshold correction.
 Verified: 2026-08-21 — and re-verified by `make figures` on every run. Each recorded pair below is
 recomputed from its two hex values against the WCAG relative-luminance formula, and its pass/fail is
 recomputed from the ratio and the requirement. A wrong number here fails the build; it does not age.

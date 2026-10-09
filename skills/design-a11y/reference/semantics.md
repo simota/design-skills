@@ -24,8 +24,8 @@ Every native element replacement must state: which APG pattern it follows, why t
 
 ## Headings (SC 1.3.1, 2.4.6)
 
-- One `<h1>` per page, naming the page's subject.
-- No skipped levels. `h2` follows `h1`; a jump to `h4` breaks the outline.
+- One `<h1>` per page, naming the page's subject (best practice; not required by 1.3.1/2.4.6).
+- No skipped levels. `h2` follows `h1`; a jump to `h4` breaks the outline (best practice, as above).
 - Headings describe content, not decoration. If text is large but is not a heading, style it — do not mark it up as one.
 - Every distinct region of a complex screen deserves a heading, even if visually hidden.
 

@@ -93,8 +93,8 @@ Reading declared values from the spec is `measured` evidence of those declaratio
 not their suitability or runtime performance. Judge the stated purpose as
 `inspected`; measure runtime claims on a running artifact or mark them unverified.
 
-- **Every transition specifies four things or it is incomplete**: trigger,
-  properties, interrupt behaviour, reduced variant. A missing one is `UNSPECIFIED`
+- **Every transition specifies five things or it is incomplete**: trigger,
+  properties, values, interrupt behaviour, reduced variant. A missing one is `UNSPECIFIED`
 <!-- deliver:report -->
 - **Grade each claim**: `measured` supports only what was actually measured;
   `inspected` is for non-measurable judgement, with its reason and limits;

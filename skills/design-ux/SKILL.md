@@ -119,7 +119,7 @@ built yet, the spec is `inspected` and says so.
 
 ## Done when
 
-Every screen's state matrix is complete, every state has copy and a next action,
+Every screen's state matrix is complete, every state has copy and, where the user can act, a next action,
 one primary action is named per screen, every exit path exists, and every state
 left undesigned appears in the residuals by name.
 <!-- deliver:surface -->

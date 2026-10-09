@@ -38,7 +38,6 @@ Design shape that works on any surface:
 :focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
-  border-radius: inherit;
 }
 ```
 
@@ -46,7 +45,7 @@ The offset creates a gap so the ring reads against both the element and the back
 
 Use `:focus-visible`, not `:focus`, so mouse users do not see rings — but verify the browser's heuristic covers your custom widgets.
 
-Sticky headers: give focusable content `scroll-margin-top` equal to the header height plus a little, or SC 2.4.11 fails on every scrolled-into-view focus.
+Sticky headers: give focusable content `scroll-margin-top` equal to the measured header height, or a focused element can end up entirely hidden behind it (SC 2.4.11).
 
 ## Keyboard models
 
@@ -85,7 +84,7 @@ Minimum 24×24 CSS px, **or** 24px of spacing between adjacent target centres.
 
 | Exception | Applies when |
 |-----------|--------------|
-| Spacing | Targets are ≥24px apart |
+| Spacing | A 24px circle centred on each undersized target intersects no other target or circle |
 | Inline | The target is inside a sentence or text block |
 | Essential | The size is legally required or essential to the information (e.g. a map pin) |
 | User agent control | Size is browser-determined and unstyled |
@@ -93,9 +92,9 @@ Minimum 24×24 CSS px, **or** 24px of spacing between adjacent target centres.
 
 Practical guidance beyond AA: 44×44 CSS px for touch (matching iOS HIG); Material recommends 48×48 dp. The *visual* control may be smaller — enlarge the hit area with padding or a pseudo-element instead of growing the icon.
 
-Adjacent targets must not overlap. Table row action icons at 20px, 4px apart, is the single most common 2.5.8 failure.
+Adjacent targets must not overlap. Abutting 20px row action icons (no gap) are the most common 2.5.8 failure; at 4px gaps they pass on the spacing exception.
 
-## Pointer and gesture (SC 2.5.1, 2.5.7)
+## Pointer and gesture (SC 2.5.1, 2.5.2, 2.5.7)
 
 | Requirement | Design implication |
 |-------------|--------------------|

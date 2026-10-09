@@ -34,9 +34,9 @@ not assessable at design time, rather than passing them from the specification a
 |----|-------|-----------------|
 | 2.1.1 Keyboard | A | Every function is keyboard-operable |
 | 2.1.2 No Keyboard Trap | A | Focus can always leave |
-| 2.1.4 Character Key Shortcuts | A | Single-character shortcuts are remappable or focus-scoped |
+| 2.1.4 Character Key Shortcuts | A | Single-character shortcuts can be turned off, remapped, or are focus-scoped |
 | 2.2.1 Timing Adjustable | A | Time limits can be extended or turned off |
-| 2.2.2 Pause, Stop, Hide | A | Motion or auto-update over 5s can be paused |
+| 2.2.2 Pause, Stop, Hide | A | Moving content over 5s, and any auto-updating content, can be paused, stopped or hidden |
 | 2.3.1 Three Flashes | A | Nothing flashes more than 3×/second |
 | 2.3.3 Animation from Interactions | AAA | Non-essential motion can be disabled |
 | 2.4.3 Focus Order | A | Focus follows a meaningful sequence |
@@ -46,6 +46,7 @@ not assessable at design time, rather than passing them from the specification a
 | 2.4.12 Focus Not Obscured (Enh) | AAA | The focused element is not obscured at all |
 | 2.4.13 Focus Appearance | AAA | Indicator ≥2px perimeter and ≥3:1 against the unfocused state |
 | 2.5.1 Pointer Gestures | A | Multipoint or path gestures have a single-pointer alternative |
+| 2.5.2 Pointer Cancellation | A | Actions fire on the up-event, or can be aborted or undone |
 | 2.5.3 Label in Name | A | The visible label is contained in the accessible name |
 | 2.5.4 Motion Actuation | A | Device-motion actions have a UI alternative |
 | 2.5.7 Dragging Movements | AA | Drag operations have a non-drag alternative |

@@ -6,9 +6,9 @@ Read when: writing the deliverable, or checking one for completeness.
 Source: APG — the patterns it names move without this page.
 Verified: 2026-08-21 — no automated check.
 
-The `SPEC` phase deliverable. `design-critique` judges the built UI against this, and `design-a11y` consumes sections 6–7 — so the shape must be stable run to run. Fill every field; write "n/a — <reason>" rather than leaving a blank.
+The `SPEC` phase deliverable. `design-critique` judges the built UI against this, and `design-a11y` consumes sections 4 and 6 — so the shape must be stable run to run. Fill every field; write "n/a — <reason>" rather than leaving a blank.
 
-```markdown
+````markdown
 # Interaction Spec — <flow / screen>
 
 ## 1. Goal
@@ -46,6 +46,7 @@ Every network call needs three exits: success, expected failure, unexpected fail
 | Partial | | | | | |
 | Error (recoverable) | | | | | input preserved |
 | Error (permission) | | | | | |
+| Error (not found) | | | | | parent list as exit |
 | Offline | | | | | |
 | Success | | | | | |
 | Destructive pending | | | | | undo window: Ns |
@@ -66,7 +67,7 @@ Per-component keyboard maps and APG conformance are `design-a11y`'s, not this se
 ## 7. Latency Plan
 | Action | Expected | <100ms | 100ms–1s | 1–10s | >10s | Timeout → |
 |--------|----------|--------|----------|-------|------|-----------|
-| | | no indicator | inline on control | skeleton | progress + cancel | named error state |
+| | | no indicator | inline on control | skeleton (load) / on control (action) | progress + cancel | named error state |
 
 ## 8. Open Questions
 | Question | Recommended default | Blocks? |
@@ -77,8 +78,8 @@ Per-component keyboard maps and APG conformance are `design-a11y`'s, not this se
 - To design-motion:   transitions this flow needs
 - To design-a11y:     focus destinations, live-region announcements
 - To design-critique: this document, as the standard
-```
+````
 
 ## Completeness gate
 
-The spec is not done until: every screen has a filled state matrix, every async action appears in the latency plan, every failure branch names where focus lands and confirms input is preserved, and every open question carries a recommended default. `Implementable without asking` means an implementer reading only this document raises no question it does not answer.
+The spec is not done until: every screen has a filled state matrix, every async action appears in the latency plan, every failure branch names where focus lands and confirms input is preserved, every open question carries a recommended default, and any marked `Blocks: yes` is in `open` as `UNSPECIFIED`. Together these make it implementable without asking: an implementer reading only this document raises no question it does not answer.

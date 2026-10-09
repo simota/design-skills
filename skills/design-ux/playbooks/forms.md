@@ -41,7 +41,7 @@ After a failed submit, switch previously-errored fields to live validation so th
 - At the field, below it, associated programmatically with the input.
 - Plus a summary at the top *only* for long forms — the summary links to each field.
 - Move focus to the first errored field on failed submit.
-- State how to fix, not what is wrong: "Use at least 12 characters" beats "Password too short".
+- State how to fix, not only what is wrong: "Use at least 12 characters" beats "Password too short".
 - Never clear the field's value on error.
 - Never use colour alone — pair with an icon and text.
 

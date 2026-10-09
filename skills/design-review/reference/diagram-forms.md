@@ -28,9 +28,9 @@ card, 320 x 200, viewed at 1x
 │  ③ [ buy ]                       │
 └──────────────────────────────────┘
 
-① major     title and body are one step apart on the scale; no hierarchy
-② major     price sits below the fold at the 360px breakpoint
-③ blocking  target is 32px tall against a 44px floor
+① Serious   title and body read as one level; nothing leads the eye
+② Serious   price sits below the fold at the 360px breakpoint
+③ Moderate  buy reads as the weakest mark on the card (size → design-a11y)
 ```
 
 Say the component, its size, and the density you judged at, or the marks mean

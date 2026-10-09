@@ -16,7 +16,7 @@ Turn supplied references into principles you can apply, never into an identity y
 |-----------|----------------|
 | Density | Information per screen; generous, balanced, or packed |
 | Type strategy | One family or paired; weight range used; display/body contrast |
-| Colour strategy | Monochrome+accent, duotone, full palette; where saturation appears |
+| Colour strategy | Monochrome+accent, duotone, full semantic, neutral+imagery; where saturation appears |
 | Surface | Borders vs shadows vs flat fills; corner language |
 | Composition | Grid regularity, asymmetry, whitespace distribution |
 | Motion | Present/absent; functional or expressive |

@@ -35,7 +35,7 @@ If the accent does more than one job, users cannot learn what it means.
 
 Only introduce success / warning / danger / info when the product genuinely has those states. Each needs:
 - a foreground that passes AA on the app canvas,
-- a subtle background that passes 3:1 against its border,
+- a subtle background whose boundary stays distinguishable from the canvas (threshold per `design-a11y`),
 - a non-colour redundancy (icon, label) — colour must never be the sole carrier of meaning.
 
 ## Contrast verification (before proposing)

@@ -57,8 +57,8 @@ Produce an explicit table. Never a silent global replace.
 
 | Old value | Occurrences | New token | Visual delta | Risk |
 |-----------|-------------|-----------|--------------|------|
-| `#333333` | 84 | `--color-text-primary` | ΔE ≈ 1.2 | none |
-| `#3a3a3a` | 6 | `--color-text-primary` | ΔE ≈ 0.8 | none |
+| `#333333` | 84 | `--color-text-primary` (`#363636`) | ΔE76 ≈ 1.4 | none |
+| `#3a3a3a` | 6 | `--color-text-primary` (`#363636`) | ΔE76 ≈ 1.8 | none |
 | `#767676` | 31 | `--color-text-muted` | exact | none |
 | `13px` | 19 | `--text-sm` (14px) | +1px | check dense tables |
 

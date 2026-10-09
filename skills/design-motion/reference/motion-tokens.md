@@ -95,11 +95,11 @@ Where the export format supports it, store trigger-level composites so implement
   "motion": {
     "modal-enter": {
       "$type": "transition",
-      "$value": { "duration": "{duration.slow}", "timingFunction": "{ease.out}", "delay": "0ms" }
+      "$value": { "duration": "{duration.slow}", "timingFunction": "{ease.out}", "delay": { "value": 0, "unit": "ms" } }
     },
     "modal-exit": {
       "$type": "transition",
-      "$value": { "duration": "{duration.base}", "timingFunction": "{ease.in}", "delay": "0ms" }
+      "$value": { "duration": "{duration.base}", "timingFunction": "{ease.in}", "delay": { "value": 0, "unit": "ms" } }
     }
   }
 }

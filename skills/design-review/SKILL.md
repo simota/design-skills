@@ -60,7 +60,7 @@ Phases: `SEE → IMPRESSION → PRINCIPLE → REFERENCE → VERDICT`.
 | Turning an impression into something arguable | [principles](playbooks/principles.md) — the named visual principle it restates as |
 | Holding it against work that already succeeds | [comparison](reference/comparison.md) — a reference proves a thing is possible, never that it fits here |
 | Forming and phrasing the overall judgement | [verdict](playbooks/verdict.md) |
-| A finding spans places, an order, a disagreement, or a region | [visualise](playbooks/visualise.md) — a reader who has to reassemble it will skim it. ASCII by default, and the drawing carries the finding's rung, never a better one |
+| A finding spans places, an order, a disagreement, or a region | [visualise](playbooks/visualise.md) — a reader who has to reassemble it will skim it. ASCII by default, and the drawing carries the finding's evidence grade, never a better one |
 | The impression restates as no principle and matches no reference | It is taste. Say so, mark it `ARBITRARY`, and never rank it as a defect |
 | The problem is a value, a count, an alignment, contrast, or focus order | Measurable, so not this skill's: values and counts go to `design-critique`, conformance to `design-a11y`. This skill judges the whole, and looking wrong is a different claim from failing a criterion |
 | The interface looks fine and the direction is still wrong | Say that plainly. Executing a poor brief well is a `design-direction` problem, and no amount of looking fixes it |
@@ -97,7 +97,7 @@ reasoning. Counts or positions actually read from the render are separate
 `measured` observations; they never upgrade the aesthetic verdict or establish
 an unobserved user's response. Guessed numbers are `asserted`.
 
-- **A verdict carries all three phases or says which are missing.** Impression
+- **A verdict carries all three legs (impression, principle, reference) or says which are missing.** Impression
   alone is opinion, principle alone is a rule, reference alone is envy
 - **State the coverage**: which screens, viewports, themes and states were
   rendered, and what a static view cannot show — live data, motion, real content

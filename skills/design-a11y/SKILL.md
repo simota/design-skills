@@ -79,7 +79,7 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
 - Always: give every non-decorative image, icon, and control its intended
   accessible name — the name is a design decision, not a build detail
 - Always: specify focus order, focus destination for every state change, and a
-  visible indicator that is never obscured by sticky chrome
+  visible indicator never entirely obscured by sticky chrome (2.4.11; 2.4.12 at AAA)
 - Always: check target size and spacing for every interactive element, and
   verify light and dark independently
 - Always: get permission first when the required level is unstated on a

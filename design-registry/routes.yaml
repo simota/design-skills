@@ -48,7 +48,7 @@ critique-to-zero:
   pattern: loop
   when: "close every finding before this ships"
   chain: [design-critique, design-ux]
-  oracle: "no open finding at severity major or above, and one full pass adds none"
+  oracle: "no open finding at severity Serious or above, and one full pass adds none"
   checker: other-engine          # resolved at run time to one that is not running this
   max_cycles: 4              # hand back rather than loop again
 

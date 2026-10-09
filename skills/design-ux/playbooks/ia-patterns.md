@@ -16,7 +16,7 @@ Structure decides whether a product feels simple. Styling cannot rescue bad stru
 | Command palette (secondary) | Power users, deep feature sets | Used as the *only* discovery mechanism |
 
 Rules:
-- Depth over breadth costs clicks; breadth over depth costs scanning. Prefer breadth up to ~7 items, then group.
+- Depth over breadth costs clicks; breadth over depth costs scanning. Prefer breadth; group when a level stops being scannable as one list.
 - A navigation label is a user's word, not an internal team name.
 - Never make the current location ambiguous — the active state must be unmistakable.
 - Search complements navigation; it does not replace it. Users who cannot browse cannot learn what exists.
@@ -35,7 +35,7 @@ Group by the user's mental model, not the org chart or the database schema. When
 
 ## Hierarchy on a screen
 
-Three levels, expressed with the strongest available signal first:
+Hierarchy is expressed with the strongest available signal first:
 
 1. **Position** — top-left in LTR reading order carries most weight
 2. **Size** — relative scale, before colour

@@ -43,7 +43,7 @@ Emit the format the project actually consumes. Emitting all of them is noise.
 }
 ```
 
-Rules: `rem` for anything that should respond to the user's font size (type, spacing around type); `px` for hairlines, radii, and shadow offsets.
+Rules: `rem` for anything that should respond to the user's font size (type, spacing around type); `px` for hairlines and shadow offsets; radii take either, chosen once.
 
 ## Tailwind v4
 
@@ -53,7 +53,7 @@ Rules: `rem` for anything that should respond to the user's font size (type, spa
 @theme {
   --color-canvas: var(--gray-0);
   --color-surface: var(--gray-0);
-  --color-text-primary: var(--gray-950);
+  --color-primary: var(--gray-950);
   --spacing-4: 1rem;
   --radius-md: 0.5rem;
 }
