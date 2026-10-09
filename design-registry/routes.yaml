@@ -7,8 +7,8 @@
 redesign:
   pattern: linear
   when: "a surface needs a point of view it does not have"
-  chain: [design-direction, design-ux, design-tokens, design-motion, design-a11y]
-  gate: "the brief names a standard before design-ux starts"
+  chain: [design-direction, design-ux, design-motion, design-tokens, design-a11y]
+  gate: "the direction brief is DONE, with no UNSPECIFIED, before design-ux starts"
 
 new-system:
   pattern: linear
@@ -32,7 +32,7 @@ tokenise:
   when: "hardcoded values must become a system"
   chain: [design-tokens]
 
-review:
+itemise:
   pattern: report-only
   when: "itemise individual issues, inconsistencies or judgements and who should address them"
   chain: [design-critique]
@@ -46,9 +46,9 @@ conformance-check:
 
 critique-to-zero:
   pattern: loop
-  when: "close every finding before this ships"
+  when: "close every structure, flow or state finding at Serious or above before this ships"
   chain: [design-critique, design-ux]
-  oracle: "no open finding at severity Serious or above, and one full pass adds none"
+  oracle: "no open design-ux-owned finding at severity Serious or above, and one full pass adds none"
   checker: other-engine          # resolved at run time to one that is not running this
   max_cycles: 4              # hand back rather than loop again
 
@@ -59,8 +59,9 @@ look-check:
   stops_at: "one verdict on the whole, with the conditions it was formed under and what was not seen. Nothing is redesigned"
 
 look-then-itemise:
-  pattern: linear
+  pattern: report-only
   when: "the whole reads wrong and the parts have to be named"
   chain: [design-review, design-critique]
   gate: "pass the scoped verdict and its observations with their evidence grades; a whole-screen judgement is not proof of an itemised defect"
+  stops_at: "a scoped verdict and the itemised findings under it. Nothing is redesigned"
 

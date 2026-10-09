@@ -36,7 +36,7 @@ not assessable at design time, rather than passing them from the specification a
 | 2.1.2 No Keyboard Trap | A | Focus can always leave |
 | 2.1.4 Character Key Shortcuts | A | Single-character shortcuts can be turned off, remapped, or are focus-scoped |
 | 2.2.1 Timing Adjustable | A | Time limits can be extended or turned off |
-| 2.2.2 Pause, Stop, Hide | A | Moving content over 5s, and any auto-updating content, can be paused, stopped or hidden |
+| 2.2.2 Pause, Stop, Hide | A | Auto-starting moving content over 5s, or auto-updating content, shown alongside other content can be paused, stopped or hidden |
 | 2.3.1 Three Flashes | A | Nothing flashes more than 3×/second |
 | 2.3.3 Animation from Interactions | AAA | Non-essential motion can be disabled |
 | 2.4.3 Focus Order | A | Focus follows a meaningful sequence |

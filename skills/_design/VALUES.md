@@ -62,7 +62,7 @@ reaches every surface — it stopped being the agent's to make.
 | The reference the user supplied is a different product's identity | §4 — take the principle, name it, and say what you did not copy |
 | The system's spacing scale has no room for what this screen needs | §5 — use the scale here, propose the extension as its own work |
 | The user asks for "more premium" with no standard | §2 — a word with no achievement condition. Settle it in the dialogue before executing |
-| Deadline argues for skipping the contrast check | §1, then the escape hatch — skip it if the human decides to, and the report says it was skipped |
+| Deadline argues for skipping the contrast check | §1 — a deadline is not an escape condition. Skip only if the human decides to; the report says so, status `PARTIAL` |
 
 ## The escape hatch
 
@@ -80,6 +80,6 @@ performing the ceremony.
   be the only way to comply
 - Two contracts in `_design/` give conflicting instructions for this exact case
 
-When it fires: do the work, state which rule was suspended and why, and mark the
-gap as `#TODO(agent): OUT-OF-SCOPE`. Suspending a rule silently is the failure
+When it fires: do the work, state which rule was suspended and why, and record the
+gap in `open` as `DEFERRED`, with a marker where the grant allows. Suspending a rule silently is the failure
 this section exists to prevent.

@@ -34,13 +34,14 @@ limits:
                               # grown since. Measured own-content max in this
                               # set: 78 lines, in design-review
   description_chars: 200      # the listing truncates past this
-  playbook_lines: 300         # measured max: 115
+  playbook_lines: 300         # measured max: 114
   playbooks_per_skill: 8      # measured max: 5
-  shared_file_lines: 115   # raised for the sixth axis. REPORT.md is the densest of the
-                              # six — four moments, the order at the end, the ceiling and the
-                              # proportion rule — and 100 was the figure from when there were
-                              # five. Two compression passes over the file came back with the
-                              # same content in fewer words and no fewer lines
+  shared_file_lines: 115   # raised for the sixth axis: REPORT.md arrived with four
+                              # moments, the order at the end, the length rule and the
+                              # proportion rule, and 100 was the figure from when there were
+                              # five axes. Two compression passes came back with the same
+                              # content in fewer words and no fewer lines. Measured max:
+                              # 113, in CONTRACT.md
   shared_lines_total: 620   # raised by 20 for the terms rule in SIZING.md — a term
                               # with two meanings is a question, never a silent
                               # choice — the same move as the sixth axis, for the

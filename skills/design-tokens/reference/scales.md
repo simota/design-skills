@@ -95,7 +95,7 @@ Rule: pick steps in a perceptual space (OKLCH/LCH) with even lightness spacing, 
 
 - 9–11 steps for every ramp; `0` (white) is allowed as the neutral's lightest step.
 - Hold chroma roughly constant across the mid-range; taper it at the extremes or the ends look muddy.
-- Number by lightness: `50` lightest → `950` darkest. Keep the direction identical across all ramps.
+- Number by lightness: `50` lightest (with `0` above it on the neutral only, counted in the 9–11) → `950` darkest. Keep the direction identical across all ramps.
 - Verify the ramp against both the lightest and darkest planned surface.
 
 ## Breakpoints

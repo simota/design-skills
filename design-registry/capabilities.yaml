@@ -28,7 +28,7 @@ design-tokens:
   not:
     - what: "choosing the aesthetic the values express"
       go: design-direction
-    - what: "storing motion values before motion is designed"
+    - what: "deciding duration and easing values"
       go: design-motion
   signals: [design tokens, scales, semantic layer, theming, dark mode, naming grammar, export, hardcoded values]
 
@@ -67,7 +67,7 @@ design-critique:
   does: [heuristic-evaluation, craft-audit, drift-detection, severity-ranking]
   not:
     - what: "producing the replacement design"
-      go: design-direction
+      go: "the owner named on the finding (direction, ux, tokens, motion or a11y)"
     - what: "adjudicating a conformance question the critique raised"
       go: design-a11y
     - what: "the verdict on how the whole of it looks"

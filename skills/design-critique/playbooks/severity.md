@@ -34,7 +34,7 @@ Independent of severity, mark each finding:
 
 | Class | Meaning |
 |-------|---------|
-| `defect` | Measurably wrong against a stated standard — contrast ratio, missing state, broken layout |
+| `defect` | Measurably wrong against a stated standard — missing state, broken layout |
 | `inconsistency` | Violates the project's own system or its own prior decisions |
 | `judgement` | A defensible alternative view; the current choice is not wrong |
 
@@ -66,6 +66,6 @@ findings are never folded away to make the list shorter.
 | A 2px misalignment as Serious | Minor — no user is blocked |
 | A confusing primary action as Moderate | Serious or Blocker — it is the screen's job |
 | A missing empty state as Minor | Moderate at least — it is a state real users will hit first |
-| Failing contrast on body text as Minor | Serious — it excludes users |
+| Suspected body-text contrast failure as Minor | Rank Serious and flag to `design-a11y` with both values |
 | Personal taste as a defect | Label taste separately; it is not a ranked finding or a release blocker |
 | Twelve instances of one problem as twelve findings | One aggregated finding with a count |

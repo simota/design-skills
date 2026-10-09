@@ -14,8 +14,11 @@ import pathlib
 import re
 import sys
 
+import yaml
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SKILLS = ROOT / "skills"
+H = yaml.safe_load((ROOT / "design-registry" / "harness.yaml").read_text(encoding="utf-8"))
+SKILLS = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
 failures: list[str] = []
 
 

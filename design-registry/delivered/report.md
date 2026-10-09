@@ -3,9 +3,9 @@
   `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
   `inspected`. A count, convention or preference alone does not establish a defect
 - **The unit is the decision, not the document.** Each promised decision carries
-  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
+  a grade or an `open` class; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
-  claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
+  claim measured, no `BLOCKED`/`UNSPECIFIED` in `open`) / `PARTIAL` / `BLOCKED` (say what was tried)
 - **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
   in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
   At `T0`, name any residual inline without creating a handoff

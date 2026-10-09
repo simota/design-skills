@@ -13,10 +13,10 @@ Colour is assigned to *roles*, never picked as a set of favourite hues.
 
 ## Neutral ramp
 
-Neutrals carry surface, border, and text. A ramp of 9–11 steps is standard.
+Neutrals carry surface, border, and text. Step count and generation are `design-tokens`' (its scales reference).
 
 - Do not use pure `#000` for text or pure `#FFF` for canvas unless the direction argues for that starkness; slight warmth or coolness in the neutrals is where the direction lives.
-- Keep the ramp perceptually even. Pick steps in OKLCH or LCH and hold lightness spacing constant, then convert to hex; even spacing in sRGB is not even to the eye.
+- Say what the ramp must feel like; how it is generated is `design-tokens`' rule.
 - Give the ramp a temperature and state it ("neutrals carry a +8° warm shift; the product should feel like paper, not glass").
 
 ## Accent

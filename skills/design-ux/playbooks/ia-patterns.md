@@ -33,9 +33,9 @@ Group by the user's mental model, not the org chart or the database schema. When
 | A group with one item | Not a group |
 | A group with 15 items | Needs sub-structure or ranking |
 
-## Hierarchy on a screen
+## Priority on a screen
 
-Hierarchy is expressed with the strongest available signal first:
+Decide the order of importance here; how it is expressed is `design-direction`'s. The signals, strongest first:
 
 1. **Position** — top-left in LTR reading order carries most weight
 2. **Size** — relative scale, before colour
@@ -61,11 +61,11 @@ Modal rules: one at a time, Escape always closes, focus trapped inside, focus re
 
 Density is a direction decision (`design-direction`) with structural consequences here.
 
-| Density | Row height | Fits |
+| Density | Row height (set by `design-direction`) | Fits |
 |---------|-----------|------|
-| Compact | 32–36px | Professional tools, data grids, users who live in the screen |
-| Default | 40–48px | General product UI |
-| Spacious | 56px+ | Consumer, occasional-use, touch-first |
+| Compact | tightest | Professional tools, data grids, users who live in the screen |
+| Default | middle | General product UI |
+| Spacious | loosest, touch-sized | Consumer, occasional-use, touch-first |
 
 Offer a density toggle only when the same product genuinely serves both scanning and reading modes. Otherwise it is a decision the design is avoiding.
 

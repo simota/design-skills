@@ -1,6 +1,6 @@
 ---
 name: design-ux
-description: "Designing how an interface behaves: information architecture, task flows, screen states, forms, navigation, destructive actions, and cognitive load. Use when structure or interaction is undecided."
+description: "Designing how an interface behaves: information architecture, task flows, screen states, forms, navigation, destructive actions, and cognitive load. Use when behaviour is undecided or wrong."
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 <!-- design:contract -->
@@ -24,7 +24,7 @@ Phases: `FLOW → STATES → SPEC → HANDOFF`.
 <!-- deliver:sizing -->
 - **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
   result — answer with grounds and evidence, **no brief, no handoff**. A screen
-  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  with several promised decisions is not `T0`. `T1`: one skill, a `T0` condition fails;
   settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
 - **Read before asking.** Dialogue is required for unresolved scope, achievement
   conditions or authority to change a prior choice, not for facts the request or
@@ -66,15 +66,15 @@ Phases: `FLOW → STATES → SPEC → HANDOFF`.
 - Ties break by `_design/VALUES.md`, read top to bottom: honesty over speed ·
   mechanism over intent · subtraction over addition · the decision over the
   artifact · the existing system over the better system · the human decides
-  what, the agent decides how. Against all of them: **a harness that is correct
-  and avoided has failed** — when the ceremony costs more than the decision, say
-  so rather than performing it
+  what, the agent decides how. Outside the ranking: **a harness that is correct
+  and avoided has failed** — when a checkable condition in `_design/VALUES.md`
+  holds, say so, name the rule suspended and record the gap
 <!-- /deliver:values -->
 
 ## Always / Never
 
 - Always: enumerate the **full state matrix** for every screen — empty, loading,
-  partial, error, permission-denied, offline, success. Missing states are the
+  partial, error, permission-denied, not-found, offline, success, destructive-pending. Missing states are the
   single most common cause of shipped UX failure
 - Always: name exactly one primary action per screen and demote everything else
 - Always: specify validation timing per field and the error copy itself. Every
@@ -106,9 +106,9 @@ built yet, the spec is `inspected` and says so.
   `asserted` never supports completion. **A guessed measurable value is `asserted`**, not
   `inspected`. A count, convention or preference alone does not establish a defect
 - **The unit is the decision, not the document.** Each promised decision carries
-  a grade or is `UNSPECIFIED`; no silent delegation of design choices to build
+  a grade or an `open` class; no silent delegation of design choices to build
 - **Report `status`**: `DONE` (every promised decision made, every measurable
-  claim measured, zero `UNSPECIFIED`) / `PARTIAL` / `BLOCKED` (say what was tried)
+  claim measured, no `BLOCKED`/`UNSPECIFIED` in `open`) / `PARTIAL` / `BLOCKED` (say what was tried)
 - **Classify residuals** as `BLOCKED` / `OUT-OF-SCOPE` / `DEFERRED` / `UNSPECIFIED`
   in `open`; a run holding `Write` also places a `#TODO(agent):` marker in its output.
   At `T0`, name any residual inline without creating a handoff
@@ -132,8 +132,8 @@ left undesigned appears in the residuals by name.
   then one line per residual a human must decide, then what is next. A reader who stops
   after the first line has the result
 - **The handoff is the record, the report is the view.** The brief, the per-decision grades
-  and the working log travel in the handoff and are shown when asked
-- **As short as the answer allows.** `T0` is the answer alone; `T1` and `T2` add only the
+  and the whole `open` list travel in the handoff and are shown when asked
+- **As short as the answer allows.** `T0` is the answer with its ground and evidence; `T1` and `T2` add only the
   sweep, the residuals and what is next, with the deliverable linked, never pasted. Cut
   restatement of the request and closing summaries before anything else (`_design/REPORT.md`)
 - **Not bigger than it is.** The requested scope is the deliverable; thought

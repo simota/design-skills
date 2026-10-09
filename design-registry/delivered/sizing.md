@@ -1,6 +1,6 @@
 - **Size first.** `T0`: one skill, reversible, one bounded decision with a clear
   result — answer with grounds and evidence, **no brief, no handoff**. A screen
-  with several promised decisions is not `T0`. `T1`: one skill, larger scope;
+  with several promised decisions is not `T0`. `T1`: one skill, a `T0` condition fails;
   settle the brief. `T2`: multiple owners or handoff stages; route once. Re-size as needed
 - **Read before asking.** Dialogue is required for unresolved scope, achievement
   conditions or authority to change a prior choice, not for facts the request or

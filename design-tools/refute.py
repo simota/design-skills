@@ -152,9 +152,12 @@ def main() -> int:
                         "independent_readings": len(votes),
                         "votes": votes, "unreachable": silent})
 
+    # A claim no engine answered was not checked, and a zero exit over it
+    # would read as a pass to whatever runs this.
+    unchecked = 1 if any(r["verdict"] == "UNCHECKED" for r in results) else 0
     if a.json:
         print(json.dumps(results, ensure_ascii=False, indent=2))
-        return 0
+        return unchecked
 
     for r in results:
         print(f"\n[{r['verdict']}] {r['id']}   "
@@ -168,7 +171,7 @@ def main() -> int:
     print(f"\n{kinds.count('REFUTED')} refuted · {kinds.count('CONTESTED')} contested · "
           f"{kinds.count('STANDS')} unrefuted · {kinds.count('UNCHECKED')} unchecked")
     print("Unrefuted means nothing was found, not that nothing is there.")
-    return 0
+    return unchecked
 
 
 if __name__ == "__main__":

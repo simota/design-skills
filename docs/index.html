@@ -165,7 +165,7 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
     <div class="fact"><b>20</b><span>playbooks</span></div>
     <div class="fact"><b>16</b><span>reference</span></div>
     <div class="fact"><b>38</b><span>static rules</span></div>
-    <div class="fact"><b>1,431</b><span>listing chars</span></div>
+    <div class="fact"><b>1,389</b><span>listing chars</span></div>
   </div>
 </header>
 
@@ -196,7 +196,7 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
       <text x="48" y="136" font-family="Archivo,sans-serif" font-weight="700"
             font-size="17" fill="currentColor">7 names + descriptions</text>
       <text x="48" y="156" font-family="'JetBrains Mono',monospace" font-size="10.5"
-            fill="currentColor" opacity=".6">1,431 characters</text>
+            fill="currentColor" opacity=".6">1,389 characters</text>
       <text x="48" y="180" font-family="Archivo,sans-serif" font-size="11.5"
             fill="currentColor" opacity=".72">selection happens here, and on nothing else</text>
       <rect x="420" y="60" width="330" height="132" rx="1" fill="none"
@@ -252,7 +252,7 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
       <span class="tag b">doc-write</span>
     </div>
     <div class="card-body">
-      <p>What the product should look and feel like, and <strong>why</strong> — the adjectives it must convey, the typeface roles, the colour strategy, the composition system, and what it deliberately refuses to do. The deliverable is a written brief that a later reader can argue with. Not values, not code.</p>
+      <p>What the product should look and feel like, and <strong>why</strong> — the adjectives it must convey, the typeface roles, the colour strategy, the composition system, and what it deliberately refuses to do. The deliverable is a written direction brief that a later reader can argue with. Not token names, not code.</p>
       <ul class="rows"><li>art-direction</li><li>reference-analysis</li><li>typography-intent</li><li>colour-intent</li><li>layout-system</li><li>brief</li></ul>
     </div>
   </article>
@@ -330,11 +330,13 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
       <td><code>design-tokens</code></td></tr>
       <tr><td><code>design-direction</code></td><td>how the interface behaves</td>
       <td><code>design-ux</code></td></tr>
-      <tr><td><code>design-direction</code></td><td>judging a screen that already exists</td>
+      <tr><td><code>design-direction</code></td><td>itemising defects, inconsistencies or judgements about an existing interface</td>
       <td><code>design-critique</code></td></tr>
+      <tr><td><code>design-direction</code></td><td>judging how an existing rendering holds together as a whole</td>
+      <td><code>design-review</code></td></tr>
       <tr><td><code>design-tokens</code></td><td>choosing the aesthetic the values express</td>
       <td><code>design-direction</code></td></tr>
-      <tr><td><code>design-tokens</code></td><td>storing motion values before motion is designed</td>
+      <tr><td><code>design-tokens</code></td><td>deciding duration and easing values</td>
       <td><code>design-motion</code></td></tr>
       <tr><td><code>design-ux</code></td><td>how the interface looks</td>
       <td><code>design-direction</code></td></tr>
@@ -349,14 +351,14 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
       <tr><td><code>design-a11y</code></td><td>writing the implementation that carries the semantics</td>
       <td>a build skill outside this set</td></tr>
       <tr><td><code>design-critique</code></td><td>producing the replacement design</td>
-      <td><code>design-direction</code></td></tr>
-      <tr><td><code>design-critique</code></td><td>adjudicating a conformance question the review raised</td>
+      <td>the owner named on the finding (direction, ux, tokens, motion or a11y)</td></tr>
+      <tr><td><code>design-critique</code></td><td>adjudicating a conformance question the critique raised</td>
       <td><code>design-a11y</code></td></tr>
       <tr><td><code>design-critique</code></td><td>the verdict on how the whole of it looks</td>
       <td><code>design-review</code></td></tr>
-      <tr><td><code>design-review</code></td><td>itemising the measurable defects against a named standard</td>
+      <tr><td><code>design-review</code></td><td>itemising individual defects, inconsistencies or defensible judgements</td>
       <td><code>design-critique</code></td></tr>
-      <tr><td><code>design-review</code></td><td>deciding the aesthetic in the first place</td>
+      <tr><td><code>design-review</code></td><td>choosing or changing the intended aesthetic</td>
       <td><code>design-direction</code></td></tr>
       <tr><td><code>design-review</code></td><td>whether a contrast or focus problem conforms</td>
       <td><code>design-a11y</code></td></tr></tbody>
@@ -373,8 +375,8 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
     <thead><tr><th>Route</th><th>Pattern</th><th>When</th><th>Chain</th><th>Condition</th></tr></thead>
     <tbody>
       <tr><td><code>redesign</code></td><td><span class="tag c">linear</span></td>
-      <td>a surface needs a point of view it does not have</td><td class="chain">design-direction <b>&rarr;</b> design-ux <b>&rarr;</b> design-tokens <b>&rarr;</b> design-motion <b>&rarr;</b> design-a11y</td>
-      <td><b>gate</b> &middot; the brief names a standard before design-ux starts</td></tr>
+      <td>a surface needs a point of view it does not have</td><td class="chain">design-direction <b>&rarr;</b> design-ux <b>&rarr;</b> design-motion <b>&rarr;</b> design-tokens <b>&rarr;</b> design-a11y</td>
+      <td><b>gate</b> &middot; the direction brief is DONE, with no UNSPECIFIED, before design-ux starts</td></tr>
       <tr><td><code>new-system</code></td><td><span class="tag c">linear</span></td>
       <td>a product needs a design foundation</td><td class="chain">design-direction <b>&rarr;</b> design-tokens <b>&rarr;</b> design-a11y</td>
       <td><b>gate</b> &middot; colour roles are decided before any value is named</td></tr>
@@ -387,21 +389,21 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
       <tr><td><code>tokenise</code></td><td><span class="tag c">linear</span></td>
       <td>hardcoded values must become a system</td><td class="chain">design-tokens</td>
       <td>&mdash;</td></tr>
-      <tr><td><code>review</code></td><td><span class="tag c">report-only</span></td>
-      <td>is this any good, what should change</td><td class="chain">design-critique</td>
+      <tr><td><code>itemise</code></td><td><span class="tag c">report-only</span></td>
+      <td>itemise individual issues, inconsistencies or judgements and who should address them</td><td class="chain">design-critique</td>
       <td><b>stops at</b> &middot; findings ranked by user impact, each with a fix and an owner. Nothing is redesigned</td></tr>
       <tr><td><code>conformance-check</code></td><td><span class="tag c">report-only</span></td>
       <td>does this meet the accessibility bar</td><td class="chain">design-a11y</td>
       <td><b>stops at</b> &middot; each criterion passed, failed, or not assessable at design time</td></tr>
       <tr><td><code>critique-to-zero</code></td><td><span class="tag c">loop</span></td>
-      <td>close every finding before this ships</td><td class="chain">design-critique <b>&rarr;</b> design-ux</td>
-      <td><b>oracle</b> &middot; no open finding at severity major or above, and one full pass adds none</td></tr>
+      <td>close every structure, flow or state finding at Serious or above before this ships</td><td class="chain">design-critique <b>&rarr;</b> design-ux</td>
+      <td><b>oracle</b> &middot; no open design-ux-owned finding at severity Serious or above, and one full pass adds none</td></tr>
       <tr><td><code>look-check</code></td><td><span class="tag c">report-only</span></td>
       <td>does this look good, and how far off is it</td><td class="chain">design-review</td>
       <td><b>stops at</b> &middot; one verdict on the whole, with the conditions it was formed under and what was not seen. Nothing is redesigned</td></tr>
-      <tr><td><code>look-then-itemise</code></td><td><span class="tag c">linear</span></td>
+      <tr><td><code>look-then-itemise</code></td><td><span class="tag c">report-only</span></td>
       <td>the whole reads wrong and the parts have to be named</td><td class="chain">design-review <b>&rarr;</b> design-critique</td>
-      <td><b>gate</b> &middot; the verdict names which principle failed before the itemised pass starts</td></tr></tbody>
+      <td><b>gate</b> &middot; pass the scoped verdict and its observations with their evidence grades; a whole-screen judgement is not proof of an itemised defect</td></tr></tbody>
   </table></div>
 </section>
 
@@ -499,8 +501,8 @@ a:focus-visible{outline:2px solid var(--gate);outline-offset:2px}
       <div class="tw" style="border:0;background:transparent"><table style="min-width:0"><tbody>
         <tr><td>skills</td><td class="num-c">7 / 8</td></tr>
         <tr><td>routes</td><td class="num-c">10 / 12</td></tr>
-        <tr><td>shared contract lines</td><td class="num-c">607 / 620</td></tr>
-        <tr><td>repository markdown</td><td class="num-c">5,130 / 5,800</td></tr>
+        <tr><td>shared contract lines</td><td class="num-c">606 / 620</td></tr>
+        <tr><td>repository markdown</td><td class="num-c">5,012 / 5,800</td></tr>
         <tr><td>static rules</td><td class="num-c">38</td></tr>
       </tbody></table></div>
       <p style="margin:14px 0 0;color:var(--muted);font-size:13.5px">Adding a rule means adding a
@@ -538,7 +540,7 @@ make hooks                      # run the rules on every commit</pre>
 
 <footer>
   <p>design-skills &middot; 7 skills &middot; 38 static rules
-     &middot; 5,130 lines of markdown.<br>
+     &middot; 5,012 lines of markdown.<br>
      Every figure on this page is read off the repository by <code>tools/pages.py</code> in
      <code>agent-toolkit</code>. None of them are typed by hand, and a stale page fails a
      check rather than sitting there looking current.</p>

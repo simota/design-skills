@@ -1,7 +1,7 @@
 <!-- design:deferred -->
 # Motion Tokens
 
-Purpose: Named duration and easing values, plus the rule that assigns them.
+Purpose: Illustrative duration and easing values, plus the rule that assigns them.
 Read when: choosing a value, or naming one for `design-tokens` to store.
 Source: none — nothing outside this page can move what it states.
 Verified: 2026-09-17 — reviewed as illustrative values, not external authority; no automated check.

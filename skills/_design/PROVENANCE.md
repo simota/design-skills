@@ -47,7 +47,7 @@ Values travel in tables, so the ground travels in a column:
 Prose deliverables carry the same thing inline. The form is not the point; the
 column being impossible to leave blank is.
 
-## What `ARBITRARY` obliges
+## `ARBITRARY` — what it obliges
 
 An `ARBITRARY` value is legitimate and is **not** a residual on its own. Design
 runs out of grounds long before it runs out of decisions, and pretending
