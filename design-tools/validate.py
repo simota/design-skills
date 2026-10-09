@@ -9,6 +9,7 @@ belongs in a review, not in this file.
 """
 from __future__ import annotations
 
+import fnmatch
 import re
 import sys
 import unicodedata
@@ -201,7 +202,10 @@ def v9_signals():
 
 def v10_fixtures():
     pairs = [(_norm(s), name) for name, c in CAP.items() for s in c.get("signals", [])]
-    for entry in FIX if isinstance(FIX, list) else []:
+    if not isinstance(FIX, list) or not FIX:
+        fail("V10", "fixtures.yaml holds no list of asks; this rule is checking nothing")
+        return
+    for entry in FIX:
         ask, expect = _norm(entry["ask"]), entry["expect"]
         hits = [(len(sig), owner) for sig, owner in pairs if sig in ask]
         if not hits:
@@ -228,6 +232,12 @@ def v12_prefix():
 def v13_route_budget():
     if len(ROUTES) > LIM["routes_max"]:
         fail("V13", f"{len(ROUTES)} routes (max {LIM['routes_max']})")
+    # A limit the registry declares and nothing reads is a number that only
+    # looks enforced.
+    for name, r in ROUTES.items():
+        n = len(r.get("chain", []))
+        if n > LIM["route_stages_max"]:
+            fail("V13", f"route {name} chains {n} stages (max {LIM['route_stages_max']})")
 
 
 def v14_patterns():
@@ -302,8 +312,11 @@ def v19_paths_resolve():
     probe = SKILL_DIRS[0]
     shared = sorted((SKILLS_ROOT / SHARED).glob("*.md"))
     for d in SKILL_DIRS:
-        readable = [d / "SKILL.md"] + sorted((d / "playbooks").glob("*.md")) \
-            if (d / "playbooks").exists() else [d / "SKILL.md"]
+        # reference/ is read by the same skill from the same base; leaving it
+        # out let `naming.md` stand for `playbooks/naming.md` there unnoticed.
+        readable = [d / "SKILL.md"]
+        for layer in ("playbooks", "reference"):
+            readable += sorted((d / layer).glob("*.md"))
         for f in readable:
             _check_paths(f, d, f"{d.name}/{f.relative_to(d)}")
     for f in shared:                      # checked once, against one skill dir
@@ -385,7 +398,10 @@ def v22_markers_classified():
 
 
 def v23_labels():
-    import fnmatch
+    for pat, label in H["label_by_path"].items():
+        if label not in H["document_labels"]:
+            fail("V23", f"label_by_path gives {pat} the label {label!r}, which "
+                        "document_labels does not declare")
     for f in sorted(ROOT.rglob("*.md")):
         if ".git" in f.parts:
             continue

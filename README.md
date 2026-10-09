@@ -70,7 +70,7 @@ and the date anyone last checked it instead.
 `Verified:` line records that someone looked once; it cannot fail, so it cannot
 catch the value edited into a wrong one later. `make figures` recomputes what the
 reference layer states from the reference layer itself — every recorded contrast
-pair from its two hex values and its verdict from the requirement, and the type
+pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, and the type
 scale from its own stated base and ratio. It runs in `make check` and in the
 pre-commit hook, and six deliberately-introduced errors were each observed
 failing it, including two that make the checks vacuous rather than wrong.
@@ -130,6 +130,7 @@ finds the file, which is what makes this fail quietly.
 | [`skills/_design/CONTRACT.md`](skills/_design/CONTRACT.md) | Evidence grades, status, residual classes, the completion sweep |
 | [`skills/_design/SIZING.md`](skills/_design/SIZING.md) | How much ceremony a request is worth; when a dialogue is mandatory; the brief |
 | [`skills/_design/HANDOFF.md`](skills/_design/HANDOFF.md) | What passes between skills, and the seven checks the receiver runs |
+| [`skills/_design/PROVENANCE.md`](skills/_design/PROVENANCE.md) | The six grounds, `ARBITRARY`, and what each literal value must carry |
 | [`skills/_design/VALUES.md`](skills/_design/VALUES.md) | The order that decides when two goods conflict, and the escape hatch |
 | [`skills/_design/ROUTING.md`](skills/_design/ROUTING.md) | Guidance. Read when the owner is unclear or the work spans several |
 | [`skills/_design/REPORT.md`](skills/_design/REPORT.md) | What a person reads: the order, the ceiling per tier, and why the handoff is the record |
@@ -141,7 +142,7 @@ design-skills/
 ├── README.md
 ├── Makefile
 ├── design-registry/            # budgets, boundaries, routes, delivered blocks
-├── design-tools/               # validate · test_validate · render · pre-commit
+├── design-tools/               # validate · test_validate · figures_check · render · engine · refute · pre-commit
 └── skills/                     # everything the CLI reads
     ├── _design/                # contracts in force on every run
     └── design-<facet>/         # a SKILL.md is what makes this a skill, and
@@ -157,7 +158,7 @@ design-skills/
 ## Working on it
 
 ```sh
-make check      # what CI runs: the rules, then proof the rules still fire
+make check      # what CI runs: the rules, the figures, then proof both still fire
 make render     # after editing anything in design-registry/delivered/
 make hooks      # run the rules on every commit
 ```
@@ -169,7 +170,7 @@ passing may be checking nothing.
 ## Installing
 
 ```sh
-make link                       # into ~/.claude/skills
+make link                       # into the claude, codex and agy skills dirs that exist
 make link CLAUDE_DIR=.claude/skills
 ```
 

@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+MISSING: list[str] = []
 H = yaml.safe_load((ROOT / "design-registry" / "harness.yaml").read_text(encoding="utf-8"))
 PREFIX = H["prefix"]
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
@@ -35,7 +36,9 @@ def render(path: Path) -> bool:
         else:
             heading = f"## {spec['section']}\n"
             if heading not in text:
-                print(f"  {path.name}: no section {spec['section']!r}", file=sys.stderr)
+                # A block with nowhere to go is not delivered, and saying
+                # "rendered" over it would read as though it were.
+                MISSING.append(f"{path.parent.name}: no section {spec['section']!r} for {key}")
                 continue
             head, rest = text.split(heading, 1)
             # append at the end of that section, before the next heading
@@ -52,7 +55,9 @@ def main() -> int:
     changed = [d.name for d in sorted(SKILLS_ROOT.glob(f"{PREFIX}*"))
                if (d / "SKILL.md").exists() and render(d / "SKILL.md")]
     print(f"rendered: {len(changed)} changed" + (f" ({', '.join(changed)})" if changed else ""))
-    return 0
+    for m in MISSING:
+        print(f"  undelivered — {m}", file=sys.stderr)
+    return 1 if MISSING else 0
 
 
 if __name__ == "__main__":

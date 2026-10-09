@@ -50,7 +50,7 @@ State the stack per role, as plain text. Token names are `design-tokens`' output
 | Role | Stack after the chosen family |
 |------|-------------------------------|
 | UI / body | `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif` |
-| Display | `Georgia, "Times New Roman", serif` |
+| Display | the display face's own class: the UI stack if sans, `Georgia, "Times New Roman", serif` if serif |
 | Mono | `ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace` |
 
 Specify `font-display: swap` intent and note whether a metric-compatible fallback (`size-adjust`) is required.

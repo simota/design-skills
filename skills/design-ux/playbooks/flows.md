@@ -36,7 +36,7 @@ flowchart TD
 ```
 
 Rules:
-- Every `-->` out of a network call has at least three targets: success, expected failure, unexpected failure.
+- Every network call has at least three outgoing `-->`: success, expected failure, unexpected failure.
 - Preserve user input across every failure branch. Losing a filled form is the most costly avoidable failure in UX.
 - Mark where focus lands on each branch.
 
@@ -63,7 +63,7 @@ In priority order:
 5. **Merge** — can two steps live on one screen without crowding?
 6. **Parallelise** — can the user proceed while a slow step completes in the background?
 
-Only after all five does splitting into more, simpler steps become the right answer.
+Only after all six does splitting into more, simpler steps become the right answer.
 
 ## Multi-step flows
 

@@ -59,7 +59,7 @@ The brief is the deliverable. Fill every field; write "n/a — <reason>" rather 
 | Text muted | | | | |
 | Accent | | | | |
 | Surface / canvas | | | | |
-| Border | | | | (3:1 non-text) |
+| Border | | | | (non-text, per design-a11y) |
 
 ## 7. Composition Spec
 - Grid:                 columns, gutter, breakpoints

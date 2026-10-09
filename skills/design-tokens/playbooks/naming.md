@@ -49,7 +49,7 @@ Reading a name should tell you its tier without opening the file.
 3. **State is always the last segment.** This makes state variants sortable and greppable.
 4. **`default` is never written.** `--color-text-primary` is the default state.
 5. **Foreground on a coloured surface uses `on-`.** `--color-on-accent`, `--color-on-danger`.
-6. **Never abbreviate below four characters.** `bg` and `fg` are the accepted exceptions; `clr`, `bdr`, `sz` are not.
+6. **Never abbreviate below four characters.** `bg`, `fg`, `z` and t-shirt sizes (`xs`–`4xl`) are the accepted exceptions; `clr`, `bdr`, `sz` are not.
 7. **Singular category, plural never.** `--color-*`, not `--colors-*`.
 8. **One grammar per repository.** If a framework imposes its own (Tailwind, MUI), adopt theirs rather than running two.
 
@@ -66,7 +66,7 @@ Reading a name should tell you its tier without opening the file.
 | `bg-subtle` | Inset or striped areas |
 | `border-subtle` | Low-emphasis dividers |
 | `border-strong` | Control boundaries; must reach 3:1 |
-| `action-bg` / `action-text` | Primary action |
+| `action-bg` / `on-action` | Primary action |
 | `danger` / `success` / `warning` / `info` | Semantic states |
 | `focus-ring` | Focus indicator |
 
@@ -86,7 +86,7 @@ Reading a name should tell you its tier without opening the file.
 Never silently rename. Keep the old name as an alias for one release, mark it, and record the replacement.
 
 ```css
-/* @deprecated → --color-text-muted. Remove after the next major. */
+/* @deprecated → --color-text-muted. Remove after one release. */
 --color-text-tertiary: var(--color-text-muted);
 ```
 

@@ -11,7 +11,7 @@ When a screen feels heavy, the fix is usually structural, not visual.
 | Extraneous | Effort spent on the interface, not the task | Remove — this is the design's fault |
 | Germane | Effort spent learning the model | Support with consistency and good naming |
 
-Only extraneous load should be attacked directly. Reducing intrinsic load means changing the task.
+Only extraneous load should be removed; intrinsic load is managed by decomposition, and reducing it means changing the task.
 
 ## Sources of extraneous load
 

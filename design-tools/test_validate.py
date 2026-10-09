@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove each rule in validate.py fires.
+"""Prove each rule in validate.py fires, and each recomputation in figures_check.py.
 
 A check only ever seen passing may be checking nothing. Every rule below gets a
 deliberate violation injected into a throwaway copy of the repo, and the test
@@ -93,6 +93,10 @@ def _(r): sub(r / "design-registry/fixtures.yaml",
               '- ask: "give me a UI audit of this screen"\n  expect: design-tokens')
 
 
+@case("V10-empty")
+def _(r): (r / "design-registry/fixtures.yaml").write_text("# no asks yet\n", encoding="utf-8")
+
+
 @case("V11")
 def _(r):
     import shutil
@@ -112,6 +116,13 @@ def _(r):
     t += "".join(f"\nfiller{i}:\n  pattern: linear\n  when: x\n  chain: [design-ux]\n"
                  for i in range(20))
     (r / "design-registry/routes.yaml").write_text(t, encoding="utf-8")
+
+
+@case("V13-stages")
+def _(r): sub(r / "design-registry/routes.yaml",
+              "chain: [design-direction, design-ux, design-tokens, design-motion, design-a11y]",
+              "chain: [design-direction, design-ux, design-tokens, design-motion, design-a11y, "
+              "design-critique, design-review]")
 
 
 @case("V14")
@@ -143,6 +154,11 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "`_design/SIZING.md`", "`../_design/
 def _(r): sub(r / f"{S}_design/ROUTING.md", "(`_design/SIZING.md`)", "(`SIZING.md`)")
 
 
+@case("V19-reference")
+def _(r): sub(r / f"{S}design-tokens/reference/export-targets.md",
+              "`playbooks/naming.md`", "`naming.md`")
+
+
 @case("V20")
 def _(r):
     """The definition row becomes a mention; the word is still on the page."""
@@ -164,6 +180,12 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Done when",
 
 @case("V23")
 def _(r): sub(r / f"{S}_design/VALUES.md", "<!-- design:contract -->", "<!-- design:guidance -->")
+
+
+@case("V23-undeclared")
+def _(r): sub(r / "design-registry/harness.yaml",
+              "document_labels: [contract, guidance, deferred]",
+              "document_labels: [contract, deferred]")
 
 
 @case("V24")
@@ -207,10 +229,10 @@ def _(r): (r / f"{S}design-ux/reference/orphan.md").write_text(
 @case("V31")
 def _(r):
     for f in sorted((r / f"{S}").glob("*/reference/*.md")):
-        t = f.read_text()
+        t = f.read_text(encoding="utf-8")
         i = t.index("Verified:")
         j = t.index("\n\n", i)
-        f.write_text(t[:i] + "Verified: 2026-08-21" + t[j:])
+        f.write_text(t[:i] + "Verified: 2026-08-21" + t[j:], encoding="utf-8")
         return
 
 
@@ -257,8 +279,8 @@ def _(r):
 def _(r):
     """A link where the class grants no shell reads like a capability and is not one."""
     import yaml as _y
-    caps = _y.safe_load((r / "design-registry/capabilities.yaml").read_text())
-    cls = _y.safe_load((r / "design-registry/harness.yaml").read_text())["permission_classes"]
+    caps = _y.safe_load((r / "design-registry/capabilities.yaml").read_text(encoding="utf-8"))
+    cls = _y.safe_load((r / "design-registry/harness.yaml").read_text(encoding="utf-8"))["permission_classes"]
     for name, e in caps.items():
         if "Bash" not in cls[e["class"]]["tools"]:
             (r / "skills" / name / "refute.py").symlink_to("../../design-tools/refute.py")
@@ -344,6 +366,51 @@ def _(r):
 def _(r): sub(r / "design-registry/harness.yaml", "source_authorities:", "unused_authorities:")
 
 
+# figures_check.py is held to the same standard: each recomputation is shown
+# failing on a deliberately wrong page, or a green run proves nothing about it.
+CONTRAST = f"{S}design-a11y/reference/contrast.md"
+SCALES = f"{S}design-tokens/reference/scales.md"
+FIGURE_CASES: dict[str, callable] = {
+    "contrast-ratio": lambda r: sub(r / CONTRAST, "| 17.76:1 |", "| 17.10:1 |"),
+    "contrast-verdict": lambda r: sub(r / CONTRAST, "| 2.64:1 | 4.5:1 | **fail** |",
+                                      "| 2.64:1 | 4.5:1 | pass |"),
+    "contrast-unparsed": lambda r: sub(r / CONTRAST, "| Body on canvas | `#16181d` |",
+                                       "| Body on canvas | near-black |"),
+    "contrast-table-gone": lambda r: sub(r / CONTRAST, "| Pair | Foreground |",
+                                         "| Pairing | Foreground |"),
+    "scale-step": lambda r: sub(r / SCALES, "| `--text-lg` | 19px |", "| `--text-lg` | 20px |"),
+    "scale-clamp-undeclared": lambda r: sub(r / SCALES, "clamped below `--text-base`",
+                                            "kept above the ratio"),
+    "scale-header-gone": lambda r: sub(r / SCALES, "| 16px / 1.20 ratio |", "| Size |"),
+}
+
+
+def run_figures(root: Path) -> subprocess.CompletedProcess:
+    return subprocess.run([sys.executable, str(root / "design-tools" / "figures_check.py")],
+                          capture_output=True, text=True)
+
+
+def copy_repo(tmp: str) -> Path:
+    copy = Path(tmp) / "repo"
+    shutil.copytree(ROOT, copy, symlinks=True,
+                    ignore=shutil.ignore_patterns(".git", "__pycache__"))
+    return copy
+
+
+def figures_fire() -> list[str]:
+    if run_figures(ROOT).returncode != 0:
+        return ["baseline (figures_check is already failing)"]
+    bad = []
+    for name, mutate in FIGURE_CASES.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = copy_repo(tmp)
+            mutate(copy)
+            if run_figures(copy).returncode == 0:
+                bad.append(name)
+                print(f"  figures/{name} did not fail")
+    return bad
+
+
 def main() -> int:
     baseline = run(ROOT)
     if "green" not in baseline:
@@ -353,9 +420,7 @@ def main() -> int:
     bad: list[str] = []
     for rule, mutate in CASES.items():
         with tempfile.TemporaryDirectory() as tmp:
-            copy = Path(tmp) / "repo"
-            shutil.copytree(ROOT, copy, symlinks=True,
-                            ignore=shutil.ignore_patterns(".git", "__pycache__"))
+            copy = copy_repo(tmp)
             mutate(copy)
             out = run(copy)
             expect = rule.split("-")[0]
@@ -377,6 +442,12 @@ def main() -> int:
         print("no deliberate violation is injected for: " + ", ".join(untested))
         return 1
     print(f"every rule fires ({len(declared)} rules, {len(CASES)} cases)")
+
+    silent_figures = figures_fire()
+    if silent_figures:
+        print("figures_check stayed green on: " + ", ".join(silent_figures))
+        return 1
+    print(f"every figure check fails when it should ({len(FIGURE_CASES)} cases)")
     return 0
 
 

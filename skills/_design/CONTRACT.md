@@ -59,7 +59,7 @@ with the place a reader would next look for it.
 
 **Who writes the marker depends on the tool grant.** A skill holding `Write`
 puts a `#TODO(agent): <class> — <action>` line in the document it produced.
-`design-critique` holds no write grant: it records the entry in `open` alone
+A report-only skill (`design-critique`, `design-review`) holds no write grant: it records the entry in `open` alone
 and names where the marker belongs. **A report-only skill never edits to
 satisfy this rule** — that would break the guarantee that makes it trustworthy.
 

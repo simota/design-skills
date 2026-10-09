@@ -20,9 +20,9 @@ nine to learn whether it is fine has been told nothing by paragraph eight.
 
 ## Grounding it
 
-Each verdict carries the three phases, or names the one it is missing.
+Each verdict carries the three legs, or names the one it is missing.
 
-| Phase | Present when | Absent means |
+| Leg | Present when | Absent means |
 |---|---|---|
 | Impression | The conditions and the first reading are recorded | There was no looking. Nothing else survives |
 | Principle | The impression restates as one named principle with evidence | It is a feeling. Legitimate, and labelled `ARBITRARY` |

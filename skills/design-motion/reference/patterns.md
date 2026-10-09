@@ -96,7 +96,7 @@ feedback is allowed. UX owns the underlying states and feedback semantics.
 - Under reduced motion: static neutral blocks, no shimmer.
 
 ### Spinner
-- The loop above is an illustrative choice, not a wait-duration requirement.
+- The spinner loop in `reference/motion-tokens.md` is an illustrative choice, not a wait-duration requirement.
 - UX owns the waiting state. Elapsed time does not make unknown progress measurable;
   show a percentage only when actual progress data supports it.
 

@@ -33,7 +33,7 @@ Dark is a *design*, not a transform. Inverting lightness produces muddy mid-tone
 | Concern | Light | Dark |
 |---------|-------|------|
 | Canvas | `--gray-0` | `--gray-950` — not `#000`; pure black kills elevation and increases halation |
-| Surface | `--gray-0` on `--gray-50` canvas | *Lighter* than canvas (`--gray-900` on `--gray-950`) — elevation goes up in lightness |
+| Surface | `--gray-0` on `--gray-0` canvas, separated by border or shadow | *Lighter* than canvas (`--gray-900` on `--gray-950`) — elevation goes up in lightness |
 | Elevation | Shadow | Shadow reads poorly; layer with lighter surfaces plus `--color-border-subtle` |
 | Text primary | `--gray-950` | `--gray-100`, not `--gray-0` — full white on near-black is fatiguing |
 | Accent | `--accent-600` | `--accent-400` — saturated accents that pass on white fail on dark; lighten and often desaturate |
@@ -49,6 +49,7 @@ Verify every text pair again after remapping. A pair passing in light says nothi
   --color-bg-canvas:   var(--gray-0);
   --color-text-primary: var(--gray-950);
   --color-action-bg:    var(--accent-600);
+  --color-on-action:    var(--gray-0);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,6 +57,7 @@ Verify every text pair again after remapping. A pair passing in light says nothi
     --color-bg-canvas:    var(--gray-950);
     --color-text-primary: var(--gray-100);
     --color-action-bg:    var(--accent-400);
+    --color-on-action:    var(--gray-950);  /* white on accent-400 is 2.49:1 */
   }
 }
 
@@ -63,13 +65,14 @@ Verify every text pair again after remapping. A pair passing in light says nothi
   --color-bg-canvas:    var(--gray-950);
   --color-text-primary: var(--gray-100);
   --color-action-bg:    var(--accent-400);
+  --color-on-action:    var(--gray-950);
 }
 ```
 
 Rules:
 - Define the complete light palette on bare `:root` so no token's only definition lives inside a media query.
 - Support three states: explicit light, explicit dark, and system default. The `:not([data-theme="light"])` guard makes the toggle win in both directions.
-- Set `color-scheme: light dark` so form controls and scrollbars follow.
+- Set `color-scheme: light dark` on `:root` and `light` / `dark` under each explicit `[data-theme]`, so form controls and scrollbars follow the toggle, not only the OS.
 - Avoid a flash of the wrong theme: apply the stored preference before first paint.
 
 ## Additional themes

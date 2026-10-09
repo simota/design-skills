@@ -42,8 +42,8 @@ goes. These rows say *how to tell which case you are in*.
 | direction vs critique | New or revised aesthetic decisions → direction. Itemised evaluation of what exists → critique; existence alone does not decide |
 | ux vs motion | Does the question name a state, or the passage between two? State → ux. Passage → motion |
 | ux vs a11y | Is the failure "nobody can use this" or "some people cannot"? Everyone → ux. Some → a11y |
-| a11y vs critique | **critique flags, a11y adjudicates.** A review may note a contrast risk; whether it conforms is a11y's to decide |
-| critique vs anything | critique never produces the replacement. It says what is wrong and hands the fix to the owner |
+| a11y vs critique | **critique flags, a11y adjudicates.** A critique may note a contrast risk; whether it conforms is a11y's to decide |
+| critique vs anything | critique never decides the replacement. It says what is wrong, proposes a fix, and hands the decision to the owner |
 | review vs critique | **review judges the whole, critique itemises the parts.** Is the question "does this hold together" or "what is wrong here"? |
 | review vs direction | A verdict on a rendering → review. Choosing or changing its intended aesthetic → direction. A poor verdict does not authorise redesign |
 | tokens vs motion | Motion decides the value; tokens decide its name and where it lives |

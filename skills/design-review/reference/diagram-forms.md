@@ -4,7 +4,7 @@ Read when: a finding has hit one of the triggers and the shape is not obvious.
 Source: none — nothing outside this page can move what it states.
 Verified: 2026-08-23 — no automated check reads the drawings. What is checked is
 that this page and `visualise` between them define every trigger, form and floor
-word the registry declares; a rule in `design-tools/validate.py` re-runs that on
+word the registry declares; a rule in the set's validator (V36) re-runs that on
 every commit, so a word deleted from here fails the build.
 
 # Forms
@@ -28,9 +28,9 @@ card, 320 x 200, viewed at 1x
 │  ③ [ buy ]                       │
 └──────────────────────────────────┘
 
-① major     title and body are one step apart on the scale; no hierarchy
-② major     price sits below the fold at the 360px breakpoint
-③ blocking  target is 32px tall against a 44px floor
+① Serious   title and body read as one level; nothing leads the eye
+② Serious   price sits below the fold at the 360px breakpoint
+③ Moderate  buy reads as the weakest mark on the card (size → design-a11y)
 ```
 
 Say the component, its size, and the density you judged at, or the marks mean

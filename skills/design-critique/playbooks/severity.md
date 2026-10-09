@@ -11,7 +11,7 @@ Rank by user impact, never by how obvious the finding was.
 | Serious | Completable, but materially harder or riskier | Does it cost time, cause errors, or risk data? |
 | Moderate | Confusion or friction | Would a user pause, or ask a question? |
 | Minor | Craft gap with no functional barrier | Would a designer notice, but a user not? |
-| Note | Observation or a defensible alternative | Is this taste rather than a defect? |
+| Note | Observation or a defensible alternative | Is this a defensible alternative rather than a defect? |
 
 ## Impact factors
 

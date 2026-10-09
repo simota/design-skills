@@ -43,7 +43,7 @@ Emit the format the project actually consumes. Emitting all of them is noise.
 }
 ```
 
-Rules: `rem` for anything that should respond to the user's font size (type, spacing around type); `px` for hairlines, radii, and shadow offsets.
+Rules: `rem` for anything that should respond to the user's font size (type, spacing around type); `px` for hairlines and shadow offsets; radii take either, chosen once.
 
 ## Tailwind v4
 
@@ -53,13 +53,13 @@ Rules: `rem` for anything that should respond to the user's font size (type, spa
 @theme {
   --color-canvas: var(--gray-0);
   --color-surface: var(--gray-0);
-  --color-text-primary: var(--gray-950);
+  --color-primary: var(--gray-950);
   --spacing-4: 1rem;
   --radius-md: 0.5rem;
 }
 ```
 
-Tailwind derives utility names from the token names, so the grammar here *is* the class API. Decide it deliberately: `--color-text-primary` yields `text-text-primary`, which stutters — prefer `--color-primary` under Tailwind's own namespace rules. This is the rule-8 exception to `naming.md`'s anti-pattern list: the framework's grammar wins when the project adopts it.
+Tailwind derives utility names from the token names, so the grammar here *is* the class API. Decide it deliberately: `--color-text-primary` yields `text-text-primary`, which stutters — prefer `--color-primary` under Tailwind's own namespace rules. This is the rule-8 exception to `playbooks/naming.md`'s anti-pattern list: the framework's grammar wins when the project adopts it.
 
 ## Style Dictionary
 

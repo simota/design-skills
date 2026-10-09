@@ -11,7 +11,7 @@ The output structure. Tone rules matter as much as content — a report that rea
 ## Structure
 
 ```markdown
-# Design Review — <screen / flow / product>
+# Design Critique — <screen / flow / product>
 
 ## Standard
 Judged against: <design brief | design system v2.1 | UX spec | platform conventions | general heuristics>
@@ -41,7 +41,7 @@ Source: <link or file>
 
 **Fix:** <specific, implementable change>
 
-**Owner:** <design-ux | design-tokens | design-motion | design-a11y | engineering>
+**Owner:** <design-direction | design-ux | design-tokens | design-motion | design-a11y | engineering>
 
 ---
 
@@ -92,7 +92,7 @@ A fix is specific enough that an implementer would not need to ask a follow-up q
 | "Improve the hierarchy" | "Demote 'Save changes' to the secondary outline style; leave 'Publish' as the only filled button" |
 | "Fix the contrast" | "Change `--color-text-muted` from `#9aa0a6` to `#6b7280` (4.83:1 on canvas); re-check the dark theme" |
 | "Add an empty state" | "Add a first-use empty state: one sentence of purpose plus a 'Create invoice' primary action; distinct from the filtered-empty state" |
-| "Make targets bigger" | "Increase row action hit areas to 24×24 with padding (visual icon stays 20px) and space them 8px apart — SC 2.5.8" |
+| "Make targets bigger" | "Increase row action hit areas to 24×24 CSS px with padding (visual icon stays 20px) — SC 2.5.8" |
 
 ## When you cannot measure
 
