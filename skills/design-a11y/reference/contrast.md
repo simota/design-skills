@@ -56,7 +56,7 @@ When a fixed brand colour cannot pass: keep it for large display text, backgroun
 | Placeholder text as content | Placeholders are hints, not labels; the label carries the meaning and must pass |
 | Light grey secondary text | Most "elegant grey" values sit between 2.5:1 and 4:1; step darker |
 | White text on a mid-saturation brand colour | Usually 3–4:1; darken the surface or use dark text |
-| Text over an image or gradient | Add a scrim, and measure against the *lightest* pixel behind the text |
+| Text over an image or gradient | Add a scrim, and measure against the *worst-case* pixel behind the text |
 | Icon-only buttons | Meaningful icons need 3:1 (SC 1.4.11) |
 | Chart series | Adjacent series need 3:1 from each other and a non-colour distinction |
 | Focus ring on a coloured button | Offset ring or inverted ring colour |
@@ -124,7 +124,7 @@ for fg, bg in [("#16181d", "#ffffff"), ("#9aa0a6", "#ffffff")]:
 
 Notes:
 - Semi-transparent foregrounds must be composited against the actual backdrop first; the formula takes opaque values only.
-- Text over a gradient or image is measured against the **lightest** pixel behind the text, not the average.
+- Text over a gradient or image is measured against the pixel behind the text closest in luminance to it (the lightest for light text, the darkest for dark text), not the average.
 - Round to two decimals and record the two source values beside the result. A ratio without its inputs cannot be re-checked.
 
 Every example ratio in this package was produced by the snippet above, not typed by hand.

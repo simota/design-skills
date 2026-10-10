@@ -78,8 +78,8 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
 - Always: compute the ratio and record **both source values** beside it
 - Always: give every non-decorative image, icon, and control its intended
   accessible name — the name is a design decision, not a build detail
-- Always: check the focus order and destinations `design-ux` specified (send any it
-  left open back to `design-ux` as `UNSPECIFIED`), and a
+- Always: specify the focus order; check the destinations `design-ux` specified
+  (record any it left open in `open` as `UNSPECIFIED`, owner `design-ux`), and a
   visible indicator never entirely obscured by sticky chrome (2.4.11; 2.4.12 at AAA)
 - Always: check target size and spacing for every interactive element, and
   verify each in-scope theme independently

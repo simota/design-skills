@@ -67,18 +67,19 @@ The undo window (5–10s typical), where the undo control lives, and what happen
 
 ## Filled example
 
-| State | Condition | Content | Primary action | Notes |
-|-------|-----------|---------|----------------|-------|
-| Empty (first) | `items.length === 0 && !filters` | "Invoices you create appear here." | Create invoice | Show a sample row, greyed |
-| Empty (filtered) | `items.length === 0 && filters` | "No invoices match *unpaid, Q3*." | Clear filters | Keep filter chips visible |
-| Loading (initial) | first fetch pending | 6 skeleton rows | — | Appears after 150ms |
-| Loading (refresh) | refetch pending | previous rows retained | — | Spinner on refresh button only |
-| Partial | totals failed, rows ok | rows render; totals slot shows retry | Retry totals | Rows remain interactive |
-| Error (fetch) | 5xx / timeout | "Couldn't load invoices." | Retry | Filters preserved |
-| Error (permission) | 403 | "You need billing access." | Request access | Names the admin |
-| Offline | `navigator.onLine === false` | cached rows + banner | — | New invoices queue |
-| Success (create) | 201 | toast: "Invoice INV-104 created" | View invoice | Undo not applicable |
-| Destructive pending | delete issued | row greyed, "Deleted · Undo" | Undo | 8s window; commits on navigate |
+| State | Condition | Content | Primary action | Focus goes to | Notes |
+|-------|-----------|---------|----------------|---------------|-------|
+| Empty (first) | `items.length === 0 && !filters` | "Invoices you create appear here." | Create invoice | Create invoice | Show a sample row, greyed |
+| Empty (filtered) | `items.length === 0 && filters` | "No invoices match *unpaid, Q3*." | Clear filters | Clear filters | Keep filter chips visible |
+| Loading (initial) | first fetch pending | 6 skeleton rows | — | unchanged | Appears after 150ms |
+| Loading (refresh) | refetch pending | previous rows retained | — | unchanged | Spinner on refresh button only |
+| Partial | totals failed, rows ok | rows render; totals slot shows retry | Retry totals | unchanged | Rows remain interactive |
+| Error (fetch) | 5xx / timeout | "Couldn't load invoices." | Retry | Retry | Filters preserved |
+| Error (permission) | 403 | "You need billing access." | Request access | Request access | Names the admin |
+| Error (not found) | 404 | "This invoice was deleted or never existed." | Back to invoices | Back to invoices | Parent list as exit |
+| Offline | `navigator.onLine === false` | cached rows + banner | — | unchanged | New invoices queue |
+| Success (create) | 201 | toast: "Invoice INV-104 created" | View invoice | the new row | Undo not applicable |
+| Destructive pending | delete issued | row greyed, "Deleted · Undo" | Undo | the next row | 8s window; commits on navigate |
 
 ## Checklist
 

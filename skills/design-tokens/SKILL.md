@@ -63,7 +63,7 @@ Phases: `AUDIT → GRAMMAR → PRIMITIVES → SEMANTICS → THEMES → EXPORT`.
 | Two competing grammars are already in the repo | Do not run both. Recommend the one with more sites (a framework-imposed grammar wins) and get permission before deprecating the other |
 | Duration or easing values are requested | Store what `design-motion` decided; with nothing decided, hand back rather than choose |
 | The colour space for ramps is unstated | Generate in OKLCH and say so — even lightness spacing in sRGB is not even to the eye |
-| No export target named | Emit CSS custom properties and DTCG JSON; both are consumable without further tooling |
+| No export target named | Emit CSS custom properties, consumable without further tooling, and DTCG JSON as the tool-agnostic source |
 | A claim here would be expensive to get wrong | [refute](refute.py) — put it to the engines that did not make it, asked to break it rather than to agree. Unrefuted is n engines finding nothing, never proof |
 | A primitive comes from a scale | `derived` only with grounded base, factor and step policy; otherwise `ARBITRARY`, with the formula retained. Naming the primitive does not erase its origin |
 <!-- deliver:values -->

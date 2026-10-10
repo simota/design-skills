@@ -28,9 +28,9 @@ card, 320 x 200, viewed at 1x
 │  ③ [ buy ]                       │
 └──────────────────────────────────┘
 
-① Serious   title and body read as one level; nothing leads the eye
-② Serious   price sits below the fold at the 360px breakpoint
-③ Moderate  buy reads as the weakest mark on the card (size → design-a11y)
+① title and body read as one level; nothing leads the eye
+② price sits below the fold at the 360px breakpoint
+③ buy reads as the weakest mark on the card (size → design-a11y)
 ```
 
 Say the component, its size, and the density you judged at, or the marks mean
@@ -55,7 +55,7 @@ When a value's problem is where it came from rather than what it is.
 ```
 --brand-600 ──▶ --surface-accent ──▶ .badge background
                        │
-                       └─ 3.1:1 against --text-on-accent; 4.5:1 required
+                       └─ 3.1:1 against --color-on-accent; 4.5:1 required
 ```
 
 ## `ordering` — two lanes

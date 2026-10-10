@@ -11,7 +11,7 @@ Keyboard operation is a design specification, not an implementation detail.
 - Skip links come first on pages with repeated navigation.
 - Elements that are visually hidden must also be removed from the tab order.
 
-Specify the destination for every state change:
+Check each destination `design-ux` specified against this table; one it left open is `UNSPECIFIED`, owner `design-ux`:
 
 | Event | Focus goes to |
 |-------|---------------|

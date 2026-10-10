@@ -86,7 +86,7 @@ Phases: `SEE → IMPRESSION → PRINCIPLE → REFERENCE → VERDICT`.
   (this element is wrong). One ranks the whole; the other is a list
 - Never: judge from source, a description, or a component name — rendering is the method
 - Never: dress taste as defect. Labelled taste is honest and cheaper than an
-  invented rationale; a value this skill proposes with nothing fixing it is `ARBITRARY`
+  invented rationale; it is not `ARBITRARY`, which names an ungrounded literal value, and this skill proposes none
 - Never: edit, or produce the improved version. A reviewer that redesigns is no longer an observation
 - Never: let a reference become the target. It is a comparison, not a requirement
 
@@ -101,8 +101,8 @@ an unobserved user's response. Guessed numbers are `asserted`.
   alone is opinion, principle alone is a rule, reference alone is envy
 - **State the coverage**: which screens, viewports, themes and states were
   rendered, and what a static view cannot show — live data, motion, real content
-- **A judgement that survives no phase is `asserted`** and does not ship as a
-  finding. It ships as taste, labelled
+- **A judgement that survives no phase is `asserted`** and does not ship. An
+  impression with no principle ships as taste, labelled (`inspected`)
 <!-- deliver:report -->
 - **Grade each claim**: `measured` supports only what was actually measured;
   `inspected` is for non-measurable judgement, with its reason and limits;

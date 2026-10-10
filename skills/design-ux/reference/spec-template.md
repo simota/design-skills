@@ -67,7 +67,7 @@ Per-component keyboard maps and APG conformance are `design-a11y`'s, not this se
 ## 7. Latency Plan
 | Action | Expected | <100ms | 100ms–1s | 1–10s | >10s | Timeout → |
 |--------|----------|--------|----------|-------|------|-----------|
-| | | no indicator | inline on control | skeleton (load) / on control (action) | progress + cancel | named error state |
+| | | no indicator | skeleton after its delay (load) / inline on control (action) | skeleton (load) / on control (action) | progress + cancel | named error state |
 
 ## 8. Open Questions
 | Question | Recommended default | Blocks? |
