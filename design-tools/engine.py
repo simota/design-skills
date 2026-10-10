@@ -75,10 +75,15 @@ def mismatch(value, schema: dict, where: str = "$") -> str | None:
     or a string "false" that reads as true.
     """
     want = schema.get("type")
-    py = _TYPES.get(want)
-    if py and (not isinstance(value, py) or (want in ("integer", "number")
-                                             and isinstance(value, bool))):
+    wants = want if isinstance(want, list) else [want] if want else []
+    unknown = [w for w in wants if w not in _TYPES]
+    if unknown:
+        return f"{where}: schema type {unknown} is not one this checker understands"
+    fits = [w for w in wants if isinstance(value, _TYPES[w])
+            and not (w in ("integer", "number") and isinstance(value, bool))]
+    if wants and not fits:
         return f"{where} is {type(value).__name__}, schema wants {want}"
+    want = fits[0] if fits else None
     if want == "object":
         props = schema.get("properties") or {}
         for k in schema.get("required") or []:

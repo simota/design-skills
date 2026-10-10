@@ -541,6 +541,44 @@ def _(r): sub(r / f"{S}design-a11y/reference/contrast.md",
               "| WCAG 2.2 SC 1.4.3 AA |", "| WCAG 2.1 SC 1.4.3 AA |")
 
 
+@case("V8-titled", "links to missing missing.md")
+def _(r): sub(r / "README.md", "## Files", "[guide](missing.md 'caption')\n\n## Files")
+
+
+@case("V8-reference", "links to missing skills/_design/GONE.md")
+def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## Files")
+
+
+# The other direction: valid Markdown that must stay green. A rule that only
+# ever meets violations can be wrong about every form it was not shown.
+GREEN_CASES: dict[str, callable] = {
+    "fence-indented-and-longer-close": lambda r: sub(
+        r / "README.md", "## Files",
+        "   ```md\n[example](not/a/real/file.md)\n````\n\n## Files"),
+    "fence-unclosed-tilde-at-end": lambda r: (r / "NOTES.md").write_text(
+        "# Notes\n\n~~~\n[example](nowhere.md)\n", encoding="utf-8"),
+    "angle-reference-to-real-file": lambda r: sub(
+        r / "README.md", "## Files", "[routing]: <skills/_design/ROUTING.md>\n\n## Files"),
+    "titled-link-to-real-file": lambda r: sub(
+        r / "README.md", "## Files",
+        "[routing](skills/_design/ROUTING.md 'routing') [r2](skills/_design/ROUTING.md (r))"
+        "\n\n## Files"),
+}
+
+
+def greens_hold() -> list[str]:
+    bad = []
+    for name, mutate in GREEN_CASES.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = copy_repo(tmp)
+            mutate(copy)
+            out = run(copy)
+            if "green" not in out.splitlines()[-1:][0]:
+                bad.append(name)
+                print(f"  green/{name} failed\n{out}")
+    return bad
+
+
 def main() -> int:
     baseline = run(ROOT)
     if "green" not in baseline:
@@ -573,6 +611,29 @@ def main() -> int:
         print("no deliberate violation is injected for: " + ", ".join(untested))
         return 1
     print(f"every rule fires ({len(declared)} rules, {len(CASES)} cases)")
+
+    broken = greens_hold()
+    if broken:
+        print("valid input rejected: " + ", ".join(broken))
+        return 1
+    print(f"every valid form stays green ({len(GREEN_CASES)} cases)")
+
+    import engine
+    schema_cases = [  # (value, schema, should it pass)
+        (None, {"type": ["string", "null"]}, True),
+        (3, {"type": ["string", "null"]}, False),
+        (True, {"type": "integer"}, False),
+        ({"refuted": "false"}, {"type": "object", "required": ["refuted"],
+                                "properties": {"refuted": {"type": "boolean"}}}, False),
+        ({}, {"type": "object", "required": ["refuted"]}, False),
+        ({"a": 1}, {"type": "object", "properties": {"a": {"type": "weird"}}}, False),
+    ]
+    wrong = [i for i, (v, s, ok) in enumerate(schema_cases)
+             if (engine.mismatch(v, s) is None) != ok]
+    if wrong:
+        print(f"engine.mismatch decided wrongly on schema cases {wrong}")
+        return 1
+    print(f"engine answers are held to their schema ({len(schema_cases)} cases)")
 
     silent_figures = figures_fire()
     if silent_figures:

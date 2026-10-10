@@ -50,9 +50,12 @@ PLATFORM_DIRS = set(H["platform_dirs"])
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
 SKILL_DIRS = sorted(p for p in SKILLS_ROOT.glob(f"{PREFIX}*") if (p / "SKILL.md").exists())
 SKILLS = [p.name for p in SKILL_DIRS]
-LINK_RE = re.compile(r"\[[^\]]+\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
-REF_LINK_RE = re.compile(r"^\s*\[[^\]]+\]:\s*(\S+)", re.M)
-FENCE_RE = re.compile(r"^(`{3,}|~{3,}).*?^\1\s*$", re.M | re.S)
+# The destination is `<...>` or a run without spaces; a title in any of the
+# three CommonMark delimiters may follow it.
+LINK_RE = re.compile(r"\[[^\]]+\]\(\s*(<[^>\n]*>|[^)\s]+)"
+                     r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)")
+REF_LINK_RE = re.compile(r"^ {0,3}\[[^\]]+\]:\s*(<[^>\n]*>|\S+)", re.M)
+FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 CODE_SPAN_RE = re.compile(r"`[^`\n]*`")
 # A backticked token is a path if it contains a slash or names a file. Matching
 # only on the slash misses the bare sibling reference (`SIZING.md`), which is
@@ -86,12 +89,35 @@ def _local_dir(name: str) -> bool:
         (name.startswith(".") and name not in PLATFORM_DIRS)
 
 
+def strip_fences(text: str) -> str:
+    """Drop fenced code blocks as CommonMark reads them.
+
+    An opener may be indented up to three spaces; it closes on a run of the
+    same character at least as long, and an unclosed fence runs to the end.
+    """
+    out, fence = [], None
+    for line in text.split("\n"):
+        if fence is None:
+            m = FENCE_OPEN_RE.match(line)
+            if m:
+                fence = m.group(1)
+                continue
+            out.append(line)
+        else:
+            m = FENCE_OPEN_RE.match(line)
+            if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) \
+                    and not line.strip()[len(m.group(1)):].strip():
+                fence = None
+    return "\n".join(out)
+
+
 def links(text: str) -> list[str]:
     """Link targets outside code: inline, titled or reference-style."""
     # A code span becomes a placeholder, not nothing: `[`file.md`](file.md)`
     # is a link whose text happens to be code.
-    text = CODE_SPAN_RE.sub("c", FENCE_RE.sub("", text))
-    return LINK_RE.findall(text) + REF_LINK_RE.findall(text)
+    text = CODE_SPAN_RE.sub("c", strip_fences(text))
+    return [t[1:-1] if t.startswith("<") and t.endswith(">") else t
+            for t in LINK_RE.findall(text) + REF_LINK_RE.findall(text)]
 
 
 def frontmatter(text: str) -> dict:
