@@ -158,6 +158,7 @@ design-skills/
 ## Working on it
 
 ```sh
+pip install pyyaml markdown-it-py   # the tools' two dependencies; CI pins both
 make check      # what CI runs: the rules, the figures, then proof both still fire
 make render     # after editing anything in design-registry/delivered/
 make hooks      # run the rules on what each commit stages (core.hooksPath)

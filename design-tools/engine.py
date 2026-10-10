@@ -55,7 +55,10 @@ def strict(schema: dict) -> dict:
     if not isinstance(schema, dict):
         return schema
     out = {k: strict(v) if isinstance(v, dict) else v for k, v in schema.items()}
-    if out.get("type") == "object":
+    kind = out.get("type")
+    # `["object", "null"]` is an object schema too; leaving it open let an
+    # undeclared key through the check that run() relies on.
+    if kind == "object" or (isinstance(kind, list) and "object" in kind):
         out["additionalProperties"] = False
         out["properties"] = {k: strict(v) for k, v in (out.get("properties") or {}).items()}
     if isinstance(out.get("items"), dict):

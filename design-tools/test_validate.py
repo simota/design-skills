@@ -549,6 +549,10 @@ def _(r): sub(r / "README.md", "## Files", "[guide](missing.md 'caption')\n\n## 
 def _(r): sub(r / "README.md", "## Files", "[odd](skills/_design/a(b).md)\n\n## Files")
 
 
+@case("V8-not-a-fence", "links to missing gone.md")
+def _(r): sub(r / "README.md", "## Files", "``` aa ```\n\n[bad](gone.md)\n\n## Files")
+
+
 @case("V8-reference", "links to missing skills/_design/GONE.md")
 def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## Files")
 
@@ -568,6 +572,14 @@ GREEN_CASES: dict[str, callable] = {
         sub(r / "README.md", "## Files", "[odd](skills/_design/a(b).md)\n\n## Files")),
     "multi-backtick-code-span": lambda r: sub(
         r / "README.md", "## Files", "``[demo](missing.md)`` stays an example\n\n## Files"),
+    "escaped-opener-is-text": lambda r: sub(
+        r / "README.md", "## Files", "\\[not a link](missing.md)\n\n## Files"),
+    "escaped-parens-in-destination": lambda r: (
+        (r / "skills/_design/a(b).md").write_text("<!-- design:contract -->\n", encoding="utf-8"),
+        sub(r / "README.md", "## Files", "[odd](skills/_design/a\\(b\\).md)\n\n## Files")),
+    "marker-quoted-in-a-fence": lambda r: sub(
+        r / "README.md", "## Files",
+        "```\n#" + "TODO(agent): an example with no class\n```\n\n## Files"),
     "titled-link-to-real-file": lambda r: sub(
         r / "README.md", "## Files",
         "[routing](skills/_design/ROUTING.md 'routing') [r2](skills/_design/ROUTING.md (r))"
@@ -640,6 +652,10 @@ def main() -> int:
             {"type": "object", "properties": {"ok": {"type": "boolean"}}}), False),
         ({"ok": True}, engine.strict(
             {"type": "object", "properties": {"ok": {"type": "boolean"}}}), True),
+        ({"ok": True, "extra": 1}, engine.strict(
+            {"type": ["object", "null"], "properties": {"ok": {"type": "boolean"}}}), False),
+        (None, engine.strict(
+            {"type": ["object", "null"], "properties": {"ok": {"type": "boolean"}}}), True),
     ]
     wrong = [i for i, (v, s, ok) in enumerate(schema_cases)
              if (engine.mismatch(v, s) is None) != ok]
