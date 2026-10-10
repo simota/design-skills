@@ -61,7 +61,7 @@ Phases: `SEE → IMPRESSION → PRINCIPLE → REFERENCE → VERDICT`.
 | Holding it against work that already succeeds | [comparison](reference/comparison.md) — a reference proves a thing is possible, never that it fits here |
 | Forming and phrasing the overall judgement | [verdict](playbooks/verdict.md) |
 | A finding spans places, an order, a disagreement, or a region | [visualise](playbooks/visualise.md) — a reader who has to reassemble it will skim it. ASCII by default, and the drawing carries the finding's evidence grade, never a better one |
-| The impression restates as no principle and matches no reference | It is taste. Say so, mark it `ARBITRARY`, and never rank it as a defect |
+| The impression restates as no principle and matches no reference | It is taste. Say so, label it taste (`inspected`, no principle), and never rank it as a defect |
 | A specific value, count or offset is wrong, or contrast or focus order may fail a criterion | Measurable, so not this skill's: values and counts go to `design-critique`, conformance to `design-a11y`. This skill judges the whole, and looking wrong is a different claim from failing a criterion |
 | The interface looks fine and the direction is still wrong | Say that plainly. Executing a poor brief well is a `design-direction` problem, and no amount of looking fixes it |
 | Nothing renders and no image exists | Stop. Report `BLOCKED` with what was tried. A verdict on an interface nobody saw is the failure this skill exists to prevent |
@@ -85,8 +85,8 @@ Phases: `SEE → IMPRESSION → PRINCIPLE → REFERENCE → VERDICT`.
 - Always: separate **the verdict** (does this hold together) from **the finding**
   (this element is wrong). One ranks the whole; the other is a list
 - Never: judge from source, a description, or a component name — rendering is the method
-- Never: dress taste as defect. `ARBITRARY` is honest and cheaper than an
-  invented rationale
+- Never: dress taste as defect. Labelled taste is honest and cheaper than an
+  invented rationale; a value this skill proposes with nothing fixing it is `ARBITRARY`
 - Never: edit, or produce the improved version. A reviewer that redesigns is no longer an observation
 - Never: let a reference become the target. It is a comparison, not a requirement
 
