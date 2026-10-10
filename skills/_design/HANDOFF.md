@@ -48,7 +48,7 @@ next: "<the skill that should receive this, or none>"
   decided against rather than rediscovering it
 - **`written` says whether the marker is in the document yet.** A report-only
   skill sets it `false` and names where it belongs; the first receiver holding
-  `Write` places it and flips the flag
+  `Write` places it in its own output, citing the upstream location, and flips the flag
 - Pass the decisions, not the exploration. The options considered and rejected
   belong in the artifact if they are load-bearing, and nowhere if they are not
 

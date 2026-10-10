@@ -63,8 +63,59 @@ def strict(schema: dict) -> dict:
     return out
 
 
+_TYPES = {"object": dict, "array": list, "string": str, "boolean": bool,
+          "integer": int, "number": (int, float), "null": type(None)}
+
+
+def mismatch(value, schema: dict, where: str = "$") -> str | None:
+    """The first place `value` departs from `schema`, or None.
+
+    Types, required keys and closed objects only — enough that an answer which
+    is not the asked-for shape is an error here, not a KeyError in the caller
+    or a string "false" that reads as true.
+    """
+    want = schema.get("type")
+    wants = want if isinstance(want, list) else [want] if want else []
+    unknown = [w for w in wants if w not in _TYPES]
+    if unknown:
+        return f"{where}: schema type {unknown} is not one this checker understands"
+    fits = [w for w in wants if isinstance(value, _TYPES[w])
+            and not (w in ("integer", "number") and isinstance(value, bool))]
+    if wants and not fits:
+        return f"{where} is {type(value).__name__}, schema wants {want}"
+    want = fits[0] if fits else None
+    if want == "object":
+        props = schema.get("properties") or {}
+        for k in schema.get("required") or []:
+            if k not in value:
+                return f"{where} lacks required {k!r}"
+        for k, v in value.items():
+            if k not in props and schema.get("additionalProperties") is False:
+                return f"{where} carries {k!r}, which the closed schema does not declare"
+            if k in props:
+                bad = mismatch(v, props[k], f"{where}.{k}")
+                if bad:
+                    return bad
+    if want == "array" and isinstance(schema.get("items"), dict):
+        for i, v in enumerate(value):
+            bad = mismatch(v, schema["items"], f"{where}[{i}]")
+            if bad:
+                return bad
+    return None
+
+
 def run(engine: str, prompt: str, schema: dict) -> dict:
     """Ask `engine` for one object matching `schema`. Raises rather than guessing."""
+    got = _ask(engine, prompt, schema)
+    # Held to the closed form every engine is asked for, so an undeclared key
+    # is an off-schema answer whichever engine produced it.
+    bad = mismatch(got, strict(schema))
+    if bad:
+        raise EngineError(f"{engine} answered off-schema: {bad}")
+    return got
+
+
+def _ask(engine: str, prompt: str, schema: dict) -> dict:
     known = ENGINES.get("runs_on") or []
     if engine not in known:
         raise EngineError(f"{engine} is not one of {known}")
@@ -185,13 +236,16 @@ def main() -> int:
     # Naming the checker is not stating who is running. Without --running the
     # exclusion below has nothing to compare against, and a checker named
     # by the engine that made the work would pass straight through.
-    if not a.running:
-        print("need --running: the engine running this is stated, never assumed",
-              file=sys.stderr)
+    known = ENGINES.get("runs_on") or []
+    if a.running not in known:
+        # A misspelt or unknown --running excludes nothing, and a named checker
+        # that is in fact the producer would then mark its own work.
+        print(f"need --running, one of {known}: the engine running this is "
+              "stated, never assumed", file=sys.stderr)
         return 2
     try:
         engine = a.engine or other_than(a.running)
-        if a.running and engine == a.running:
+        if engine == a.running:
             raise EngineError(f"{engine} is the engine running this; "
                               "a verdict from it is not a check")
         got = run(engine,

@@ -11,7 +11,7 @@ where the eye went, in what order, what it skipped, what it caught on, how the
 whole read in the first seconds. Then find the principle that explains it.
 
 If nothing here explains the impression, that is a result. Report the impression
-and mark it `ARBITRARY`. A principle stretched to cover an observation is how
+and label it taste (`inspected`, no principle). A principle stretched to cover an observation is how
 review turns into rationalisation.
 
 ## The principles

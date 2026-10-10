@@ -88,7 +88,7 @@ All loops stop under reduced motion; replace with a static indicator.
 
 ## Composite tokens
 
-Where the export format supports it, store trigger-level composites so implementers do not re-derive the pairing:
+Where the export format supports it, hand `design-tokens` trigger-level composites to store, so implementers do not re-derive the pairing:
 
 ```json
 {

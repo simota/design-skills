@@ -53,18 +53,19 @@ The brief is the deliverable. Fill every field; write "n/a — <reason>" rather 
 - Licensing status:
 
 ## 6. Colour Spec
-| Role | Value | On (background) | Contrast | Passes |
-|------|-------|-----------------|----------|--------|
-| Text primary | | | | AA / AAA |
-| Text muted | | | | |
-| Accent | | | | |
-| Surface / canvas | | | | |
-| Border | | | | (non-text, per design-a11y) |
+| Role | Value | Ground | On (background) | Contrast | Passes |
+|------|-------|--------|-----------------|----------|--------|
+| Text primary | | | | | AA / AAA |
+| Text muted | | | | | |
+| Accent | | | | | |
+| Surface / canvas | | | | | |
+| Border | | | | | (non-text, per design-a11y) |
 
 ## 7. Composition Spec
 - Grid:                 columns, gutter, breakpoints
 - Max content width:
 - Density:              compact | default | spacious — and why
+- Row height per density:
 - Spacing rhythm:       base unit and intended stepping
 - Alignment strategy:
 

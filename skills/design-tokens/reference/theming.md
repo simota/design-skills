@@ -46,6 +46,7 @@ Verify every text pair again after remapping. A pair passing in light says nothi
 
 ```css
 :root {
+  color-scheme: light dark;
   --color-bg-canvas:   var(--gray-0);
   --color-text-primary: var(--gray-950);
   --color-action-bg:    var(--accent-600);
@@ -61,7 +62,10 @@ Verify every text pair again after remapping. A pair passing in light says nothi
   }
 }
 
+:root[data-theme="light"] { color-scheme: light; }
+
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --color-bg-canvas:    var(--gray-950);
   --color-text-primary: var(--gray-100);
   --color-action-bg:    var(--accent-400);

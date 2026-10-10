@@ -41,9 +41,17 @@ def sub(path: Path, old: str, new: str) -> None:
 CASES: dict[str, callable] = {}
 
 
-def case(rule):
+# A case may also name the text its branch prints. Without it a case proves
+# only that the rule id appeared, and a rule with several checks passes with
+# all but one of them deleted.
+MESSAGES: dict[str, str] = {}
+
+
+def case(rule, says: str | None = None):
     def deco(fn):
         CASES[rule] = fn
+        if says:
+            MESSAGES[rule] = says
         return fn
     return deco
 
@@ -283,21 +291,14 @@ def _(r):
         "tools: \"Read, Grep, Glob, Write", "tools: \"Read, Grep, Glob, Bash, Write")
 
 
-@case("V34-decoration")
+@case("V34-wrong-tool", "not the set's own")
 def _(r):
-    """A link where the class grants no shell reads like a capability and is not one."""
-    import yaml as _y
-    caps = _y.safe_load((r / "design-registry/capabilities.yaml").read_text(encoding="utf-8"))
-    cls = _y.safe_load((r / "design-registry/harness.yaml").read_text(encoding="utf-8"))["permission_classes"]
-    for name, e in caps.items():
-        if "Bash" not in cls[e["class"]]["tools"]:
-            (r / "skills" / name / "refute.py").symlink_to("../../design-tools/refute.py")
-            return
+    """A link to the right name that resolves to a different tool."""
     for d in sorted((r / "skills").glob("design-*")):
         link = d / "refute.py"
         if link.is_symlink():
             link.unlink()
-            link.symlink_to("../../design-tools/render.py")   # the set's own, but the wrong tool
+            link.symlink_to("../../design-tools/render.py")
             return
 
 
@@ -401,7 +402,7 @@ def run_figures(root: Path) -> subprocess.CompletedProcess:
 def copy_repo(tmp: str) -> Path:
     copy = Path(tmp) / "repo"
     shutil.copytree(ROOT, copy, symlinks=True,
-                    ignore=shutil.ignore_patterns(".git", "__pycache__"))
+                    ignore=shutil.ignore_patterns(".git", "__pycache__", ".venv", "node_modules"))
     return copy
 
 
@@ -419,6 +420,174 @@ def figures_fire() -> list[str]:
     return bad
 
 
+# --- one case per branch, keyed by what that branch prints -------------------
+
+@case("V1-description", "description is")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how an interface behaves",
+              "Designing, specifying, documenting and defending how an interface behaves")
+
+
+@case("V2-terms", "contains 'rather than'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how", "Designing, rather than guessing, how")
+
+
+@case("V2-names", "names design-motion")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how", "design-motion. Designing how")
+
+
+@case("V3-disk", "capabilities.yaml vs disk")
+def _(r):
+    p = r / "design-registry/capabilities.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + "\ndesign-phantom:\n  class: doc-write\n"
+                 "  signals: [phantom work]\n", encoding="utf-8")
+
+
+@case("V5-count", "playbooks (max")
+def _(r):
+    for i in range(9):
+        (r / f"{S}design-ux/playbooks/extra{i}.md").write_text("<!-- design:guidance -->\n",
+                                                               encoding="utf-8")
+
+
+@case("V6-shared-total", "_design totals")
+def _(r): sub(r / f"{S}_design/ROUTING.md", "## Rules for running a chain",
+              "z\n" * 30 + "## Rules for running a chain")
+
+
+@case("V6-repo-total", "repo markdown totals")
+def _(r): (r / "NOTES.md").write_text("n\n" * 2000, encoding="utf-8")
+
+
+@case("V10-no-signal", "no signal matches")
+def _(r):
+    p = r / "design-registry/fixtures.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + '\n- ask: "zzz qqq"\n  expect: design-ux\n',
+                 encoding="utf-8")
+
+
+@case("V14-loop", "is missing oracle")
+def _(r): sub(r / "design-registry/routes.yaml", "  oracle:", "  oracle_was:")
+
+
+@case("V14-stops", "is missing stops_at")
+def _(r): sub(r / "design-registry/routes.yaml",
+              '  stops_at: "each criterion passed', '  stopped: "each criterion passed')
+
+
+@case("V17-section", "is not under")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Done when", "## Finished when")
+
+
+@case("V17-duplicate", "needs exactly one")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Owns",
+              "<!-- deliver:sizing -->\nstale\n<!-- /deliver:sizing -->\n\n## Owns")
+
+
+@case("V24-readme", "README.md does not list design-motion")
+def _(r):
+    p = r / "README.md"
+    p.write_text(p.read_text(encoding="utf-8").replace("design-motion", "the motion skill"),
+                 encoding="utf-8")
+
+
+@case("V24-unknown", "names design-i18n")
+def _(r): sub(r / f"{S}_design/ROUTING.md", "`design-motion`", "`design-motion`, `design-i18n`")
+
+
+@case("V27-outside", "points outside the repo")
+def _(r):
+    outside = r.parent / "elsewhere"
+    outside.mkdir()
+    (r / f"{S}design-ux/stray").symlink_to(outside)
+
+
+@case("V32-pinned", "pins its checker")
+def _(r): sub(r / "design-registry/routes.yaml", "checker: ", "checker: codex  # ")
+
+
+@case("V34-no-shell", "its class grants no Bash")
+def _(r):
+    sub(r / "design-registry/harness.yaml", "permission_classes:\n",
+        'permission_classes:\n  view-only:\n    tools: "Read, Grep, Glob"\n    writes: false\n')
+    sub(r / "design-registry/capabilities.yaml", "design-review:\n  class: read-only",
+        "design-review:\n  class: view-only")
+
+
+@case("V34-unknown", "which are not skills")
+def _(r): sub(r / "design-registry/harness.yaml", "  refute.py: all", "  refute.py: [design-ghost]")
+
+
+@case("V35-vocabulary", "PROVENANCE.md never defines")
+def _(r):
+    p = r / f"{S}_design/PROVENANCE.md"
+    p.write_text(p.read_text(encoding="utf-8").replace("`platform`", "platform"), encoding="utf-8")
+
+
+@case("V36-forms", "never names the 'mermaid' form")
+def _(r):
+    for g in (r / f"{S}design-review/playbooks/visualise.md",
+              r / f"{S}design-review/reference/diagram-forms.md"):
+        g.write_text(re.sub("mermaid", "graphviz", g.read_text(encoding="utf-8"), flags=re.I),
+                     encoding="utf-8")
+
+
+@case("V37-pin-head", "without the pinned version")
+def _(r): sub(r / f"{S}design-a11y/reference/wcag22-checklist.md",
+              "Source: WCAG 2.2 —", "Source: WCAG —")
+
+
+@case("V37-pin-body", "and the page never says")
+def _(r): sub(r / f"{S}design-a11y/reference/contrast.md",
+              "| WCAG 2.2 SC 1.4.3 AA |", "| WCAG 2.1 SC 1.4.3 AA |")
+
+
+@case("V8-titled", "links to missing missing.md")
+def _(r): sub(r / "README.md", "## Files", "[guide](missing.md 'caption')\n\n## Files")
+
+
+@case("V8-parens", "links to missing skills/_design/a(b).md")
+def _(r): sub(r / "README.md", "## Files", "[odd](skills/_design/a(b).md)\n\n## Files")
+
+
+@case("V8-reference", "links to missing skills/_design/GONE.md")
+def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## Files")
+
+
+# The other direction: valid Markdown that must stay green. A rule that only
+# ever meets violations can be wrong about every form it was not shown.
+GREEN_CASES: dict[str, callable] = {
+    "fence-indented-and-longer-close": lambda r: sub(
+        r / "README.md", "## Files",
+        "   ```md\n[example](not/a/real/file.md)\n````\n\n## Files"),
+    "fence-unclosed-tilde-at-end": lambda r: (r / "NOTES.md").write_text(
+        "# Notes\n\n~~~\n[example](nowhere.md)\n", encoding="utf-8"),
+    "angle-reference-to-real-file": lambda r: sub(
+        r / "README.md", "## Files", "[routing]: <skills/_design/ROUTING.md>\n\n## Files"),
+    "balanced-parens-in-destination": lambda r: (
+        (r / "skills/_design/a(b).md").write_text("<!-- design:contract -->\n", encoding="utf-8"),
+        sub(r / "README.md", "## Files", "[odd](skills/_design/a(b).md)\n\n## Files")),
+    "multi-backtick-code-span": lambda r: sub(
+        r / "README.md", "## Files", "``[demo](missing.md)`` stays an example\n\n## Files"),
+    "titled-link-to-real-file": lambda r: sub(
+        r / "README.md", "## Files",
+        "[routing](skills/_design/ROUTING.md 'routing') [r2](skills/_design/ROUTING.md (r))"
+        "\n\n## Files"),
+}
+
+
+def greens_hold() -> list[str]:
+    bad = []
+    for name, mutate in GREEN_CASES.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = copy_repo(tmp)
+            mutate(copy)
+            out = run(copy)
+            if "green" not in out.splitlines()[-1:][0]:
+                bad.append(name)
+                print(f"  green/{name} failed\n{out}")
+    return bad
+
+
 def main() -> int:
     baseline = run(ROOT)
     if "green" not in baseline:
@@ -432,7 +601,8 @@ def main() -> int:
             mutate(copy)
             out = run(copy)
             expect = rule.split("-")[0]
-            if not re.search(rf"^\s*{expect}: ", out, re.M):
+            says = re.escape(MESSAGES.get(rule, ""))
+            if not re.search(rf"^\s*{expect}: .*{says}", out, re.M):
                 bad.append(rule)
                 print(f"  {rule} did not fire\n{out}")
 
@@ -450,6 +620,33 @@ def main() -> int:
         print("no deliberate violation is injected for: " + ", ".join(untested))
         return 1
     print(f"every rule fires ({len(declared)} rules, {len(CASES)} cases)")
+
+    broken = greens_hold()
+    if broken:
+        print("valid input rejected: " + ", ".join(broken))
+        return 1
+    print(f"every valid form stays green ({len(GREEN_CASES)} cases)")
+
+    import engine
+    schema_cases = [  # (value, schema, should it pass)
+        (None, {"type": ["string", "null"]}, True),
+        (3, {"type": ["string", "null"]}, False),
+        (True, {"type": "integer"}, False),
+        ({"refuted": "false"}, {"type": "object", "required": ["refuted"],
+                                "properties": {"refuted": {"type": "boolean"}}}, False),
+        ({}, {"type": "object", "required": ["refuted"]}, False),
+        ({"a": 1}, {"type": "object", "properties": {"a": {"type": "weird"}}}, False),
+        ({"ok": True, "extra": 1}, engine.strict(
+            {"type": "object", "properties": {"ok": {"type": "boolean"}}}), False),
+        ({"ok": True}, engine.strict(
+            {"type": "object", "properties": {"ok": {"type": "boolean"}}}), True),
+    ]
+    wrong = [i for i, (v, s, ok) in enumerate(schema_cases)
+             if (engine.mismatch(v, s) is None) != ok]
+    if wrong:
+        print(f"engine.mismatch decided wrongly on schema cases {wrong}")
+        return 1
+    print(f"engine answers are held to their schema ({len(schema_cases)} cases)")
 
     silent_figures = figures_fire()
     if silent_figures:

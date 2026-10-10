@@ -10,6 +10,7 @@ into a wrong one breaks the build instead of ageing quietly.
 Add a checker here whenever a reference page states a number that follows from
 another number on the same page.
 """
+import math
 import pathlib
 import re
 import sys
@@ -131,8 +132,16 @@ def check_type_scale() -> int:
     clamp = CLAMP.search(text)
     clamp_below = clamp.group(1) if clamp else None
 
+    # Only the table under the header: a later table repeating a token would
+    # otherwise shift every step index after it.
+    lines = text[head.start():].splitlines()
+    table = []
+    for l in lines[2:]:
+        if not l.strip().startswith("|"):
+            break
+        table.append(l)
     rows = [(m.group(1), int(m.group(2)))
-            for m in (SCALE_ROW.match(l) for l in text.splitlines()) if m]
+            for m in (SCALE_ROW.match(l) for l in table) if m]
     if not rows:
         fail("scales.md", "no `--text-*` rows matched — the checker has stopped checking")
         return 0
@@ -146,7 +155,8 @@ def check_type_scale() -> int:
     n = 0
     for idx, (name, value) in enumerate(rows):
         step = idx - origin
-        expected = round(base * ratio ** step)
+        # Half up, as "round to whole pixels" is read; round() is half-to-even.
+        expected = math.floor(base * ratio ** step + 0.5)
         n += 1
         if idx < exempt_upto:
             if value == expected:

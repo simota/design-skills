@@ -25,7 +25,7 @@ Each verdict carries the three legs, or names the one it is missing.
 | Leg | Present when | Absent means |
 |---|---|---|
 | Impression | The conditions and the first reading are recorded | There was no looking. Nothing else survives |
-| Principle | The impression restates as one named principle with evidence | It is a feeling. Legitimate, and labelled `ARBITRARY` |
+| Principle | The impression restates as one named principle with evidence | It is a feeling. Legitimate, and labelled taste |
 | Reference | An opened comparison, cited | The claim is that it is weak, not that better is possible |
 
 Impression plus principle is a usable verdict. All three is a strong one.

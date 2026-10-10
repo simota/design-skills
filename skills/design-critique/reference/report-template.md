@@ -90,7 +90,7 @@ A fix is specific enough that an implementer would not need to ask a follow-up q
 | Weak | Strong |
 |------|--------|
 | "Improve the hierarchy" | "Demote 'Save changes' to the secondary outline style; leave 'Publish' as the only filled button" |
-| "Fix the contrast" | "Change `--color-text-muted` from `#9aa0a6` to `#6b7280` (4.83:1 on canvas); re-check the dark theme" |
+| "Fix the contrast" | "Change `--color-text-muted` from `#9aa0a6` to `#6b7280` (4.83:1 on canvas) — `ARBITRARY`, contrast checked separately; re-check the dark theme" |
 | "Add an empty state" | "Add a first-use empty state: one sentence of purpose plus a 'Create invoice' primary action; distinct from the filtered-empty state" |
 | "Make targets bigger" | "Increase row action hit areas to 24×24 CSS px with padding (visual icon stays 20px) — SC 2.5.8" |
 
