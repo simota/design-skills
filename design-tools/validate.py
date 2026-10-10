@@ -13,9 +13,11 @@ import fnmatch
 import re
 import sys
 import unicodedata
+from urllib.parse import unquote
 from pathlib import Path
 
 import yaml
+from markdown_it import MarkdownIt
 
 ROOT = Path(__file__).resolve().parent.parent
 FAILURES: list[str] = []
@@ -50,10 +52,6 @@ PLATFORM_DIRS = set(H["platform_dirs"])
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
 SKILL_DIRS = sorted(p for p in SKILLS_ROOT.glob(f"{PREFIX}*") if (p / "SKILL.md").exists())
 SKILLS = [p.name for p in SKILL_DIRS]
-# The destination is `<...>` or a run without spaces; a title in any of the
-# three CommonMark delimiters may follow it.
-REF_LINK_RE = re.compile(r"^ {0,3}\[[^\]]+\]:\s*(<[^>\n]*>|\S+)", re.M)
-FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 # A code span opens on a run of n backticks and closes on the next run of
 # exactly n, so ``a `b` c`` is one span, not three.
 # A span never crosses a blank line: a stray backtick must not swallow the
@@ -91,71 +89,57 @@ def _local_dir(name: str) -> bool:
         (name.startswith(".") and name not in PLATFORM_DIRS)
 
 
-def strip_fences(text: str) -> str:
-    """Drop fenced code blocks as CommonMark reads them.
+# A CommonMark parser, not a pattern. Three rounds of review each found another
+# form the hand-written reader got wrong — indented and longer fences,
+# balanced parentheses, escaped openers, escapes in URLs — and the spec is the
+# only list of those forms that is complete.
+MD = MarkdownIt("commonmark")
 
-    An opener may be indented up to three spaces; it closes on a run of the
-    same character at least as long, and an unclosed fence runs to the end.
-    """
-    out, fence = [], None
-    for line in text.split("\n"):
-        if fence is None:
-            m = FENCE_OPEN_RE.match(line)
-            if m:
-                fence = m.group(1)
-                continue
-            out.append(line)
-        else:
-            m = FENCE_OPEN_RE.match(line)
-            if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) \
-                    and not line.strip()[len(m.group(1)):].strip():
-                fence = None
-    return "\n".join(out)
+
+def code_block_lines(text: str) -> set[int]:
+    """1-based line numbers inside fenced or indented code, as the parser sees them."""
+    out: set[int] = set()
+    for tok in MD.parse(text):
+        if tok.type in ("fence", "code_block") and tok.map:
+            out.update(range(tok.map[0] + 1, tok.map[1] + 1))
+    return out
 
 
 def links(text: str) -> list[str]:
-    """Link targets outside code: inline, titled or reference-style."""
-    # A code span becomes a placeholder, not nothing: `[`file.md`](file.md)`
-    # is a link whose text happens to be code.
-    text = CODE_SPAN_RE.sub("c", strip_fences(text))
-    return inline_destinations(text) + [
-        t[1:-1] if t.startswith("<") and t.endswith(">") else t
-        for t in REF_LINK_RE.findall(text)]
+    """Every link and image destination, and every reference definition, as
+    CommonMark reads the page. Code is not parsed as links, so it never shows
+    up here."""
+    env: dict = {}
+    out: list[str] = []
+
+    def walk(tokens) -> None:
+        for tok in tokens:
+            if tok.type == "link_open":
+                out.append(tok.attrGet("href"))
+            elif tok.type == "image":
+                out.append(tok.attrGet("src"))
+            if tok.children:
+                walk(tok.children)
+
+    walk(MD.parse(text, env))
+    out += [ref["href"] for ref in (env.get("references") or {}).values()]
+    return [p for p in (local_path(h) for h in out if h) if p]
 
 
-def inline_destinations(text: str) -> list[str]:
-    """Every `[text](destination ...)` target, read as CommonMark reads it.
+SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
-    `<...>` runs to `>`. Otherwise the destination runs to whitespace or to
-    the `)` that closes the link, with parentheses inside it balanced, so
-    `a(b).md` is one destination; a regex stopping at the first `)` was not.
+
+def local_path(href: str) -> str:
+    """The file a destination names, or "" when it names none.
+
+    The fragment and query come off first and only the path is decoded: the
+    parser percent-encodes what it normalises, so `foo%23bar.md` is a file
+    called `foo#bar.md`, and decoding the whole href first turned its `#` into
+    a fragment marker that a later split then cut at.
     """
-    out = []
-    for m in re.finditer(r"\]\(", text):
-        i = m.end()
-        while i < len(text) and text[i] in " \t\n":
-            i += 1
-        if i < len(text) and text[i] == "<":
-            j = text.find(">", i)
-            if j != -1 and "\n" not in text[i:j]:
-                out.append(text[i + 1:j])
-            continue
-        depth, j = 0, i
-        while j < len(text) and not text[j].isspace():
-            c = text[j]
-            if c == "\\":
-                j += 2
-                continue
-            if c == "(":
-                depth += 1
-            elif c == ")":
-                if depth == 0:
-                    break
-                depth -= 1
-            j += 1
-        if j > i and depth == 0:
-            out.append(text[i:j])
-    return out
+    if SCHEME_RE.match(href):                  # http:, mailto: and the like
+        return ""
+    return unquote(href.split("#", 1)[0].split("?", 1)[0])
 
 
 def frontmatter(text: str) -> dict:
@@ -280,15 +264,13 @@ def v7_routes_real():
 
 
 def _resolve(base: Path, target: str) -> Path:
-    return (base / target.split("#")[0]).resolve()
+    return (base / target).resolve()
 
 
 def v8_links():
     for f in corpus_md(ROOT):
         for target in links(read(f)):
-            if target.startswith(("http", "#", "mailto:")):
-                continue
-            if not (f.parent / target.split("#")[0]).exists():
+            if not (f.parent / target).exists():
                 fail("V8", f"{f.relative_to(ROOT)} links to missing {target}")
 
 
@@ -512,7 +494,11 @@ def v22_markers_classified():
     for f in corpus_md(ROOT):
         if f.parts[-2:-1] == ("delivered",):
             continue
-        for i, line in enumerate(read(f).splitlines(), 1):
+        text = read(f)
+        in_code = code_block_lines(text)
+        for i, line in enumerate(text.splitlines(), 1):
+            if i in in_code:                      # a fenced or indented example
+                continue
             # A marker quoted in a code span is being talked about; one that is
             # merely followed by one (`rename \`x\` later`) is still a marker.
             line = CODE_SPAN_RE.sub("", line)

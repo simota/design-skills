@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install 'pyyaml==6.0.2'
+      - run: pip install 'pyyaml==6.0.2' 'markdown-it-py==3.0.0'
       - name: Static rules
         run: python3 design-tools/validate.py
       - name: Stated figures recompute
