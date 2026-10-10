@@ -90,6 +90,8 @@ def mismatch(value, schema: dict, where: str = "$") -> str | None:
             if k not in value:
                 return f"{where} lacks required {k!r}"
         for k, v in value.items():
+            if k not in props and schema.get("additionalProperties") is False:
+                return f"{where} carries {k!r}, which the closed schema does not declare"
             if k in props:
                 bad = mismatch(v, props[k], f"{where}.{k}")
                 if bad:
@@ -105,7 +107,9 @@ def mismatch(value, schema: dict, where: str = "$") -> str | None:
 def run(engine: str, prompt: str, schema: dict) -> dict:
     """Ask `engine` for one object matching `schema`. Raises rather than guessing."""
     got = _ask(engine, prompt, schema)
-    bad = mismatch(got, schema)
+    # Held to the closed form every engine is asked for, so an undeclared key
+    # is an off-schema answer whichever engine produced it.
+    bad = mismatch(got, strict(schema))
     if bad:
         raise EngineError(f"{engine} answered off-schema: {bad}")
     return got

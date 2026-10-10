@@ -52,11 +52,13 @@ SKILL_DIRS = sorted(p for p in SKILLS_ROOT.glob(f"{PREFIX}*") if (p / "SKILL.md"
 SKILLS = [p.name for p in SKILL_DIRS]
 # The destination is `<...>` or a run without spaces; a title in any of the
 # three CommonMark delimiters may follow it.
-LINK_RE = re.compile(r"\[[^\]]+\]\(\s*(<[^>\n]*>|[^)\s]+)"
-                     r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)")
 REF_LINK_RE = re.compile(r"^ {0,3}\[[^\]]+\]:\s*(<[^>\n]*>|\S+)", re.M)
 FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
-CODE_SPAN_RE = re.compile(r"`[^`\n]*`")
+# A code span opens on a run of n backticks and closes on the next run of
+# exactly n, so ``a `b` c`` is one span, not three.
+# A span never crosses a blank line: a stray backtick must not swallow the
+# paragraphs, and the links in them, up to the next one.
+CODE_SPAN_RE = re.compile(r"(?<!`)(`+)(?!`)((?:(?!\n[ \t]*\n).)+?)(?<!`)\1(?!`)", re.S)
 # A backticked token is a path if it contains a slash or names a file. Matching
 # only on the slash misses the bare sibling reference (`SIZING.md`), which is
 # the form that breaks: it resolves against the skill directory, not against
@@ -116,8 +118,44 @@ def links(text: str) -> list[str]:
     # A code span becomes a placeholder, not nothing: `[`file.md`](file.md)`
     # is a link whose text happens to be code.
     text = CODE_SPAN_RE.sub("c", strip_fences(text))
-    return [t[1:-1] if t.startswith("<") and t.endswith(">") else t
-            for t in LINK_RE.findall(text) + REF_LINK_RE.findall(text)]
+    return inline_destinations(text) + [
+        t[1:-1] if t.startswith("<") and t.endswith(">") else t
+        for t in REF_LINK_RE.findall(text)]
+
+
+def inline_destinations(text: str) -> list[str]:
+    """Every `[text](destination ...)` target, read as CommonMark reads it.
+
+    `<...>` runs to `>`. Otherwise the destination runs to whitespace or to
+    the `)` that closes the link, with parentheses inside it balanced, so
+    `a(b).md` is one destination; a regex stopping at the first `)` was not.
+    """
+    out = []
+    for m in re.finditer(r"\]\(", text):
+        i = m.end()
+        while i < len(text) and text[i] in " \t\n":
+            i += 1
+        if i < len(text) and text[i] == "<":
+            j = text.find(">", i)
+            if j != -1 and "\n" not in text[i:j]:
+                out.append(text[i + 1:j])
+            continue
+        depth, j = 0, i
+        while j < len(text) and not text[j].isspace():
+            c = text[j]
+            if c == "\\":
+                j += 2
+                continue
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                if depth == 0:
+                    break
+                depth -= 1
+            j += 1
+        if j > i and depth == 0:
+            out.append(text[i:j])
+    return out
 
 
 def frontmatter(text: str) -> dict:
