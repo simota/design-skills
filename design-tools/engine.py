@@ -63,8 +63,50 @@ def strict(schema: dict) -> dict:
     return out
 
 
+_TYPES = {"object": dict, "array": list, "string": str, "boolean": bool,
+          "integer": int, "number": (int, float), "null": type(None)}
+
+
+def mismatch(value, schema: dict, where: str = "$") -> str | None:
+    """The first place `value` departs from `schema`, or None.
+
+    Types, required keys and closed objects only — enough that an answer which
+    is not the asked-for shape is an error here, not a KeyError in the caller
+    or a string "false" that reads as true.
+    """
+    want = schema.get("type")
+    py = _TYPES.get(want)
+    if py and (not isinstance(value, py) or (want in ("integer", "number")
+                                             and isinstance(value, bool))):
+        return f"{where} is {type(value).__name__}, schema wants {want}"
+    if want == "object":
+        props = schema.get("properties") or {}
+        for k in schema.get("required") or []:
+            if k not in value:
+                return f"{where} lacks required {k!r}"
+        for k, v in value.items():
+            if k in props:
+                bad = mismatch(v, props[k], f"{where}.{k}")
+                if bad:
+                    return bad
+    if want == "array" and isinstance(schema.get("items"), dict):
+        for i, v in enumerate(value):
+            bad = mismatch(v, schema["items"], f"{where}[{i}]")
+            if bad:
+                return bad
+    return None
+
+
 def run(engine: str, prompt: str, schema: dict) -> dict:
     """Ask `engine` for one object matching `schema`. Raises rather than guessing."""
+    got = _ask(engine, prompt, schema)
+    bad = mismatch(got, schema)
+    if bad:
+        raise EngineError(f"{engine} answered off-schema: {bad}")
+    return got
+
+
+def _ask(engine: str, prompt: str, schema: dict) -> dict:
     known = ENGINES.get("runs_on") or []
     if engine not in known:
         raise EngineError(f"{engine} is not one of {known}")
@@ -185,13 +227,16 @@ def main() -> int:
     # Naming the checker is not stating who is running. Without --running the
     # exclusion below has nothing to compare against, and a checker named
     # by the engine that made the work would pass straight through.
-    if not a.running:
-        print("need --running: the engine running this is stated, never assumed",
-              file=sys.stderr)
+    known = ENGINES.get("runs_on") or []
+    if a.running not in known:
+        # A misspelt or unknown --running excludes nothing, and a named checker
+        # that is in fact the producer would then mark its own work.
+        print(f"need --running, one of {known}: the engine running this is "
+              "stated, never assumed", file=sys.stderr)
         return 2
     try:
         engine = a.engine or other_than(a.running)
-        if a.running and engine == a.running:
+        if engine == a.running:
             raise EngineError(f"{engine} is the engine running this; "
                               "a verdict from it is not a check")
         got = run(engine,

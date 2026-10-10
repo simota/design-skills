@@ -72,8 +72,8 @@ catch the value edited into a wrong one later. `make figures` recomputes what th
 reference layer states from the reference layer itself — every recorded contrast
 pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, and the type
 scale from its own stated base and ratio. It runs in `make check` and in the
-pre-commit hook, and six deliberately-introduced errors were each observed
-failing it, including two that make the checks vacuous rather than wrong.
+pre-commit hook, and `make test` introduces seven deliberate errors and fails
+unless each one breaks it, including two that make the checks vacuous rather than wrong.
 
 That is also how the type scale's clamp got written down: the ratio applied
 downward gives 13px and 11px, the table said 14 and 12, and nothing on the page
@@ -142,7 +142,7 @@ design-skills/
 ├── README.md
 ├── Makefile
 ├── design-registry/            # budgets, boundaries, routes, delivered blocks
-├── design-tools/               # validate · test_validate · figures_check · render · engine · refute · pre-commit
+├── design-tools/               # validate · test_validate · figures_check · render · engine · refute; githooks/pre-commit
 └── skills/                     # everything the CLI reads
     ├── _design/                # contracts in force on every run
     └── design-<facet>/         # a SKILL.md is what makes this a skill, and
@@ -160,7 +160,7 @@ design-skills/
 ```sh
 make check      # what CI runs: the rules, the figures, then proof both still fire
 make render     # after editing anything in design-registry/delivered/
-make hooks      # run the rules on every commit
+make hooks      # run the rules on what each commit stages (core.hooksPath)
 ```
 
 Adding a rule means adding a deliberate violation to
@@ -171,12 +171,12 @@ passing may be checking nothing.
 
 ```sh
 make link                       # into the claude, codex and agy skills dirs that exist
-make link CLAUDE_DIR=.claude/skills
+make link CLAUDE_DIR=.claude/skills   # a named directory is created if missing
 ```
 
 Each `design-*` skill is linked individually, so a skills directory keeps
-whatever else it already carries, and a name already taken by a real directory
-is skipped rather than overwritten.
+whatever else it already carries, and a name already taken by a real directory,
+or by a link into another checkout, is skipped rather than overwritten.
 
 ## What this does not guarantee
 

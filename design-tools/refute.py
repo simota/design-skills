@@ -88,7 +88,7 @@ def ask(engine_name: str, claim: dict) -> dict:
 
 
 def refuters(running: str) -> list[str]:
-    known = H.get("engines", {}).get("runs_on") or []
+    known = (H.get("engines") or {}).get("runs_on") or []
     if running not in known:
         raise engine.EngineError(f"the running engine {running!r} is not one of {known}")
     return [e for e in known if e != running]

@@ -21,19 +21,37 @@ PREFIX = H["prefix"]
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
 
 
+def markers(text: str, key: str) -> tuple[list[int], list[int]]:
+    """Line indices of the open and close markers, each alone on its line.
+
+    A marker mentioned in prose is not a marker. Splitting on its first
+    occurrence anywhere once rewrote everything from that sentence to the real
+    block, and dropped a whole section with it.
+    """
+    lines = text.split("\n")
+    return ([i for i, l in enumerate(lines) if l == f"<!-- deliver:{key} -->"],
+            [i for i, l in enumerate(lines) if l == f"<!-- /deliver:{key} -->"])
+
+
 def render(path: Path) -> bool:
     text = path.read_text(encoding="utf-8")
     original = text
     for key, spec in H["delivered"].items():
         block = (ROOT / "design-registry" / "delivered" / f"{key}.md").read_text(
-            encoding="utf-8").rstrip("\n")
+            encoding="utf-8").strip("\n")
         open_m, close_m = f"<!-- deliver:{key} -->", f"<!-- /deliver:{key} -->"
-        payload = f"{open_m}\n{block}\n{close_m}"
-        if open_m in text and close_m in text:
-            head, rest = text.split(open_m, 1)
-            _, tail = rest.split(close_m, 1)
-            text = head + payload + tail
+        opens, closes = markers(text, key)
+        if opens or closes:
+            if len(opens) != 1 or len(closes) != 1 or closes[0] < opens[0]:
+                # Guessing which pair is meant is how a section gets deleted.
+                MISSING.append(f"{path.parent.name}: {key} needs exactly one {open_m} "
+                               f"line before one {close_m} line; found "
+                               f"{len(opens)} and {len(closes)}")
+                continue
+            lines = text.split("\n")
+            text = "\n".join(lines[:opens[0] + 1] + block.split("\n") + lines[closes[0]:])
         else:
+            payload = f"{open_m}\n{block}\n{close_m}"
             heading = f"## {spec['section']}\n"
             if heading not in text:
                 # A block with nowhere to go is not delivered, and saying
