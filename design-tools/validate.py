@@ -123,8 +123,23 @@ def links(text: str) -> list[str]:
 
     walk(MD.parse(text, env))
     out += [ref["href"] for ref in (env.get("references") or {}).values()]
-    # The parser percent-encodes what it normalises; the filesystem does not.
-    return [unquote(h) for h in out if h]
+    return [p for p in (local_path(h) for h in out if h) if p]
+
+
+SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def local_path(href: str) -> str:
+    """The file a destination names, or "" when it names none.
+
+    The fragment and query come off first and only the path is decoded: the
+    parser percent-encodes what it normalises, so `foo%23bar.md` is a file
+    called `foo#bar.md`, and decoding the whole href first turned its `#` into
+    a fragment marker that a later split then cut at.
+    """
+    if SCHEME_RE.match(href):                  # http:, mailto: and the like
+        return ""
+    return unquote(href.split("#", 1)[0].split("?", 1)[0])
 
 
 def frontmatter(text: str) -> dict:
@@ -249,15 +264,13 @@ def v7_routes_real():
 
 
 def _resolve(base: Path, target: str) -> Path:
-    return (base / target.split("#")[0]).resolve()
+    return (base / target).resolve()
 
 
 def v8_links():
     for f in corpus_md(ROOT):
         for target in links(read(f)):
-            if target.startswith(("http", "#", "mailto:")):
-                continue
-            if not (f.parent / target.split("#")[0]).exists():
+            if not (f.parent / target).exists():
                 fail("V8", f"{f.relative_to(ROOT)} links to missing {target}")
 
 

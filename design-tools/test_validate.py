@@ -553,6 +553,10 @@ def _(r): sub(r / "README.md", "## Files", "[odd](skills/_design/a(b).md)\n\n## 
 def _(r): sub(r / "README.md", "## Files", "``` aa ```\n\n[bad](gone.md)\n\n## Files")
 
 
+@case("V8-encoded-hash", "links to missing skills/_design/foo#bar.md")
+def _(r): sub(r / "README.md", "## Files", "[doc](skills/_design/foo%23bar.md)\n\n## Files")
+
+
 @case("V8-reference", "links to missing skills/_design/GONE.md")
 def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## Files")
 
@@ -580,6 +584,10 @@ GREEN_CASES: dict[str, callable] = {
     "marker-quoted-in-a-fence": lambda r: sub(
         r / "README.md", "## Files",
         "```\n#" + "TODO(agent): an example with no class\n```\n\n## Files"),
+    "encoded-hash-in-filename": lambda r: (
+        (r / "skills/_design/foo#bar.md").write_text("<!-- design:contract -->\n", encoding="utf-8"),
+        sub(r / "README.md", "## Files",
+            "[doc](skills/_design/foo%23bar.md#section)\n\n## Files")),
     "titled-link-to-real-file": lambda r: sub(
         r / "README.md", "## Files",
         "[routing](skills/_design/ROUTING.md 'routing') [r2](skills/_design/ROUTING.md (r))"
