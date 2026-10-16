@@ -98,7 +98,7 @@ resting on a guessed number looks like a fact all the way to build.
 
 **The unit is the decision, not the document.** A brief is one file and twenty
 decisions, and a file-level grade hides the nineteen that were never made. Each
-promised decision carries a grade or appears as `UNSPECIFIED` — which is what
+promised decision carries a grade or appears in `open` with its class (`UNSPECIFIED` when none other applies) — which is what
 gets invented at build time by whoever hits it first, without knowing it was a
 decision.
 

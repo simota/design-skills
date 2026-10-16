@@ -20,7 +20,7 @@ Structure and naming are design decisions. Specify them; do not leave them to be
 | Modal | `<dialog>` | Custom overlay div |
 | Progress | `<progress>` | Animated div |
 
-Every native element replacement must state: which APG pattern it follows, why the native element was insufficient, and the full keyboard model. "It didn't match the design" is a reason to restyle, not to rebuild.
+Every native element replacement must state: which APG pattern it follows, why the native element was insufficient, and the full keyboard model. "It didn't match the design" is a reason to restyle, not to rebuild. Name, role and value are what WCAG 2.2 SC 4.1.2 requires of every replacement.
 
 ## Headings (SC 1.3.1, 2.4.6)
 
@@ -95,8 +95,6 @@ Rules:
 - The live region exists in the DOM before the content changes; injecting the region and its content together may not announce.
 - One `assertive` region at most; overuse makes the product unusable with a screen reader.
 - Never use a live region for something focus movement would communicate better.
-
-Name, role and value are what WCAG 2.2 SC 4.1.2 requires of every replacement.
 
 ## Common ARIA mistakes
 

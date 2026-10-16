@@ -29,7 +29,7 @@ card, 320 x 200, viewed at 1x
 └──────────────────────────────────┘
 
 ① title and body read as one level; nothing leads the eye
-② price sits below the fold at the 360px breakpoint
+② price is the smallest mark and reads after the button
 ③ buy reads as the weakest mark on the card (size → design-a11y)
 ```
 
@@ -38,14 +38,14 @@ nothing.
 
 ## `disagreement` — two columns
 
-The intended order against the order the render produces. Also a token against
+The intended order against the order this reviewer's eye took in this viewing. Also a token against
 the value actually used, or a state against its specification.
 
 ```
                     intended        as rendered
 first               price           title       ← disagree
-second              title           buy
-third               buy             price
+second              title           buy         ← disagree
+third               buy             price       ← disagree
 ```
 
 ## `hops` — the token chain
@@ -55,7 +55,7 @@ When a value's problem is where it came from rather than what it is.
 ```
 --brand-600 ──▶ --surface-accent ──▶ .badge background
                        │
-                       └─ 3.1:1 against --color-on-accent; 4.5:1 required
+                       └─ on-accent pair: a conformance question → design-a11y
 ```
 
 ## `ordering` — two lanes
@@ -77,12 +77,14 @@ It needs a renderer, so it is a trade.
 ````
 ```mermaid
 flowchart LR
-  B[brief axis 3] --> P[prompt v2]
-  P --> R1[run 1]
-  P --> R2[run 2]
-  R1 --> C1[cand 1 · ok]
-  R2 --> C3[cand 3 · shipped]
-  C3 -.->|exclusion never re-checked| B
+  C[cart] --> A[address]
+  C -->|signed in| P[payment]
+  A --> P
+  P -->|declined| E[declined · input kept]
+  E --> P
+  P --> R[review]
+  R --> D[done]
+  R -.->|edit address: no path back| A
 ```
 ````
 

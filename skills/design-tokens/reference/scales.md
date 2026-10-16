@@ -57,7 +57,7 @@ is stated — an unstated departure makes the rule unfalsifiable and every futur
 | `--text-4xl` | 40px | 1.1 | Hero |
 
 Notes:
-- Line height loosens as size shrinks and tightens as size grows.
+- Line height tightens as size grows from `--text-base` upward; below body it stays at or near the body value.
 - Pair each size with a tracking value when the family needs it; display sizes usually want slightly negative tracking.
 - Six to eight steps is the working range. If a design needs a ninth, question the design.
 
@@ -71,7 +71,7 @@ Notes:
 | `--radius-lg` | 12px | Panels, modals |
 | `--radius-full` | 9999px | Pills, avatars |
 
-Rule: nested corners need the inner radius to be `outer − padding`, or the concentricity reads wrong. Record that rule; do not leave it to each implementer.
+Rule: where the direction wants concentric nesting, inner radius = `outer − padding`. Record whether it applies; do not leave it to each implementer.
 
 ## Elevation
 

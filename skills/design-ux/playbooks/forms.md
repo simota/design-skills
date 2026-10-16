@@ -22,7 +22,7 @@ In priority order:
 1. **Constrain the control** — a date picker cannot produce an invalid date; a select cannot produce an unknown value.
 2. **Constrain the input** — `inputmode`, `maxlength`, masks, step values.
 3. **Format as they type** — phone numbers, card numbers, currency. Never reject formatting the user could not have known about.
-4. **Accept generously, normalise silently** — strip spaces from card numbers and IBANs; accept `+81`, `081`, and `81`. Rejecting a valid value over formatting is a design failure.
+4. **Accept generously, normalise silently** — strip spaces from card numbers and IBANs; accept `+81 90…` and `090…` as the same number. Rejecting a valid value over formatting is a design failure.
 5. **Only then, validate and message.**
 
 ## Validation timing

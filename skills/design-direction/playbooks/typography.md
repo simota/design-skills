@@ -26,7 +26,7 @@ Avoid pairing two neutral sans families — the difference is invisible and the 
 
 ## Scale
 
-Pick a ratio, then round to whole pixels. Ratios are intent; the rounded values are the spec.
+Pick a ratio and say why. Ratios are intent; generating, rounding and clamping the steps is `design-tokens`' (its scales reference).
 
 | Ratio | Name | Feels | Good for |
 |-------|------|-------|----------|

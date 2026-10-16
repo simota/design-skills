@@ -73,7 +73,7 @@ numbered marks and the findings referring to the numbers beats one map each.
 - **A region map** for anything with `location` — the screen divided the way the
   layout divides it, each finding marked where it is, numbered. The default here
 - **A hierarchy order** when the finding is that the eye goes to the wrong thing
-  first: the intended order against the order the render actually produces,
+  first: the intended order against the order this reviewer's eye took,
   as two ranked lists side by side
 - **A rhythm ruler** when the rhythm impression needs showing — the gaps as seen
   in sequence; a value off the scale goes to design-critique

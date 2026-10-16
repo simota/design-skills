@@ -1,6 +1,6 @@
 ---
 name: design-a11y
-description: "Designing for accessibility: WCAG conformance at the design layer, contrast, focus visibility, keyboard operability, target size, semantics, and inclusive content. Use to check or specify a fix."
+description: "Designing for accessibility: WCAG conformance at the design layer, contrast, focus visibility, keyboard navigation, target size, semantics, and inclusive content. Use for a WCAG check or a fix."
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 <!-- design:contract -->

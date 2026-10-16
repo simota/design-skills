@@ -60,7 +60,7 @@ design-a11y:
       go: design-critique
     - what: "writing the implementation that carries the semantics"
       go: "a build skill outside this set"
-  signals: [accessibility, WCAG, contrast, focus visibility, keyboard, target size, semantics, inclusive content]
+  signals: [accessibility, WCAG, WCAG check, contrast, focus visibility, keyboard, keyboard navigation, target size, semantics, inclusive content]
 
 design-critique:
   class: read-only

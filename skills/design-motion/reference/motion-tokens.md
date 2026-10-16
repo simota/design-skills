@@ -26,8 +26,8 @@ Illustrative associations to compare in context; travel distance and area do not
 | Change | Token |
 |--------|-------|
 | Colour, opacity, ≤4px movement | `instant` |
-| ≤100px travel, or a small element appearing | `fast` |
-| 100–300px travel, dropdown/popover | `base` |
+| ≤100px travel, a small element appearing, dropdown/popover | `fast` |
+| 100–300px travel | `base` |
 | Half-screen: modal, drawer, sheet | `slow` |
 | Full screen: route, page-level | `slower` |
 
