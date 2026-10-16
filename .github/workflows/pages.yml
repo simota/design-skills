@@ -8,13 +8,18 @@
 # Enable once under Settings → Pages → Source: GitHub Actions.
 name: pages
 
-# Any push to main, deliberately unfiltered. A `paths:` filter on `docs/**` looks
-# tidier and leaves the first deploy un-triggered: turning Pages on under
-# Settings pushes nothing, so the site would not exist until something happened
-# to touch that directory. A static page is cheap to rebuild; a site that is
-# silently absent is not cheap to notice.
+# After every `check` run on main, deliberately unfiltered by path. A `paths:`
+# filter on `docs/**` looks tidier and leaves the first deploy un-triggered:
+# turning Pages on under Settings pushes nothing, so the site would not exist
+# until something happened to touch that directory. A static page is cheap to
+# rebuild; a site that is silently absent is not cheap to notice.
+#
+# Gated on `check` succeeding: a push whose corpus fails its own rules is not
+# published, so the site never shows figures from a red commit.
 on:
-  push:
+  workflow_run:
+    workflows: [check]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -30,6 +35,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment:
@@ -37,6 +43,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The commit `check` passed, not whatever main has moved to since.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: The page has to exist before it is published
         run: test -f docs/index.html
       - uses: actions/configure-pages@v5

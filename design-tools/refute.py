@@ -25,6 +25,13 @@ majority to appeal to, and inventing one would turn a disagreement into a verdic
 
 What counts as a refutation in this domain is `refutation` in harness.yaml, not
 here: the tool is the same in every set, and the lens is not.
+
+Exit status, so a caller can branch without parsing the report:
+
+    0  every claim STANDS, read by every engine in the pool
+    1  a claim was not read by every engine (UNCHECKED, or only partly read)
+    2  the input was refused before any engine was asked
+    3  a claim was REFUTED or CONTESTED
 """
 from __future__ import annotations
 
@@ -94,6 +101,15 @@ def refuters(running: str) -> list[str]:
     return [e for e in known if e != running]
 
 
+def exit_status(results: list[dict], pool: int) -> int:
+    """A refutation outranks missing coverage: it is a finding, not a gap."""
+    if any(r["verdict"] in ("REFUTED", "CONTESTED") for r in results):
+        return 3
+    if any(r["independent_readings"] < pool for r in results):
+        return 1
+    return 0
+
+
 def verdict(votes: dict[str, dict]) -> str:
     """Stated, not inferred. A split stays a split."""
     if not votes:
@@ -117,7 +133,7 @@ def main() -> int:
     if not (REFUTATION.get("lens") and REFUTATION.get("refuted_when")):
         print("harness.yaml declares no refutation lens; a refuter with no domain "
               "framing is a second opinion, not an adversary", file=sys.stderr)
-        return 1
+        return 2
 
     claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
     if isinstance(claims, dict):
@@ -137,7 +153,7 @@ def main() -> int:
         pool = refuters(a.running)
     except engine.EngineError as e:
         print(e, file=sys.stderr)
-        return 1
+        return 2
 
     results = []
     for claim in claims:
@@ -154,10 +170,10 @@ def main() -> int:
 
     # A claim no engine answered was not checked, and a zero exit over it
     # would read as a pass to whatever runs this.
-    unchecked = 1 if any(r["verdict"] == "UNCHECKED" for r in results) else 0
+    status = exit_status(results, len(pool))
     if a.json:
         print(json.dumps(results, ensure_ascii=False, indent=2))
-        return unchecked
+        return status
 
     for r in results:
         print(f"\n[{r['verdict']}] {r['id']}   "
@@ -171,7 +187,7 @@ def main() -> int:
     print(f"\n{kinds.count('REFUTED')} refuted · {kinds.count('CONTESTED')} contested · "
           f"{kinds.count('STANDS')} unrefuted · {kinds.count('UNCHECKED')} unchecked")
     print("Unrefuted means nothing was found, not that nothing is there.")
-    return unchecked
+    return status
 
 
 if __name__ == "__main__":

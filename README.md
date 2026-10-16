@@ -161,7 +161,7 @@ design-skills/
 pip install pyyaml markdown-it-py   # the tools' two dependencies; CI pins both
 make check      # what CI runs: the rules, the figures, then proof both still fire
 make render     # after editing anything in design-registry/delivered/
-make hooks      # run the rules on what each commit stages (core.hooksPath)
+make hooks      # run the rules on what each commit stages; other hooks keep working
 ```
 
 Adding a rule means adding a deliberate violation to
@@ -171,7 +171,7 @@ passing may be checking nothing.
 ## Installing
 
 ```sh
-make link                       # into the claude, codex and agy skills dirs that exist
+make link                       # for each of claude, codex and agy installed here
 make link CLAUDE_DIR=.claude/skills   # a named directory is created if missing
 ```
 
@@ -204,6 +204,7 @@ or by a link into another checkout, is skipped rather than overwritten.
 [`docs/index.html`](docs/index.html) is a generated page — every figure on it is
 read off this repository, the way `make figures` recomputes what the reference
 layer states. **Do not edit it by hand**: `tools/pages.py` in the `agent-toolkit`
-repository writes it, `tools/pages.py --check` fails when it is behind, and
-`.github/workflows/pages.yml` here only publishes what is committed.
+repository writes it, and `tools/pages.py --check` there fails when it is behind
+— nothing in this repository runs that check. `.github/workflows/pages.yml` here
+publishes only what is committed, and only after `check` has passed on that commit.
 

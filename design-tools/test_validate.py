@@ -73,7 +73,7 @@ def _(r): (r / f"{S}design-ghost").mkdir(); (r / f"{S}design-ghost/SKILL.md").wr
 def _(r): sub(r / f"{S}design-ux/SKILL.md", "name: design-ux", "name: design-behaviour")
 
 
-@case("V3-yaml")
+@case("V3-yaml", "no frontmatter a YAML loader accepts")
 def _(r): sub(r / f"{S}design-ux/SKILL.md", "description: \"", "description: \"\"")
 
 
@@ -85,7 +85,7 @@ def _(r): (r / f"{S}design-ux/playbooks/orphan.md").write_text("<!-- design:guid
 def _(r): (r / f"{S}design-ux/playbooks/forms.md").write_text("y\n" * 400)
 
 
-@case("V6")
+@case("V6", "VALUES.md is")
 def _(r): sub(r / f"{S}_design/VALUES.md", "## 1. Honesty", "z\n" * 200 + "## 1. Honesty")
 
 
@@ -204,7 +204,7 @@ def _(r): sub(r / "design-registry/harness.yaml",
               "document_labels: [contract, deferred]")
 
 
-@case("V24")
+@case("V24", "ROUTING.md does not list design-motion")
 def _(r): sub(r / f"{S}_design/ROUTING.md", "`design-motion`", "`design-animation`")
 
 
@@ -223,7 +223,7 @@ def _(r):
     (r / f"{S}design-ux/_design").symlink_to("../_gone")
 
 
-@case("V28")
+@case("V28", "set 'ui' requires")
 def _(r): sub(r / "design-registry/harness.yaml", "set: design", "set: ui")
 
 
@@ -356,7 +356,7 @@ def _(r):
         "Source: none — nothing outside this page can move what it states.")
 
 
-@case("V37-unused")
+@case("V37-unused", "never uses it")
 def _(r):
     """A source named in the header that the page never uses."""
     sub(r / f"{S}design-review/reference/comparison.md",
@@ -391,6 +391,8 @@ FIGURE_CASES: dict[str, callable] = {
     "scale-clamp-undeclared": lambda r: sub(r / SCALES, "clamped below `--text-base`",
                                             "kept above the ratio"),
     "scale-header-gone": lambda r: sub(r / SCALES, "| 16px / 1.20 ratio |", "| Size |"),
+    "scale-unparsed": lambda r: sub(r / SCALES, "| `--text-4xl` | 40px |",
+                                    "| `--text-4xl` | 52px (hero) |"),
 }
 
 
@@ -564,6 +566,9 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 # The other direction: valid Markdown that must stay green. A rule that only
 # ever meets violations can be wrong about every form it was not shown.
 GREEN_CASES: dict[str, callable] = {
+    "local-tool-dir-ignored": lambda r: (
+        (r / ".venv").mkdir(),
+        (r / ".venv/README.md").write_text("[x](missing.md)\n", encoding="utf-8")),
     "fence-indented-and-longer-close": lambda r: sub(
         r / "README.md", "## Files",
         "   ```md\n[example](not/a/real/file.md)\n````\n\n## Files"),
@@ -606,6 +611,69 @@ def greens_hold() -> list[str]:
                 bad.append(name)
                 print(f"  green/{name} failed\n{out}")
     return bad
+
+
+# --- cycle 4: branches no case isolated, and the false passes found at efbad21 ---
+
+@case("V15-unknown", "declares unknown class")
+def _(r): sub(r / "design-registry/capabilities.yaml", "design-ux:\n  class: doc-write",
+              "design-ux:\n  class: superuser")
+
+
+@case("V17-missing", "is missing the values delivery block")
+def _(r):
+    p = r / f"{S}design-ux/SKILL.md"
+    p.write_text(re.sub(r"<!-- deliver:values -->.*?<!-- /deliver:values -->\n", "",
+                        p.read_text(encoding="utf-8"), flags=re.S), encoding="utf-8")
+
+
+@case("V28-prefix", "prefix is")
+def _(r): sub(r / "design-registry/harness.yaml", "prefix: design-", "prefix: dsn-")
+
+
+@case("V28-shared-name", "shared_dir is")
+def _(r): sub(r / "design-registry/harness.yaml", "shared_dir: _design", "shared_dir: _shared")
+
+
+@case("V28-shared-missing", "_shared/ does not exist")
+def _(r): sub(r / "design-registry/harness.yaml", "shared_dir: _design", "shared_dir: _shared")
+
+
+@case("V28-dot-dir", ".claude-plugin/ carries no set name")
+def _(r): (r / ".claude-plugin").mkdir()
+
+
+@case("V8-absolute", "an absolute path")
+def _(r): sub(r / "README.md", "## Files", "[host](/etc/hostname)\n\n## Files")
+
+
+@case("V8-name-too-long", "links to missing " + "a" * 300)
+def _(r): sub(r / "README.md", "## Files", f"[long]({'a' * 300}.md)\n\n## Files")
+
+
+@case("V10-whole-word", "no signal matches 'the emotional tone")
+def _(r):
+    p = r / "design-registry/fixtures.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + '\n- ask: "the emotional tone is wrong"\n'
+                 "  expect: design-motion\n", encoding="utf-8")
+
+
+@case("V22-template", "spec-template.md:")
+def _(r): sub(r / f"{S}design-ux/reference/spec-template.md", "## 1. Goal\n",
+              "## 1. Goal\n#" + "TODO(agent): fill the goal before handoff\n")
+
+
+@case("V22-escaped-backtick", "README.md:")
+def _(r): sub(r / "README.md", "## Files", "\\`#" + "TODO(agent): x\\`\n\n## Files")
+
+
+@case("V22-line-separator", "README.md:")
+def _(r): sub(r / "README.md", "## Files",
+              "A line\u2028inside it.\n\n#" + "TODO(agent): unclassified\n```\nx\n```\n\n## Files")
+
+
+@case("V38-comment", "switches on STUCK")
+def _(r): sub(r / f"{S}_design/HANDOFF.md", "# DONE | PARTIAL | BLOCKED", "# DONE | PARTIAL | STUCK")
 
 
 def main() -> int:
@@ -667,10 +735,35 @@ def main() -> int:
     ]
     wrong = [i for i, (v, s, ok) in enumerate(schema_cases)
              if (engine.mismatch(v, s) is None) != ok]
+    # Schemas mismatch() cannot hold an answer to are refused, not half-checked.
+    unread = [{"anyOf": [{"type": "boolean"}]}, {"type": "string", "enum": ["A"]},
+              {"$ref": "#/x"}, {"type": "object", "additionalProperties": {"type": "number"}},
+              {"type": "object", "properties": {"v": {"oneOf": []}}}]
+    wrong += [f"unsupported:{i}" for i, s in enumerate(unread) if engine.unsupported(s) is None]
+    if engine.unsupported({"type": "object", "required": ["ok"], "properties":
+                           {"ok": {"type": "boolean", "description": "d"}}}) is not None:
+        wrong.append("supported schema refused")
     if wrong:
         print(f"engine.mismatch decided wrongly on schema cases {wrong}")
         return 1
     print(f"engine answers are held to their schema ({len(schema_cases)} cases)")
+
+    import refute
+    full, part = 2, 1
+    exit_cases = [  # (verdicts with readings, expected exit status)
+        ([("STANDS", full)], 0),
+        ([("STANDS", part)], 1),
+        ([("UNCHECKED", 0)], 1),
+        ([("STANDS", full), ("REFUTED", full)], 3),
+        ([("CONTESTED", full), ("UNCHECKED", 0)], 3),
+    ]
+    off = [i for i, (rs, want) in enumerate(exit_cases)
+           if refute.exit_status([{"verdict": v, "independent_readings": n} for v, n in rs],
+                                 full) != want]
+    if off:
+        print(f"refute exit status wrong on cases {off}")
+        return 1
+    print(f"refute's exit status says what happened ({len(exit_cases)} cases)")
 
     silent_figures = figures_fire()
     if silent_figures:

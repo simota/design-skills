@@ -69,6 +69,30 @@ def strict(schema: dict) -> dict:
 _TYPES = {"object": dict, "array": list, "string": str, "boolean": bool,
           "integer": int, "number": (int, float), "null": type(None)}
 
+# What mismatch() actually checks. Anything else — anyOf, $ref, enum, a map-valued
+# additionalProperties — would be accepted unread, so a schema using it is
+# refused before any engine is asked rather than half-checked after.
+_KEYWORDS = {"type", "properties", "required", "additionalProperties", "items",
+             "description", "title"}
+
+
+def unsupported(schema, where: str = "$") -> str | None:
+    """The first part of `schema` this checker cannot hold an answer to, or None."""
+    if not isinstance(schema, dict):
+        return f"{where} is not a schema object"
+    extra = sorted(set(schema) - _KEYWORDS)
+    if extra:
+        return f"{where}: schema keyword {extra} is not one this checker understands"
+    if not isinstance(schema.get("additionalProperties", False), bool):
+        return f"{where}: only a boolean additionalProperties can be checked"
+    for k, sub in (schema.get("properties") or {}).items():
+        bad = unsupported(sub, f"{where}.{k}")
+        if bad:
+            return bad
+    if "items" in schema:
+        return unsupported(schema["items"], f"{where}[]")
+    return None
+
 
 def mismatch(value, schema: dict, where: str = "$") -> str | None:
     """The first place `value` departs from `schema`, or None.
@@ -109,6 +133,9 @@ def mismatch(value, schema: dict, where: str = "$") -> str | None:
 
 def run(engine: str, prompt: str, schema: dict) -> dict:
     """Ask `engine` for one object matching `schema`. Raises rather than guessing."""
+    bad = unsupported(schema)
+    if bad:
+        raise EngineError(bad)
     got = _ask(engine, prompt, schema)
     # Held to the closed form every engine is asked for, so an undeclared key
     # is an off-schema answer whichever engine produced it.
@@ -123,6 +150,8 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
     if engine not in known:
         raise EngineError(f"{engine} is not one of {known}")
 
+    # Every engine runs in an empty directory: the claim text is untrusted, and
+    # an engine started in the caller's checkout can read and act on it.
     with tempfile.TemporaryDirectory(prefix="design-engine-") as tmp:
         d = pathlib.Path(tmp)
         s = d / "schema.json"
@@ -131,15 +160,19 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
             out = d / "answer.json"
             argv = ["codex", "exec", "--output-schema", str(s), "-o", str(out),
                     "--sandbox", "read-only", "--skip-git-repo-check", prompt]
-            r = _spawn(engine, argv)
+            r = _spawn(engine, argv, d)
             body = out.read_text(encoding="utf-8") if out.exists() else ""
             if not body.strip():
                 raise EngineError(f"codex wrote no answer.\n{_tail(r)}")
             return _parse(engine, body)
         if engine == "claude":
-            argv = ["claude", "-p", prompt, "--output-format", "json",
-                    "--json-schema", json.dumps(schema)]
-            r = _spawn(engine, argv)
+            # The prompt goes on stdin: on argv a long one exceeds ARG_MAX and a
+            # leading "-" is read as an option. No tools, no MCP servers, and
+            # the same closed schema every other engine is sent.
+            argv = ["claude", "-p", "--output-format", "json",
+                    "--json-schema", json.dumps(strict(schema)),
+                    "--tools", "", "--strict-mcp-config"]
+            r = _spawn(engine, argv, d, stdin=prompt)
             envelope = _parse(engine, r.stdout)
             if "structured_output" not in envelope:
                 raise EngineError(f"claude returned no structured_output "
@@ -148,7 +181,7 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
         if engine == "agy":
             argv = ["agy", f"--print={prompt}", "--output-format", "json",
                     "--json-schema", str(s)]
-            r = _spawn(engine, argv)
+            r = _spawn(engine, argv, d)
             envelope = _parse(engine, r.stdout)
             if "structured_output" not in envelope:
                 raise EngineError(f"agy returned no structured_output "
@@ -157,13 +190,17 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
     raise EngineError(f"no invocation is known for {engine}")
 
 
-def _spawn(engine: str, argv: list[str]) -> subprocess.CompletedProcess:
+def _spawn(engine: str, argv: list[str], cwd: pathlib.Path,
+           stdin: str | None = None) -> subprocess.CompletedProcess:
     try:
-        return subprocess.run(argv, capture_output=True, text=True, timeout=TIMEOUT)
+        return subprocess.run(argv, capture_output=True, text=True, timeout=TIMEOUT,
+                              cwd=cwd, input=stdin)
     except FileNotFoundError:
         raise EngineError(f"{engine} is not on PATH") from None
     except subprocess.TimeoutExpired:
         raise EngineError(f"{engine} did not answer within {TIMEOUT}s") from None
+    except OSError as e:          # e.g. a prompt on argv longer than ARG_MAX
+        raise EngineError(f"{engine} could not be started: {e}") from None
 
 
 def _parse(engine: str, body: str) -> dict:

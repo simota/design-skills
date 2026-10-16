@@ -63,7 +63,7 @@ right" has no stopping rule and the loop ends when someone gets tired.
 ## Rules for running a chain
 
 - **Settle the brief before the first stage**, including `standard`. Every stage
-  receives it whole and it does not change mid-run (`_design/SIZING.md`)
+  receives it whole and only `terms` may grow mid-run (`_design/SIZING.md`)
 - **A stage's output is a handoff** (`_design/HANDOFF.md`), and the next stage
   runs the seven receiver checks before starting
 - **On a report-only route, no stage goes past its `stops_at`.** "Review this"

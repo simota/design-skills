@@ -31,7 +31,10 @@ def fail(where: str, msg: str) -> None:
 
 def _channel(c: int) -> float:
     cs = c / 255
-    return cs / 12.92 if cs <= 0.03928 else ((cs + 0.055) / 1.055) ** 2.4
+    # 0.04045 is the threshold contrast.md documents. The older 0.03928 gives the
+    # same result for every 8-bit channel, but the tool and the page it checks
+    # should name one formula.
+    return cs / 12.92 if cs <= 0.04045 else ((cs + 0.055) / 1.055) ** 2.4
 
 
 def luminance(hex_colour: str) -> float:
@@ -140,8 +143,17 @@ def check_type_scale() -> int:
         if not l.strip().startswith("|"):
             break
         table.append(l)
-    rows = [(m.group(1), int(m.group(2)))
-            for m in (SCALE_ROW.match(l) for l in table) if m]
+    # Every row is held to the form, as pair_rows does for contrast: a row
+    # rewritten as `52px (hero)` or `2.5rem` used to drop out of the check, and
+    # the count of steps recomputed fell by one with nothing failing.
+    rows = []
+    for l in table:
+        m = SCALE_ROW.match(l)
+        if m:
+            rows.append((m.group(1), int(m.group(2))))
+        else:
+            fail("scales.md", f"row does not state a `--text-*` token and a px size, "
+                              f"so it cannot be recomputed — {l[:60]}")
     if not rows:
         fail("scales.md", "no `--text-*` rows matched — the checker has stopped checking")
         return 0

@@ -29,7 +29,7 @@ help:
 	@echo "make refute CLAIMS=f.json RUNNING=claude   put each claim to the engines that did not make it"
 	@echo "make engines  ask each checker engine for one object; reports what is unreachable"
 	@echo "make render    write the delivered blocks back into every SKILL.md"
-	@echo "make hooks     install the pre-commit hook"
+	@echo "make hooks     install the pre-commit hook (leaves other hooks alone)"
 	@echo "make link      symlink the skills into claude / codex / agy"
 	@echo "make unlink    remove those symlinks"
 	@echo "make status    show what is linked"
@@ -57,12 +57,22 @@ refute:
 render:
 	@python3 design-tools/render.py
 
-# Pointed at, not copied: a copy goes stale when the hook changes, and `.git` is
-# a file, not a directory, in a worktree.
+# A two-line shim in git's own hooks directory that runs the tracked hook, so
+# the hook never goes stale. Not core.hooksPath: that switches off every other
+# hook the contributor has. `--git-path` also finds the right place in a
+# worktree, where `.git` is a file. A different pre-commit is left alone.
 hooks:
 	@chmod +x design-tools/githooks/pre-commit
-	@git config core.hooksPath design-tools/githooks
-	@echo "pre-commit installed (core.hooksPath = design-tools/githooks)"
+	@if [ "$$(git config --get core.hooksPath)" = "design-tools/githooks" ]; then \
+		git config --unset core.hooksPath; echo "removed core.hooksPath set by an earlier make hooks"; fi
+	@hook="$$(git rev-parse --git-path hooks)/pre-commit"; \
+	if [ -e "$$hook" ] && ! grep -q "design-tools/githooks/pre-commit" "$$hook"; then \
+		echo "$$hook already exists and is not ours; add this line to it instead:"; \
+		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
+	mkdir -p "$$(dirname "$$hook")"; \
+	printf '#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n' > "$$hook"; \
+	chmod +x "$$hook"; \
+	echo "pre-commit installed at $$hook"
 
 # A skill is a directory holding a SKILL.md, under skills/ where the plugin
 # format expects it. The prefix alone is not the test: design-registry/ and
@@ -79,7 +89,7 @@ link:
 			name=$$(basename "$$path"); target="$$dir/$$name"; \
 			if [ -e "$$target" ] && [ ! -L "$$target" ]; then \
 				echo "  skip $$name (a real path is already there)"; \
-			elif [ -L "$$target" ] && [ "$$(readlink "$$target")" != "$(REPO)/$$path" ]; then \
+			elif [ -L "$$target" ] && [ -e "$$target" ] && [ "$$(readlink "$$target")" != "$(REPO)/$$path" ]; then \
 				echo "  skip $$name (linked to $$(readlink "$$target"), not this repo)"; \
 			else \
 				ln -sfn "$(REPO)/$$path" "$$target"; echo "  link $$name"; \
@@ -93,7 +103,7 @@ unlink:
 		echo "$$dir"; \
 		for path in $(SKILL_DIRS); do \
 			name=$$(basename "$$path"); target="$$dir/$$name"; \
-			if [ -L "$$target" ] && [ "$$(readlink "$$target")" = "$(REPO)/$$path" ]; then \
+			if [ -L "$$target" ] && { [ "$$(readlink "$$target")" = "$(REPO)/$$path" ] || [ ! -e "$$target" ]; }; then \
 				rm "$$target"; echo "  unlink $$name"; fi; \
 		done; \
 	done
