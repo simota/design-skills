@@ -35,7 +35,14 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Only a `check` that ran on a push to this repository: `check` also runs on
+    # pull requests, and the branches filter matches the head branch name, so a
+    # fork PR from its own `main` would otherwise publish the fork's commit.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment:

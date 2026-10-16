@@ -80,6 +80,12 @@ def unsupported(schema, where: str = "$") -> str | None:
     """The first part of `schema` this checker cannot hold an answer to, or None."""
     if not isinstance(schema, dict):
         return f"{where} is not a schema object"
+    # Without a known type mismatch() reads nothing below this node, so a schema
+    # with `properties` but no `type` would accept any answer at all.
+    kinds = schema.get("type")
+    kinds = kinds if isinstance(kinds, list) else [kinds]
+    if not kinds or any(k not in _TYPES for k in kinds):
+        return f"{where}: type {schema.get('type')!r} is not one this checker understands"
     extra = sorted(set(schema) - _KEYWORDS)
     if extra:
         return f"{where}: schema keyword {extra} is not one this checker understands"

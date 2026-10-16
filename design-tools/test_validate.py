@@ -566,6 +566,12 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 # The other direction: valid Markdown that must stay green. A rule that only
 # ever meets violations can be wrong about every form it was not shown.
 GREEN_CASES: dict[str, callable] = {
+    "heading-with-pipes-is-not-a-value-set": lambda r: sub(
+        r / f"{S}design-tokens/reference/export-targets.md", "## ", "## CSS | JSON\n\n## "),
+    "signal-matches-a-plural": lambda r: (r / "design-registry/fixtures.yaml").write_text(
+        (r / "design-registry/fixtures.yaml").read_text(encoding="utf-8")
+        + '\n- ask: "the page transitions feel janky"\n  expect: design-motion\n',
+        encoding="utf-8"),
     "local-tool-dir-ignored": lambda r: (
         (r / ".venv").mkdir(),
         (r / ".venv/README.md").write_text("[x](missing.md)\n", encoding="utf-8")),
@@ -672,6 +678,34 @@ def _(r): sub(r / "README.md", "## Files",
               "A line\u2028inside it.\n\n#" + "TODO(agent): unclassified\n```\nx\n```\n\n## Files")
 
 
+@case("V22-line-after-multiline-span", "README.md:")
+def _(r):
+    p = r / "README.md"
+    t = p.read_text(encoding="utf-8")
+    marker = "#" + "TODO(agent): unclassified"
+    t = t.replace("## Files", "a `code\nspan` b\n" + marker + "\n\n## Files", 1)
+    p.write_text(t, encoding="utf-8")
+    line = t.splitlines().index(marker) + 1
+    MESSAGES["V22-line-after-multiline-span"] = f"README.md:{line} marker"
+
+
+@case("V22-link-title", "README.md:")
+def _(r): sub(r / "README.md", "## Files", '[x](README.md "#' + 'TODO(agent): note")\n\n## Files')
+
+
+@case("V22-capitalised-template", "spec-template.md:")
+def _(r):
+    p = r / f"{S}design-ux/reference/spec-template.md"
+    p.write_text(p.read_text(encoding="utf-8").replace("````markdown", "````Markdown", 1)
+                 .replace("## 1. Goal\n", "## 1. Goal\n#" + "TODO(agent): fill\n", 1),
+                 encoding="utf-8")
+
+
+@case("V32-duplicate", "fewer than two distinct engines")
+def _(r): sub(r / "design-registry/harness.yaml", "runs_on: [claude, codex, agy]",
+              "runs_on: [claude, claude]")
+
+
 @case("V38-comment", "switches on STUCK")
 def _(r): sub(r / f"{S}_design/HANDOFF.md", "# DONE | PARTIAL | BLOCKED", "# DONE | PARTIAL | STUCK")
 
@@ -685,6 +719,26 @@ FOREIGN = "#!/bin/sh\necho OTHER\n"
 
 def hooks_hold() -> list[str]:
     bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        # A core.hooksPath someone else set — a global hooks directory — is
+        # refused: a shim written there would run in every repository.
+        repo = copy_repo(tmp)
+        elsewhere = Path(tmp) / "global-hooks"
+        elsewhere.mkdir()
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        subprocess.run(["git", "-C", str(repo), "config", "core.hooksPath", str(elsewhere)],
+                       check=True)
+        r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
+        if r.returncode == 0 or any(elsewhere.iterdir()):
+            bad.append("foreign core.hooksPath written to")
+        # The shim does nothing where the tracked hook is absent (an orphan branch).
+        subprocess.run(["git", "-C", str(repo), "config", "--unset", "core.hooksPath"], check=True)
+        subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, check=True)
+        (repo / "design-tools" / "githooks" / "pre-commit").unlink()
+        shim = subprocess.run(["sh", str(repo / ".git" / "hooks" / "pre-commit")], cwd=repo,
+                              capture_output=True, text=True)
+        if shim.returncode != 0:
+            bad.append(f"shim fails without the tracked hook ({shim.stderr.strip()[:60]})")
     for name, before, want_rc, keep in (("fresh", None, 0, False), ("chained", CHAINED, 0, True),
                                         ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False)):
         with tempfile.TemporaryDirectory() as tmp:
@@ -706,6 +760,34 @@ def hooks_hold() -> list[str]:
             ok = ok and (after == before if keep else "design-tools/githooks/pre-commit" in after)
             if not ok:
                 bad.append(f"{name} (exit {r.returncode}, hooksPath {left!r})")
+    return bad
+
+
+def git_corpus_holds() -> list[str]:
+    """In a checkout the corpus is what git would commit: a contributor's empty
+    `.cache/`, an ignored `.venv/` or a worktree nested under the checkout stays
+    out, and a dot-directory git would commit stays in."""
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        git = ["git", "-C", str(repo)]
+        subprocess.run(git[:1] + ["init", "-q", str(repo)], check=True)
+        subprocess.run(git + ["add", "-A"], check=True)
+        (repo / ".cache").mkdir()
+        (repo / ".venv").mkdir()
+        (repo / ".venv" / "README.md").write_text("[x](missing.md)\n", encoding="utf-8")
+        nested = repo / ".worktrees" / "feat"
+        nested.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", str(nested)], check=True)
+        (nested / "NOTES.md").write_text("[x](missing.md)\n" * 3000, encoding="utf-8")
+        if "green" not in run(repo):
+            bad.append("contributor-local directories counted")
+        plugin = repo / ".claude-plugin"
+        plugin.mkdir()
+        (plugin / "README.md").write_text("[x](missing.md)\n", encoding="utf-8")
+        out = run(repo)
+        if "V28: .claude-plugin/" not in out or "V8: .claude-plugin/README.md" not in out:
+            bad.append("a committable dot-directory escaped the checks")
     return bad
 
 
@@ -771,7 +853,9 @@ def main() -> int:
     # Schemas mismatch() cannot hold an answer to are refused, not half-checked.
     unread = [{"anyOf": [{"type": "boolean"}]}, {"type": "string", "enum": ["A"]},
               {"$ref": "#/x"}, {"type": "object", "additionalProperties": {"type": "number"}},
-              {"type": "object", "properties": {"v": {"oneOf": []}}}]
+              {"type": "object", "properties": {"v": {"oneOf": []}}},
+              {"properties": {"ok": {"type": "boolean"}}, "required": ["ok"]},   # no type
+              {"type": "objekt"}]
     wrong += [f"unsupported:{i}" for i, s in enumerate(unread) if engine.unsupported(s) is None]
     if engine.unsupported({"type": "object", "required": ["ok"], "properties":
                            {"ok": {"type": "boolean", "description": "d"}}}) is not None:
@@ -790,6 +874,9 @@ def main() -> int:
         ([("STANDS", full), ("REFUTED", full)], 3),
         ([("CONTESTED", full), ("UNCHECKED", 0)], 3),
     ]
+    # An empty pool asked nobody: that is never "every claim stands".
+    if refute.exit_status([{"verdict": "UNCHECKED", "independent_readings": 0}], 0) != 1:
+        exit_cases.append(([], -1))
     off = [i for i, (rs, want) in enumerate(exit_cases)
            if refute.exit_status([{"verdict": v, "independent_readings": n} for v, n in rs],
                                  full) != want]
@@ -814,11 +901,17 @@ def main() -> int:
     print(f"refute's exit status says what happened ({len(exit_cases)} cases, "
           f"{len(bad_inputs)} refused inputs)")
 
+    git_bad = git_corpus_holds()
+    if git_bad:
+        print("git-visible corpus wrong: " + ", ".join(git_bad))
+        return 1
+    print("in a checkout, the corpus is what git would commit (2 cases)")
+
     broken_hooks = hooks_hold()
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (4 cases)")
+    print("make hooks leaves every hook but its own shim alone (6 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:
