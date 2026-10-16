@@ -1022,6 +1022,9 @@ ENUM_RE = re.compile(rf"(?:^|:\s*|(?<=\s)#\s+)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WOR
                      r"\s*(?:$|[#—.(,;].*$)")
 
 
+ATX_HEADING_RE = re.compile(r"^ {0,3}#{1,6}(?:[ \t]|$)")
+
+
 def v38_enumerations_declared():
     """A value set a page switches on is declared vocabulary, or nothing checks it.
 
@@ -1033,8 +1036,9 @@ def v38_enumerations_declared():
     declared = {w for words in VOCAB.values() for w in words}
     for f in corpus_md(SKILLS_ROOT):
         for i, line in enumerate(read(f).splitlines(), 1):
-            # A table row is pipes between cells, not a value set.
-            if line.lstrip().startswith("|"):
+            # A table row is pipes between cells, and a heading is a title — up to
+            # three spaces of indent, as CommonMark allows — not a value set.
+            if line.lstrip().startswith("|") or ATX_HEADING_RE.match(line):
                 continue
             m = ENUM_RE.search(line)
             if not m:

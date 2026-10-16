@@ -568,6 +568,8 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 GREEN_CASES: dict[str, callable] = {
     "heading-with-pipes-is-not-a-value-set": lambda r: sub(
         r / f"{S}design-tokens/reference/export-targets.md", "## ", "## CSS | JSON\n\n## "),
+    "indented-heading-with-pipes": lambda r: sub(
+        r / f"{S}design-tokens/reference/export-targets.md", "## ", "   # CSS | JSON\n\n## "),
     "signal-matches-a-plural": lambda r: (r / "design-registry/fixtures.yaml").write_text(
         (r / "design-registry/fixtures.yaml").read_text(encoding="utf-8")
         + '\n- ask: "the page transitions feel janky"\n  expect: design-motion\n',
@@ -715,6 +717,7 @@ def _(r): sub(r / f"{S}_design/HANDOFF.md", "# DONE | PARTIAL | BLOCKED", "# DON
 # hand — the earlier ownership test (a grep) overwrote that one on reinstall.
 CHAINED = '#!/bin/sh\necho MINE\n"$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1\n'
 FOREIGN = "#!/bin/sh\necho OTHER\n"
+MENTION_ONLY = "#!/bin/sh\n# later: design-tools/githooks/pre-commit\nexit 0\n"
 
 
 def hooks_hold() -> list[str]:
@@ -739,9 +742,12 @@ def hooks_hold() -> list[str]:
                               capture_output=True, text=True)
         if shim.returncode != 0:
             bad.append(f"shim fails without the tracked hook ({shim.stderr.strip()[:60]})")
-    # A chained hook git would skip (not executable) is not "chained": it fails.
-    for name, before, want_rc, keep in (("fresh", None, 0, False), ("chained", CHAINED, 0, True),
+    # Any hook that is not exactly the shim is left alone and the target fails:
+    # nothing was installed, and whether that hook runs the rules is not knowable
+    # from its text (a comment can name the path; a 0644 file is skipped by git).
+    for name, before, want_rc, keep in (("fresh", None, 0, False), ("chained", CHAINED, 2, True),
                                         ("chained-not-executable", CHAINED, 2, True),
+                                        ("mention-only", MENTION_ONLY, 2, True),
                                         ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False)):
         with tempfile.TemporaryDirectory() as tmp:
             repo = copy_repo(tmp)
@@ -914,7 +920,7 @@ def main() -> int:
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (7 cases)")
+    print("make hooks leaves every hook but its own shim alone (8 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:

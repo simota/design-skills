@@ -61,8 +61,10 @@ render:
 # the hook never goes stale. Not core.hooksPath: that switches off every other
 # hook the contributor has. `--git-path` also finds the right place in a
 # worktree, where `.git` is a file. Only a file that is exactly this shim is
-# ours to rewrite; any other pre-commit — including one that chains the tracked
-# hook by hand, as the message below suggests — is left alone.
+# ours to rewrite; any other pre-commit is left alone and the target fails,
+# because nothing was installed. Whether someone else's script really runs the
+# rules — not only mentions them, and is executable — is not something a text
+# match can tell, so it is not guessed at.
 #
 # A core.hooksPath set by anyone else is refused: --git-path follows it, and a
 # shim written into a global hooks directory would run in every repository on
@@ -80,11 +82,8 @@ hooks:
 	old='#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n'; \
 	if [ -e "$$hook" ] && [ "$$(cat "$$hook")" != "$$(printf "$$shim")" ] \
 			&& [ "$$(cat "$$hook")" != "$$(printf "$$old")" ]; then \
-		if grep -q "design-tools/githooks/pre-commit" "$$hook"; then \
-			if [ -x "$$hook" ]; then echo "$$hook already chains the rules; left as it is"; exit 0; fi; \
-			echo "$$hook chains the rules but git will skip it: it is not executable. Run: chmod +x $$hook"; \
-			exit 1; fi; \
-		echo "$$hook already exists and is not ours; left as it is. To chain the rules, add:"; \
+		echo "$$hook is not ours, so it is left as it is and nothing was installed."; \
+		echo "Make sure it is executable and runs the rules, e.g.:"; \
 		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
 	mkdir -p "$$(dirname "$$hook")"; \
 	printf "$$shim" > "$$hook"; \
