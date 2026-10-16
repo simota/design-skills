@@ -81,7 +81,9 @@ hooks:
 	if [ -e "$$hook" ] && [ "$$(cat "$$hook")" != "$$(printf "$$shim")" ] \
 			&& [ "$$(cat "$$hook")" != "$$(printf "$$old")" ]; then \
 		if grep -q "design-tools/githooks/pre-commit" "$$hook"; then \
-			echo "$$hook already chains the rules; left as it is"; exit 0; fi; \
+			if [ -x "$$hook" ]; then echo "$$hook already chains the rules; left as it is"; exit 0; fi; \
+			echo "$$hook chains the rules but git will skip it: it is not executable. Run: chmod +x $$hook"; \
+			exit 1; fi; \
 		echo "$$hook already exists and is not ours; left as it is. To chain the rules, add:"; \
 		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
 	mkdir -p "$$(dirname "$$hook")"; \

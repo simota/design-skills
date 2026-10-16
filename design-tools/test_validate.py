@@ -739,7 +739,9 @@ def hooks_hold() -> list[str]:
                               capture_output=True, text=True)
         if shim.returncode != 0:
             bad.append(f"shim fails without the tracked hook ({shim.stderr.strip()[:60]})")
+    # A chained hook git would skip (not executable) is not "chained": it fails.
     for name, before, want_rc, keep in (("fresh", None, 0, False), ("chained", CHAINED, 0, True),
+                                        ("chained-not-executable", CHAINED, 2, True),
                                         ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False)):
         with tempfile.TemporaryDirectory() as tmp:
             repo = copy_repo(tmp)
@@ -748,6 +750,7 @@ def hooks_hold() -> list[str]:
             hook.parent.mkdir(parents=True, exist_ok=True)
             if before is not None:
                 hook.write_text(before, encoding="utf-8")
+                hook.chmod(0o644 if name == "chained-not-executable" else 0o755)
             if name == "hookspath":
                 subprocess.run(["git", "-C", str(repo), "config", "core.hooksPath",
                                 "design-tools/githooks"], check=True)
@@ -911,7 +914,7 @@ def main() -> int:
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (6 cases)")
+    print("make hooks leaves every hook but its own shim alone (7 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:
