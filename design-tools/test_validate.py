@@ -676,6 +676,39 @@ def _(r): sub(r / "README.md", "## Files",
 def _(r): sub(r / f"{S}_design/HANDOFF.md", "# DONE | PARTIAL | BLOCKED", "# DONE | PARTIAL | STUCK")
 
 
+# `make hooks` owns only the exact shim it writes. Anything else in git's
+# pre-commit slot is the contributor's, including a hook that chains ours by
+# hand — the earlier ownership test (a grep) overwrote that one on reinstall.
+CHAINED = '#!/bin/sh\necho MINE\n"$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1\n'
+FOREIGN = "#!/bin/sh\necho OTHER\n"
+
+
+def hooks_hold() -> list[str]:
+    bad = []
+    for name, before, want_rc, keep in (("fresh", None, 0, False), ("chained", CHAINED, 0, True),
+                                        ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False)):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = copy_repo(tmp)
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            hook = repo / ".git" / "hooks" / "pre-commit"
+            hook.parent.mkdir(parents=True, exist_ok=True)
+            if before is not None:
+                hook.write_text(before, encoding="utf-8")
+            if name == "hookspath":
+                subprocess.run(["git", "-C", str(repo), "config", "core.hooksPath",
+                                "design-tools/githooks"], check=True)
+            r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"],
+                               capture_output=True, text=True)
+            after = hook.read_text(encoding="utf-8") if hook.exists() else ""
+            left = subprocess.run(["git", "-C", str(repo), "config", "--get", "core.hooksPath"],
+                                  capture_output=True, text=True).stdout.strip()
+            ok = r.returncode == want_rc and not left
+            ok = ok and (after == before if keep else "design-tools/githooks/pre-commit" in after)
+            if not ok:
+                bad.append(f"{name} (exit {r.returncode}, hooksPath {left!r})")
+    return bad
+
+
 def main() -> int:
     baseline = run(ROOT)
     if "green" not in baseline:
@@ -763,7 +796,29 @@ def main() -> int:
     if off:
         print(f"refute exit status wrong on cases {off}")
         return 1
-    print(f"refute's exit status says what happened ({len(exit_cases)} cases)")
+    # Refused input exits 2 before any engine is asked, whatever is wrong with it.
+    with tempfile.TemporaryDirectory() as tmp:
+        bad_inputs = {"missing": Path(tmp) / "none.json", "not-json": Path(tmp) / "bad.json",
+                      "not-utf8": Path(tmp) / "bin.json", "no-claim": Path(tmp) / "empty.json"}
+        bad_inputs["not-json"].write_text("{bad", encoding="utf-8")
+        bad_inputs["not-utf8"].write_bytes(b"\xff\xfe\x00")
+        bad_inputs["no-claim"].write_text('[{"id": "x"}]', encoding="utf-8")
+        for name, path in bad_inputs.items():
+            r = subprocess.run([sys.executable, str(ROOT / "design-tools" / "refute.py"),
+                                "--running", "claude", str(path)], capture_output=True, text=True)
+            if r.returncode != 2 or "Traceback" in r.stderr:
+                off.append(f"input:{name}={r.returncode}")
+    if off:
+        print(f"refute refused input wrongly: {off}")
+        return 1
+    print(f"refute's exit status says what happened ({len(exit_cases)} cases, "
+          f"{len(bad_inputs)} refused inputs)")
+
+    broken_hooks = hooks_hold()
+    if broken_hooks:
+        print("make hooks mishandled: " + ", ".join(broken_hooks))
+        return 1
+    print("make hooks leaves every hook but its own shim alone (4 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:

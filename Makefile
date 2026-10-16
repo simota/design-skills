@@ -60,17 +60,22 @@ render:
 # A two-line shim in git's own hooks directory that runs the tracked hook, so
 # the hook never goes stale. Not core.hooksPath: that switches off every other
 # hook the contributor has. `--git-path` also finds the right place in a
-# worktree, where `.git` is a file. A different pre-commit is left alone.
+# worktree, where `.git` is a file. Only a file that is exactly this shim is
+# ours to rewrite; any other pre-commit — including one that chains the tracked
+# hook by hand, as the message below suggests — is left alone.
 hooks:
 	@chmod +x design-tools/githooks/pre-commit
 	@if [ "$$(git config --get core.hooksPath)" = "design-tools/githooks" ]; then \
 		git config --unset core.hooksPath; echo "removed core.hooksPath set by an earlier make hooks"; fi
 	@hook="$$(git rev-parse --git-path hooks)/pre-commit"; \
-	if [ -e "$$hook" ] && ! grep -q "design-tools/githooks/pre-commit" "$$hook"; then \
-		echo "$$hook already exists and is not ours; add this line to it instead:"; \
+	shim='#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n'; \
+	if [ -e "$$hook" ] && [ "$$(cat "$$hook")" != "$$(printf "$$shim")" ]; then \
+		if grep -q "design-tools/githooks/pre-commit" "$$hook"; then \
+			echo "$$hook already chains the rules; left as it is"; exit 0; fi; \
+		echo "$$hook already exists and is not ours; left as it is. To chain the rules, add:"; \
 		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
 	mkdir -p "$$(dirname "$$hook")"; \
-	printf '#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n' > "$$hook"; \
+	printf "$$shim" > "$$hook"; \
 	chmod +x "$$hook"; \
 	echo "pre-commit installed at $$hook"
 

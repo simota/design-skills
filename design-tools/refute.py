@@ -135,7 +135,13 @@ def main() -> int:
               "framing is a second opinion, not an adversary", file=sys.stderr)
         return 2
 
-    claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
+    # Unreadable or not JSON is refused input like any other: exit 2 with one
+    # line, not a traceback that exits 1 and reads as missing coverage.
+    try:
+        claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError) as e:
+        print(f"{a.claims}: cannot read claims — {e}", file=sys.stderr)
+        return 2
     if isinstance(claims, dict):
         claims = [claims]
     # A malformed claim is refused before any engine is asked, so a run never
