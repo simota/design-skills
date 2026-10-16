@@ -60,17 +60,33 @@ render:
 # A two-line shim in git's own hooks directory that runs the tracked hook, so
 # the hook never goes stale. Not core.hooksPath: that switches off every other
 # hook the contributor has. `--git-path` also finds the right place in a
-# worktree, where `.git` is a file. A different pre-commit is left alone.
+# worktree, where `.git` is a file. Only a file that is exactly this shim is
+# ours to rewrite; any other pre-commit is left alone and the target fails,
+# because nothing was installed. Whether someone else's script really runs the
+# rules — not only mentions them, and is executable — is not something a text
+# match can tell, so it is not guessed at.
+#
+# A core.hooksPath set by anyone else is refused: --git-path follows it, and a
+# shim written into a global hooks directory would run in every repository on
+# the machine. The shim itself exits 0 where the tracked hook does not exist —
+# an orphan branch, or a checkout from before it was added.
 hooks:
 	@chmod +x design-tools/githooks/pre-commit
 	@if [ "$$(git config --get core.hooksPath)" = "design-tools/githooks" ]; then \
 		git config --unset core.hooksPath; echo "removed core.hooksPath set by an earlier make hooks"; fi
+	@if [ -n "$$(git config --get core.hooksPath)" ]; then \
+		echo "core.hooksPath is $$(git config --get core.hooksPath); not installing there. Add to its pre-commit:"; \
+		echo '  h="$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"; [ ! -f "$$h" ] || "$$h" || exit 1'; exit 1; fi
 	@hook="$$(git rev-parse --git-path hooks)/pre-commit"; \
-	if [ -e "$$hook" ] && ! grep -q "design-tools/githooks/pre-commit" "$$hook"; then \
-		echo "$$hook already exists and is not ours; add this line to it instead:"; \
+	shim='#!/bin/sh\nh="$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"\n[ -f "$$h" ] || exit 0\nexec "$$h" "$$@"\n'; \
+	old='#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n'; \
+	if [ -e "$$hook" ] && [ "$$(cat "$$hook")" != "$$(printf "$$shim")" ] \
+			&& [ "$$(cat "$$hook")" != "$$(printf "$$old")" ]; then \
+		echo "$$hook is not ours, so it is left as it is and nothing was installed."; \
+		echo "Make sure it is executable and runs the rules, e.g.:"; \
 		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
 	mkdir -p "$$(dirname "$$hook")"; \
-	printf '#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n' > "$$hook"; \
+	printf "$$shim" > "$$hook"; \
 	chmod +x "$$hook"; \
 	echo "pre-commit installed at $$hook"
 
@@ -78,6 +94,11 @@ hooks:
 # format expects it. The prefix alone is not the test: design-registry/ and
 # design-tools/ share it and must never be installed.
 SKILL_DIRS := $(patsubst %/SKILL.md,%,$(wildcard skills/design-*/SKILL.md))
+
+# `link` replaces a link that resolves nowhere — a moved checkout leaves one, and
+# it serves no host as it is — but never a live link into another checkout.
+# `unlink` removes only links into this checkout, dangling or not, so a link it
+# did not make survives even while its target is unmounted.
 
 link:
 	@for dir in $(HOST_DIRS); do \
@@ -103,7 +124,7 @@ unlink:
 		echo "$$dir"; \
 		for path in $(SKILL_DIRS); do \
 			name=$$(basename "$$path"); target="$$dir/$$name"; \
-			if [ -L "$$target" ] && { [ "$$(readlink "$$target")" = "$(REPO)/$$path" ] || [ ! -e "$$target" ]; }; then \
+			if [ -L "$$target" ] && [ "$$(readlink "$$target")" = "$(REPO)/$$path" ]; then \
 				rm "$$target"; echo "  unlink $$name"; fi; \
 		done; \
 	done

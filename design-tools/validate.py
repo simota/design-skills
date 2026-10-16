@@ -64,19 +64,51 @@ def read(p: Path) -> str:
     return p.read_text(encoding="utf-8")
 
 
-def corpus_md(root: Path) -> list[Path]:
-    """The markdown this repo owns: not .git, and not a local tool directory.
+def _git_visible() -> set[str] | None:
+    """Paths git would commit with `git add -A`: tracked, or untracked and not
+    ignored. None outside a checkout — the pre-commit hook validates an index
+    export, and the tests a plain copy — where LOCAL_DIRS decides instead.
 
-    A `.venv/` or `node_modules/` beside the checkout is the contributor's, and
-    its README counted toward the budget and failed link checks it never agreed to.
+    In a checkout this is the honest boundary: a `.cache/`, a `.direnv/` or a
+    worktree nested under `.worktrees/` is the contributor's, and no fixed list
+    of names could know every one of them.
     """
+    if not (ROOT / ".git").exists():
+        return None
+    import subprocess
+    try:
+        out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z", "--cached",
+                              "--others", "--exclude-standard"],
+                             capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    # A nested repository (a worktree under the checkout) is listed as `dir/`.
+    return {p for p in out.decode("utf-8", "replace").split("\0") if p and not p.endswith("/")}
+
+
+GIT_VISIBLE = _git_visible()
+
+
+def corpus_md(root: Path) -> list[Path]:
+    """The markdown this repo owns: what git would commit, or, outside a
+    checkout, everything but a local tool directory."""
     out = []
     for f in sorted(root.rglob("*.md")):
-        parts = f.relative_to(ROOT).parts[:-1]
-        if any(_local_dir(p) for p in parts):
-            continue
-        out.append(f)
+        rel = f.relative_to(ROOT)
+        if GIT_VISIBLE is not None:
+            if rel.as_posix() in GIT_VISIBLE:
+                out.append(f)
+        elif not any(_local_dir(p) for p in rel.parts[:-1]):
+            out.append(f)
     return out
+
+
+def _owned_dir(d: Path) -> bool:
+    """A directory V28 holds to the set's naming: one git would commit from."""
+    if GIT_VISIBLE is None:
+        return not _local_dir(d.name)
+    prefix = d.relative_to(ROOT).as_posix() + "/"
+    return any(p.startswith(prefix) for p in GIT_VISIBLE)
 
 
 # Named, not inferred: exempting every dot-directory also exempted a tracked
@@ -103,29 +135,55 @@ def prose_lines(text: str, offset: int = 0) -> list[tuple[int, str]]:
     """(line number, text) for everything a reader sees as prose, code removed.
 
     Taken from the parser's tokens, so a code span is what CommonMark calls one
-    (an escaped backtick opens nothing) and line numbers are the parser's own.
-    A ```markdown fence is a template the skill copies out, so its inside is
-    read as Markdown too; any other fence or indented block is an example.
+    (an escaped backtick opens nothing). Link titles and reference definitions
+    are prose too. A ```markdown fence is a template the skill copies out, so
+    its inside is read as Markdown; any other fence or indented block is an
+    example.
     """
+    src = text.split("\n")
+    env: dict = {}
     out: list[tuple[int, str]] = []
-    for tok in MD.parse(text):
+    for tok in MD.parse(text, env):
         if not tok.map:
             continue
         first = offset + tok.map[0] + 1
         if tok.type == "inline":
-            line, buf = first, ""
+            segs, buf = [], ""
             for child in tok.children or []:
                 if child.type in ("softbreak", "hardbreak"):
-                    out.append((line, buf))
-                    line, buf = line + 1, ""
+                    segs.append(buf)
+                    buf = ""
+                elif child.type == "link_open":
+                    buf += " " + (child.attrGet("title") or "") + " "
                 elif child.type != "code_inline":
                     buf += child.content
-            out.append((line, buf))
-        elif tok.type == "fence" and tok.info.strip().split(" ")[0] in TEMPLATE_FENCES:
+            segs.append(buf)
+            out += [(_source_line(src, tok.map, offset, i, s), s) for i, s in enumerate(segs)]
+        elif tok.type == "fence" and (tok.info.split() or [""])[0].lower() in TEMPLATE_FENCES:
             out += prose_lines(tok.content, first)
         elif tok.type == "html_block":
             out += [(first + i, l) for i, l in enumerate(tok.content.split("\n"))]
+    for ref in (env.get("references") or {}).values():
+        title = ref.get("title") or ""
+        hit = next((i for i, l in enumerate(src) if title and title in l), 0)
+        out.append((offset + hit + 1, title))
     return out
+
+
+def _source_line(src: list[str], span: list[int], offset: int, k: int, seg: str) -> int:
+    """The source line holding the k-th segment of an inline run.
+
+    Counting breaks is right until a code span or inline HTML spans a newline,
+    which leaves no break token behind; then the segment's own text, looked up
+    in the lines the token covers, says where it really is.
+    """
+    guess = span[0] + k
+    probe = seg.strip()[:40]
+    if probe and not (guess < len(src) and probe in src[guess]):
+        for i in range(span[0], min(span[1], len(src))):
+            if probe in src[i]:
+                return offset + i + 1
+    return offset + guess + 1
 
 
 def links(text: str) -> list[str]:
@@ -329,9 +387,10 @@ def v10_fixtures():
         return
     for entry in FIX:
         ask, expect = _norm(entry["ask"]), entry["expect"]
-        # Whole words: `motion` is not a signal inside "emotional".
+        # A signal starts a word: `motion` is not a signal inside "emotional", and
+        # `transition` still matches "transitions".
         hits = [(len(sig), owner) for sig, owner in pairs
-                if re.search(rf"(?<!\w){re.escape(sig)}(?!\w)", ask)]
+                if re.search(rf"(?<!\w){re.escape(sig)}", ask)]
         if not hits:
             fail("V10", f"no signal matches {entry['ask']!r} (expected {expect})")
             continue
@@ -622,7 +681,7 @@ def v28_namespace_agrees():
     # and a sibling set's install line (`cp -R design-* _common <skills dir>`)
     # is what that judgement looks like when it is wrong.
     for d in sorted(list(ROOT.iterdir()) + list(SKILLS_ROOT.iterdir() if SKILLS_ROOT != ROOT else [])):
-        if not d.is_dir() or d.name in PLATFORM_DIRS or _local_dir(d.name):
+        if not d.is_dir() or d.name in PLATFORM_DIRS or not _owned_dir(d):
             continue
         if not (d.name.startswith(PREFIX) or d.name == SHARED):
             fail("V28", f"{d.name}/ carries no set name; a directory this set owns "
@@ -702,8 +761,8 @@ def v32_checker_engine():
     """
     eng = H.get("engines") or {}
     runs_on = eng.get("runs_on") or []
-    if len(runs_on) < 2:
-        fail("V32", f"engines.runs_on is {runs_on}; with fewer than two engines no "
+    if len(set(runs_on)) < 2:
+        fail("V32", f"engines.runs_on is {runs_on}; with fewer than two distinct engines no "
                     "run can be checked by one that did not produce the work")
     allowed = VOCAB.get("checkers") or []
     if not allowed:
@@ -959,8 +1018,11 @@ def v37_source_pins_the_rot():
 _ENUM_WORD = r"`?[A-Z][A-Z0-9-]*(?: [A-Z][A-Z0-9-]*)*`?"
 # A set may also sit in a comment (`status: DONE   # DONE | PARTIAL | BLOCKED`),
 # which is where the one real schema in the corpus writes it.
-ENUM_RE = re.compile(rf"(?:^|:\s*|#\s*)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WORD})+)"
+ENUM_RE = re.compile(rf"(?:^|:\s*|(?<=\s)#\s+)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WORD})+)"
                      r"\s*(?:$|[#—.(,;].*$)")
+
+
+ATX_HEADING_RE = re.compile(r"^ {0,3}#{1,6}(?:[ \t]|$)")
 
 
 def v38_enumerations_declared():
@@ -974,8 +1036,9 @@ def v38_enumerations_declared():
     declared = {w for words in VOCAB.values() for w in words}
     for f in corpus_md(SKILLS_ROOT):
         for i, line in enumerate(read(f).splitlines(), 1):
-            # A table row is pipes between cells, not a value set.
-            if line.lstrip().startswith("|"):
+            # A table row is pipes between cells, and a heading is a title — up to
+            # three spaces of indent, as CommonMark allows — not a value set.
+            if line.lstrip().startswith("|") or ATX_HEADING_RE.match(line):
                 continue
             m = ENUM_RE.search(line)
             if not m:

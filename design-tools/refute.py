@@ -98,14 +98,18 @@ def refuters(running: str) -> list[str]:
     known = (H.get("engines") or {}).get("runs_on") or []
     if running not in known:
         raise engine.EngineError(f"the running engine {running!r} is not one of {known}")
-    return [e for e in known if e != running]
+    pool = [e for e in dict.fromkeys(known) if e != running]   # declared order, once each
+    if not pool:
+        # Nothing left to ask is a refusal, not a run in which every engine agreed.
+        raise engine.EngineError(f"{known} leaves no engine but {running} to refute with")
+    return pool
 
 
 def exit_status(results: list[dict], pool: int) -> int:
     """A refutation outranks missing coverage: it is a finding, not a gap."""
     if any(r["verdict"] in ("REFUTED", "CONTESTED") for r in results):
         return 3
-    if any(r["independent_readings"] < pool for r in results):
+    if not pool or any(r["independent_readings"] < pool for r in results):
         return 1
     return 0
 
@@ -135,7 +139,13 @@ def main() -> int:
               "framing is a second opinion, not an adversary", file=sys.stderr)
         return 2
 
-    claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
+    # Unreadable or not JSON is refused input like any other: exit 2 with one
+    # line, not a traceback that exits 1 and reads as missing coverage.
+    try:
+        claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError) as e:
+        print(f"{a.claims}: cannot read claims — {e}", file=sys.stderr)
+        return 2
     if isinstance(claims, dict):
         claims = [claims]
     # A malformed claim is refused before any engine is asked, so a run never
