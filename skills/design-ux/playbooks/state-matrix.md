@@ -69,14 +69,14 @@ The undo window (5–10s typical), where the undo control lives, and what happen
 
 | State | Condition | Content | Primary action | Focus goes to | Notes |
 |-------|-----------|---------|----------------|---------------|-------|
-| Empty (first) | `items.length === 0 && !filters` | "Invoices you create appear here." | Create invoice | Create invoice | Show a sample row, greyed |
-| Empty (filtered) | `items.length === 0 && filters` | "No invoices match *unpaid, Q3*." | Clear filters | Clear filters | Keep filter chips visible |
+| Empty (first) | `items.length === 0 && !filters` | "Invoices you create appear here." | Create invoice | unchanged (announced) | Show a sample row, greyed |
+| Empty (filtered) | `items.length === 0 && filters` | "No invoices match *unpaid, Q3*." | Clear filters | unchanged (announced) | Keep filter chips visible |
 | Loading (initial) | first fetch pending | 6 skeleton rows | — | unchanged | Appears after 150ms |
 | Loading (refresh) | refetch pending | previous rows retained | — | unchanged | Spinner on refresh button only |
 | Partial | totals failed, rows ok | rows render; totals slot shows retry | Retry totals | unchanged | Rows remain interactive |
-| Error (fetch) | 5xx / timeout | "Couldn't load invoices." | Retry | Retry | Filters preserved |
-| Error (permission) | 403 | "You need billing access." | Request access | Request access | Names the admin |
-| Error (not found) | 404 | "This invoice was deleted or never existed." | Back to invoices | Back to invoices | Parent list as exit |
+| Error (fetch) | 5xx / timeout | "Couldn't load invoices." | Retry | unchanged (announced) | Filters preserved |
+| Error (permission) | 403 | "You need billing access." | Request access | unchanged (announced) | Names the admin |
+| Error (not found) | 404 | "This invoice was deleted or never existed." | Back to invoices | the page's `<h1>` | Parent list as exit |
 | Offline | `navigator.onLine === false` | cached rows + banner | — | unchanged | New invoices queue |
 | Success (create) | 201 | toast: "Invoice INV-104 created" | View invoice | the new row | Undo not applicable |
 | Destructive pending | delete issued | row greyed, "Deleted · Undo" | Undo | the next row | 8s window; commits on navigate |

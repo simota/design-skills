@@ -9,7 +9,7 @@ Keyboard operation is a design specification, not an implementation detail.
 - Specify the order explicitly per screen. Ambiguity here becomes a defect.
 - Never use a positive `tabindex`; it creates an order nobody can maintain.
 - Skip links come first on pages with repeated navigation.
-- Elements that are visually hidden must also be removed from the tab order.
+- Elements hidden from view must also be removed from the tab order, except content that becomes visible on focus, such as a skip link.
 
 Check each destination `design-ux` specified against this table; one it left open is `UNSPECIFIED`, owner `design-ux`:
 
@@ -92,7 +92,7 @@ Minimum 24×24 CSS px, **or** the spacing exception below.
 
 Practical guidance beyond AA: 44×44 CSS px for touch (the iOS HIG's 44×44 pt; also SC 2.5.5 at AAA); Material recommends 48×48 dp. The *visual* control may be smaller — enlarge the hit area with padding or a pseudo-element instead of growing the icon.
 
-Adjacent targets must not overlap. Abutting 20px row action icons (no gap) are the most common 2.5.8 failure; at 4px gaps they pass on the spacing exception.
+Adjacent targets must not overlap. Abutting 20px row action icons (no gap) are the most common 2.5.8 failure; at 4px gaps a single horizontal row can pass on the spacing exception — check every neighbouring target, including adjacent rows.
 
 ## Pointer and gesture (SC 2.5.1, 2.5.2, 2.5.7)
 

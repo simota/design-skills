@@ -52,11 +52,6 @@ PLATFORM_DIRS = set(H["platform_dirs"])
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
 SKILL_DIRS = sorted(p for p in SKILLS_ROOT.glob(f"{PREFIX}*") if (p / "SKILL.md").exists())
 SKILLS = [p.name for p in SKILL_DIRS]
-# A code span opens on a run of n backticks and closes on the next run of
-# exactly n, so ``a `b` c`` is one span, not three.
-# A span never crosses a blank line: a stray backtick must not swallow the
-# paragraphs, and the links in them, up to the next one.
-CODE_SPAN_RE = re.compile(r"(?<!`)(`+)(?!`)((?:(?!\n[ \t]*\n).)+?)(?<!`)\1(?!`)", re.S)
 # A backticked token is a path if it contains a slash or names a file. Matching
 # only on the slash misses the bare sibling reference (`SIZING.md`), which is
 # the form that breaks: it resolves against the skill directory, not against
@@ -84,9 +79,14 @@ def corpus_md(root: Path) -> list[Path]:
     return out
 
 
+# Named, not inferred: exempting every dot-directory also exempted a tracked
+# `.claude-plugin/` from the link, marker and budget checks.
+LOCAL_DIRS = {".git", ".venv", "venv", ".tox", ".mypy_cache", ".pytest_cache",
+              ".ruff_cache", ".idea", ".vscode", "node_modules", "__pycache__"}
+
+
 def _local_dir(name: str) -> bool:
-    return name == ".git" or name in ("node_modules", "__pycache__") or \
-        (name.startswith(".") and name not in PLATFORM_DIRS)
+    return name in LOCAL_DIRS
 
 
 # A CommonMark parser, not a pattern. Three rounds of review each found another
@@ -96,12 +96,35 @@ def _local_dir(name: str) -> bool:
 MD = MarkdownIt("commonmark")
 
 
-def code_block_lines(text: str) -> set[int]:
-    """1-based line numbers inside fenced or indented code, as the parser sees them."""
-    out: set[int] = set()
+TEMPLATE_FENCES = {"markdown", "md"}
+
+
+def prose_lines(text: str, offset: int = 0) -> list[tuple[int, str]]:
+    """(line number, text) for everything a reader sees as prose, code removed.
+
+    Taken from the parser's tokens, so a code span is what CommonMark calls one
+    (an escaped backtick opens nothing) and line numbers are the parser's own.
+    A ```markdown fence is a template the skill copies out, so its inside is
+    read as Markdown too; any other fence or indented block is an example.
+    """
+    out: list[tuple[int, str]] = []
     for tok in MD.parse(text):
-        if tok.type in ("fence", "code_block") and tok.map:
-            out.update(range(tok.map[0] + 1, tok.map[1] + 1))
+        if not tok.map:
+            continue
+        first = offset + tok.map[0] + 1
+        if tok.type == "inline":
+            line, buf = first, ""
+            for child in tok.children or []:
+                if child.type in ("softbreak", "hardbreak"):
+                    out.append((line, buf))
+                    line, buf = line + 1, ""
+                elif child.type != "code_inline":
+                    buf += child.content
+            out.append((line, buf))
+        elif tok.type == "fence" and tok.info.strip().split(" ")[0] in TEMPLATE_FENCES:
+            out += prose_lines(tok.content, first)
+        elif tok.type == "html_block":
+            out += [(first + i, l) for i, l in enumerate(tok.content.split("\n"))]
     return out
 
 
@@ -270,7 +293,15 @@ def _resolve(base: Path, target: str) -> Path:
 def v8_links():
     for f in corpus_md(ROOT):
         for target in links(read(f)):
-            if not (f.parent / target).exists():
+            if target.startswith("/"):
+                fail("V8", f"{f.relative_to(ROOT)} links to {target}, an absolute path "
+                           "that resolves on this machine and nowhere else")
+                continue
+            try:
+                exists = (f.parent / target).exists()
+            except OSError:                      # e.g. a name longer than the FS allows
+                exists = False
+            if not exists:
                 fail("V8", f"{f.relative_to(ROOT)} links to missing {target}")
 
 
@@ -298,7 +329,9 @@ def v10_fixtures():
         return
     for entry in FIX:
         ask, expect = _norm(entry["ask"]), entry["expect"]
-        hits = [(len(sig), owner) for sig, owner in pairs if sig in ask]
+        # Whole words: `motion` is not a signal inside "emotional".
+        hits = [(len(sig), owner) for sig, owner in pairs
+                if re.search(rf"(?<!\w){re.escape(sig)}(?!\w)", ask)]
         if not hits:
             fail("V10", f"no signal matches {entry['ask']!r} (expected {expect})")
             continue
@@ -494,14 +527,9 @@ def v22_markers_classified():
     for f in corpus_md(ROOT):
         if f.parts[-2:-1] == ("delivered",):
             continue
-        text = read(f)
-        in_code = code_block_lines(text)
-        for i, line in enumerate(text.splitlines(), 1):
-            if i in in_code:                      # a fenced or indented example
-                continue
-            # A marker quoted in a code span is being talked about; one that is
-            # merely followed by one (`rename \`x\` later`) is still a marker.
-            line = CODE_SPAN_RE.sub("", line)
+        # A marker quoted in code is being talked about; one beside code
+        # (`rename \`x\` later`) is still a marker.
+        for i, line in prose_lines(read(f)):
             if MARKER_RE.search(line):
                 if not any(c in line for c in VOCAB["residual_classes"]):
                     fail("V22", f"{f.relative_to(ROOT)}:{i} marker carries no residual class")
@@ -929,7 +957,9 @@ def v37_source_pins_the_rot():
 # Words may carry digits (`T0`) and backticks, and the line may go on after the
 # set (`— pick one`, `.`); a `$`-anchored, letters-only form missed all three.
 _ENUM_WORD = r"`?[A-Z][A-Z0-9-]*(?: [A-Z][A-Z0-9-]*)*`?"
-ENUM_RE = re.compile(rf"(?:^|:\s*)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WORD})+)"
+# A set may also sit in a comment (`status: DONE   # DONE | PARTIAL | BLOCKED`),
+# which is where the one real schema in the corpus writes it.
+ENUM_RE = re.compile(rf"(?:^|:\s*|#\s*)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WORD})+)"
                      r"\s*(?:$|[#—.(,;].*$)")
 
 
@@ -996,7 +1026,14 @@ def hooks_state() -> str:
 
 def main() -> int:
     for rule in RULES:
-        rule()
+        # A rule that cannot run is a failure of that rule, not the end of the
+        # run: a misnamed shared_dir used to stop every rule after the first one
+        # that read from it, and hid the V28 failure that names the cause.
+        try:
+            rule()
+        except Exception as e:                       # noqa: BLE001
+            fail(rule.__name__.split("_")[0].upper(),
+                 f"could not run: {type(e).__name__}: {e}")
     print(f"{len(RULES)} rules · {len(SKILLS)} skills" + hooks_state())
     if FAILURES:
         for f in sorted(FAILURES):
