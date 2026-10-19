@@ -83,30 +83,35 @@ def _git_visible() -> set[str] | None:
     except (OSError, subprocess.CalledProcessError):
         return None
     # A nested repository (a worktree under the checkout) is listed as `dir/`.
-    return {p for p in out.decode("utf-8", "replace").split("\0") if p and not p.endswith("/")}
+    # fsdecode, as pathlib names files: "replace" turned a non-UTF-8 name into
+    # one no path on disk compares equal to, and the file dropped out unchecked.
+    import os
+    return {os.fsdecode(p) for p in out.split(b"\0") if p and not p.endswith(b"/")}
 
 
 GIT_VISIBLE = _git_visible()
 
 
 def corpus_md(root: Path) -> list[Path]:
-    """The markdown this repo owns: what git would commit, or, outside a
-    checkout, everything but a local tool directory."""
+    """The markdown this repo owns: what git would commit, never a local tool
+    directory. A `.venv/` nobody ignored is still a contributor's, and the
+    hook's index export holds no untracked file, so both modes agree on it."""
     out = []
     for f in sorted(root.rglob("*.md")):
         rel = f.relative_to(ROOT)
-        if GIT_VISIBLE is not None:
-            if rel.as_posix() in GIT_VISIBLE:
-                out.append(f)
-        elif not any(_local_dir(p) for p in rel.parts[:-1]):
+        if any(_local_dir(p) for p in rel.parts[:-1]):
+            continue
+        if GIT_VISIBLE is None or rel.as_posix() in GIT_VISIBLE:
             out.append(f)
     return out
 
 
 def _owned_dir(d: Path) -> bool:
     """A directory V28 holds to the set's naming: one git would commit from."""
+    if _local_dir(d.name):
+        return False
     if GIT_VISIBLE is None:
-        return not _local_dir(d.name)
+        return True
     prefix = d.relative_to(ROOT).as_posix() + "/"
     return any(p.startswith(prefix) for p in GIT_VISIBLE)
 
@@ -131,59 +136,88 @@ MD = MarkdownIt("commonmark")
 TEMPLATE_FENCES = {"markdown", "md"}
 
 
-def prose_lines(text: str, offset: int = 0) -> list[tuple[int, str]]:
-    """(line number, text) for everything a reader sees as prose, code removed.
+class _Lines:
+    """Which source lines the parser calls code, which headings, and where each
+    inline run sits, keyed by the 1-based line numbers of the page."""
 
-    Taken from the parser's tokens, so a code span is what CommonMark calls one
-    (an escaped backtick opens nothing). Link titles and reference definitions
-    are prose too. A ```markdown fence is a template the skill copies out, so
-    its inside is read as Markdown; any other fence or indented block is an
-    example.
+    def __init__(self) -> None:
+        self.code: set[int] = set()
+        self.headings: set[int] = set()
+        self.inline: list[tuple[int, str]] = []     # first line, source of the run
+
+
+def line_map(text: str, offset: int = 0, into: _Lines | None = None) -> _Lines:
+    """Read the page once with the CommonMark parser.
+
+    A ```markdown fence is a template the skill copies out, so its inside is
+    read as Markdown, at its own line numbers; any other fence or indented
+    block is an example, so code.
     """
-    src = text.split("\n")
-    env: dict = {}
-    out: list[tuple[int, str]] = []
-    for tok in MD.parse(text, env):
+    out = into or _Lines()
+    for tok in MD.parse(text):
         if not tok.map:
             continue
-        first = offset + tok.map[0] + 1
-        if tok.type == "inline":
-            segs, buf = [], ""
-            for child in tok.children or []:
-                if child.type in ("softbreak", "hardbreak"):
-                    segs.append(buf)
-                    buf = ""
-                elif child.type == "link_open":
-                    buf += " " + (child.attrGet("title") or "") + " "
-                elif child.type != "code_inline":
-                    buf += child.content
-            segs.append(buf)
-            out += [(_source_line(src, tok.map, offset, i, s), s) for i, s in enumerate(segs)]
-        elif tok.type == "fence" and (tok.info.split() or [""])[0].lower() in TEMPLATE_FENCES:
-            out += prose_lines(tok.content, first)
-        elif tok.type == "html_block":
-            out += [(first + i, l) for i, l in enumerate(tok.content.split("\n"))]
-    for ref in (env.get("references") or {}).values():
-        title = ref.get("title") or ""
-        hit = next((i for i, l in enumerate(src) if title and title in l), 0)
-        out.append((offset + hit + 1, title))
+        first, last = offset + tok.map[0] + 1, offset + tok.map[1]
+        if tok.type == "fence" and (tok.info.split() or [""])[0].lower() in TEMPLATE_FENCES:
+            line_map(tok.content, first, out)
+        elif tok.type in ("fence", "code_block"):
+            out.code.update(range(first, last + 1))
+        elif tok.type == "heading_open":
+            out.headings.update(range(first, last + 1))
+        elif tok.type == "inline":
+            out.inline.append((first, tok.content))
     return out
 
 
-def _source_line(src: list[str], span: list[int], offset: int, k: int, seg: str) -> int:
-    """The source line holding the k-th segment of an inline run.
+_PROBE = "QzMarkerProbeQz"
 
-    Counting breaks is right until a code span or inline HTML spans a newline,
-    which leaves no break token behind; then the segment's own text, looked up
-    in the lines the token covers, says where it really is.
+
+def _in_code_span(run: str, row: int, col: int, width: int) -> bool:
+    """Whether the text at (row, col) of an inline run is inside a code span.
+
+    The parser decides, not a pattern: the occurrence is swapped for a probe
+    word and the run parsed again, so escapes, backtick runs of any length and
+    spans crossing a newline are read exactly as CommonMark reads them.
     """
-    guess = span[0] + k
-    probe = seg.strip()[:40]
-    if probe and not (guess < len(src) and probe in src[guess]):
-        for i in range(span[0], min(span[1], len(src))):
-            if probe in src[i]:
-                return offset + i + 1
-    return offset + guess + 1
+    rows = run.split("\n")
+    rows[row] = rows[row][:col] + _PROBE + rows[row][col + width:]
+    for tok in MD.parseInline("\n".join(rows)):
+        for child in tok.children or []:
+            if child.type == "code_inline":
+                continue
+            if _PROBE in child.content or any(_PROBE in str(v) for v in child.attrs.values()):
+                return False
+    return True
+
+
+def marker_lines(text: str) -> list[tuple[int, str]]:
+    """Every source line holding a live marker, at its own line number.
+
+    The line is the source line, never one rebuilt from tokens, so formatting
+    or a code span crossing a newline cannot move it. The parser only says
+    whether each occurrence is code: inside a fence or indented block, or in a
+    code span of its inline run. Anything else — prose, a link or image title,
+    a reference definition, HTML — is read by people, so it is live.
+    """
+    lines = line_map(text)
+    out = []
+    for n, line in enumerate(text.split("\n"), 1):
+        if n in lines.code or not MARKER_RE.search(line):
+            continue
+        run = next(((first, src) for first, src in lines.inline
+                    if first <= n < first + src.count("\n") + 1), None)
+        live = run is None
+        if run is not None:
+            first, src = run
+            row = src.split("\n")[n - first]
+            hits = list(MARKER_RE.finditer(row))
+            # Not found in the run's own text (a prefix the parser stripped
+            # cannot hold it): read as live rather than drop it unchecked.
+            live = not hits or any(not _in_code_span(src, n - first, m.start(), len(m.group()))
+                                   for m in hits)
+        if live:
+            out.append((n, line))
+    return out
 
 
 def links(text: str) -> list[str]:
@@ -588,10 +622,9 @@ def v22_markers_classified():
             continue
         # A marker quoted in code is being talked about; one beside code
         # (`rename \`x\` later`) is still a marker.
-        for i, line in prose_lines(read(f)):
-            if MARKER_RE.search(line):
-                if not any(c in line for c in VOCAB["residual_classes"]):
-                    fail("V22", f"{f.relative_to(ROOT)}:{i} marker carries no residual class")
+        for i, line in marker_lines(read(f)):
+            if not any(c in line for c in VOCAB["residual_classes"]):
+                fail("V22", f"{f.relative_to(ROOT)}:{i} marker carries no residual class")
 
 
 def v23_labels():
@@ -1018,11 +1051,8 @@ def v37_source_pins_the_rot():
 _ENUM_WORD = r"`?[A-Z][A-Z0-9-]*(?: [A-Z][A-Z0-9-]*)*`?"
 # A set may also sit in a comment (`status: DONE   # DONE | PARTIAL | BLOCKED`),
 # which is where the one real schema in the corpus writes it.
-ENUM_RE = re.compile(rf"(?:^|:\s*|(?<=\s)#\s+)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WORD})+)"
+ENUM_RE = re.compile(rf"(?:^|:\s*|(?:^|(?<=\s))#\s+)({_ENUM_WORD}(?:\s*\|\s*{_ENUM_WORD})+)"
                      r"\s*(?:$|[#—.(,;].*$)")
-
-
-ATX_HEADING_RE = re.compile(r"^ {0,3}#{1,6}(?:[ \t]|$)")
 
 
 def v38_enumerations_declared():
@@ -1035,10 +1065,14 @@ def v38_enumerations_declared():
     """
     declared = {w for words in VOCAB.values() for w in words}
     for f in corpus_md(SKILLS_ROOT):
-        for i, line in enumerate(read(f).splitlines(), 1):
-            # A table row is pipes between cells, and a heading is a title — up to
-            # three spaces of indent, as CommonMark allows — not a value set.
-            if line.lstrip().startswith("|") or ATX_HEADING_RE.match(line):
+        text = read(f)
+        # Headings as the parser finds them: a regex for "# at the start" also
+        # matched a YAML or shell comment at column 0 inside a fence, the very
+        # place a value set is written.
+        headings = line_map(text).headings
+        for i, line in enumerate(text.split("\n"), 1):
+            # A table row is pipes between cells, and a heading is a title.
+            if line.lstrip().startswith("|") or i in headings:
                 continue
             m = ENUM_RE.search(line)
             if not m:
@@ -1088,6 +1122,10 @@ def hooks_state() -> str:
 
 
 def main() -> int:
+    # A file name that is not UTF-8 is still reported, escaped, rather than
+    # ending the run on the print that names it.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(errors="backslashreplace")
     for rule in RULES:
         # A rule that cannot run is a failure of that rule, not the end of the
         # run: a misnamed shared_dir used to stop every rule after the first one

@@ -39,7 +39,7 @@ Rules:
 - Body size is the scale's anchor, not the smallest step. Set body first (16px web default; 14px only for genuinely dense professional tools).
 - Cap the number of steps. Six to eight sizes covers almost every product; more is drift.
 - Long-form line length: 60–75 characters. UI line length: 45–75.
-- Line height loosens as size shrinks: ~1.5–1.6 for body, ~1.1–1.25 for display.
+- Line height tightens as size grows above body: ~1.5–1.6 for body, ~1.1–1.25 for display; below body it stays near the body value.
 
 ## Fallback stacks
 

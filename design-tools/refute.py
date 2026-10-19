@@ -143,7 +143,7 @@ def main() -> int:
     # line, not a traceback that exits 1 and reads as missing coverage.
     try:
         claims = json.loads(pathlib.Path(a.claims).read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, ValueError) as e:
+    except (OSError, UnicodeDecodeError, ValueError, RecursionError) as e:
         print(f"{a.claims}: cannot read claims — {e}", file=sys.stderr)
         return 2
     if isinstance(claims, dict):

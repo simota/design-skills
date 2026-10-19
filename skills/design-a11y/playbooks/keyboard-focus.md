@@ -70,7 +70,7 @@ Specify keys per component. Follow the WAI-ARIA Authoring Practices Guide rather
 Rules:
 - A composite widget is one tab stop; arrows move within it. Making every cell or tab a tab stop makes the component unusable.
 - Escape always cancels the most recent layer.
-- Single-character shortcuts must be remappable or only active when a component has focus (SC 2.1.4).
+- Single-character shortcuts must be possible to turn off or remap, or be active only when the component has focus (SC 2.1.4).
 
 ## Focus traps
 

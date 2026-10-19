@@ -72,7 +72,7 @@ catch the value edited into a wrong one later. `make figures` recomputes what th
 reference layer states from the reference layer itself — every recorded contrast
 pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, and the type
 scale from its own stated base and ratio. It runs in `make check` and in the
-pre-commit hook, and `make test` introduces seven deliberate errors and fails
+pre-commit hook, and `make test` introduces eight deliberate errors and fails
 unless each one breaks it, including two that make the checks vacuous rather than wrong.
 
 That is also how the type scale's clamp got written down: the ratio applied
@@ -133,7 +133,7 @@ finds the file, which is what makes this fail quietly.
 | [`skills/_design/PROVENANCE.md`](skills/_design/PROVENANCE.md) | The six grounds, `ARBITRARY`, and what each literal value must carry |
 | [`skills/_design/VALUES.md`](skills/_design/VALUES.md) | The order that decides when two goods conflict, and the escape hatch |
 | [`skills/_design/ROUTING.md`](skills/_design/ROUTING.md) | Guidance. Read when the owner is unclear or the work spans several |
-| [`skills/_design/REPORT.md`](skills/_design/REPORT.md) | What a person reads: the order, the ceiling per tier, and why the handoff is the record |
+| [`skills/_design/REPORT.md`](skills/_design/REPORT.md) | What a person reads: the order, what each tier's report contains, and why the handoff is the record |
 
 ## Layout
 

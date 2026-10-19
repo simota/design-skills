@@ -30,7 +30,7 @@ card, 320 x 200, viewed at 1x
 
 ① title and body read as one level; nothing leads the eye
 ② price is the smallest mark and reads after the button
-③ buy reads as the weakest mark on the card (size → design-a11y)
+③ buy is the only action but reads second, after the title (size → design-a11y)
 ```
 
 Say the component, its size, and the density you judged at, or the marks mean

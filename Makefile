@@ -73,7 +73,8 @@ render:
 hooks:
 	@chmod +x design-tools/githooks/pre-commit
 	@if [ "$$(git config --get core.hooksPath)" = "design-tools/githooks" ]; then \
-		git config --unset core.hooksPath; echo "removed core.hooksPath set by an earlier make hooks"; fi
+		if git config --unset core.hooksPath; then \
+			echo "removed core.hooksPath set by an earlier make hooks"; fi; fi
 	@if [ -n "$$(git config --get core.hooksPath)" ]; then \
 		echo "core.hooksPath is $$(git config --get core.hooksPath); not installing there. Add to its pre-commit:"; \
 		echo '  h="$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"; [ ! -f "$$h" ] || "$$h" || exit 1'; exit 1; fi

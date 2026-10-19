@@ -47,3 +47,7 @@
   expect: design-critique
 - ask: "The colour feels off. Does this screen look calm and hold together as a whole?"
   expect: design-review
+- ask: "what should the loading state show for the invoice list"
+  expect: design-ux
+- ask: "the loading spinner feels janky"
+  expect: design-motion

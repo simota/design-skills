@@ -40,7 +40,7 @@ design-ux:
       go: design-direction
     - what: "the timing of a state change"
       go: design-motion
-  signals: [information architecture, task flows, screen states, forms, navigation, destructive actions, cognitive load]
+  signals: [information architecture, task flows, screen states, loading state, forms, navigation, destructive actions, cognitive load]
 
 design-motion:
   class: doc-write
