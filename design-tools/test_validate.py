@@ -9,6 +9,7 @@ Run: make test
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -24,7 +25,7 @@ import validate                                    # noqa: E402  — for RULES o
 
 def run(root: Path) -> str:
     r = subprocess.run([sys.executable, str(root / "design-tools" / "validate.py")],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, errors="replace")
     return r.stdout + r.stderr
 
 
@@ -61,8 +62,8 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Owns", "## Owns\n" + "x\n" * 200
 
 
 @case("V2")
-def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how an interface behaves",
-              "Not for design-motion. Designing how an interface behaves")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "How an interface behaves",
+              "Not for design-motion. How an interface behaves")
 
 
 @case("V3")
@@ -425,16 +426,16 @@ def figures_fire() -> list[str]:
 # --- one case per branch, keyed by what that branch prints -------------------
 
 @case("V1-description", "description is")
-def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how an interface behaves",
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "How an interface behaves",
               "Designing, specifying, documenting and defending how an interface behaves")
 
 
 @case("V2-terms", "contains 'rather than'")
-def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how", "Designing, rather than guessing, how")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "How an interface", "How, rather than guessing, an interface")
 
 
 @case("V2-names", "names design-motion")
-def _(r): sub(r / f"{S}design-ux/SKILL.md", "Designing how", "design-motion. Designing how")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "How an interface", "design-motion. How an interface")
 
 
 @case("V3-disk", "capabilities.yaml vs disk")
@@ -601,6 +602,8 @@ GREEN_CASES: dict[str, callable] = {
         (r / "skills/_design/foo#bar.md").write_text("<!-- design:contract -->\n", encoding="utf-8"),
         sub(r / "README.md", "## Files",
             "[doc](skills/_design/foo%23bar.md#section)\n\n## Files")),
+    "marker-in-a-span-across-lines": lambda r: sub(
+        r / "README.md", "## Files", "a `quoted\n#" + "TODO(agent): example` b\n\n## Files"),
     "titled-link-to-real-file": lambda r: sub(
         r / "README.md", "## Files",
         "[routing](skills/_design/ROUTING.md 'routing') [r2](skills/_design/ROUTING.md (r))"
@@ -712,12 +715,38 @@ def _(r): sub(r / "design-registry/harness.yaml", "runs_on: [claude, codex, agy]
 def _(r): sub(r / f"{S}_design/HANDOFF.md", "# DONE | PARTIAL | BLOCKED", "# DONE | PARTIAL | STUCK")
 
 
+# A comment in a fence starts with "#" at column 0, as a heading does; only the
+# parser knows which one it is.
+@case("V38-comment-at-column-0", "switches on STUCK")
+def _(r): sub(r / f"{S}design-tokens/reference/export-targets.md", "## ",
+              "```yaml\n# DONE | PARTIAL | STUCK\n```\n\n## ")
+
+
+@case("V22-image-title", "README.md:")
+def _(r): sub(r / "README.md", "## Files", '![x](a.png "#' + 'TODO(agent): note")\n\n## Files')
+
+
+# The marker reported at its own line, not the first line that happens to hold
+# the same words in a code span.
+@case("V22-reference-title-line", "README.md:")
+def _(r):
+    p = r / "README.md"
+    t = p.read_text(encoding="utf-8")
+    marker = "#" + "TODO(agent): note"
+    ref = f'[r]: README.md "{marker}"'
+    t = t.replace("## Files", f"`{marker}`\n\n{ref}\n\n## Files", 1)
+    p.write_text(t, encoding="utf-8")
+    MESSAGES["V22-reference-title-line"] = f"README.md:{t.split(chr(10)).index(ref) + 1} marker"
+
+
 # `make hooks` owns only the exact shim it writes. Anything else in git's
 # pre-commit slot is the contributor's, including a hook that chains ours by
 # hand — the earlier ownership test (a grep) overwrote that one on reinstall.
 CHAINED = '#!/bin/sh\necho MINE\n"$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1\n'
 FOREIGN = "#!/bin/sh\necho OTHER\n"
 MENTION_ONLY = "#!/bin/sh\n# later: design-tools/githooks/pre-commit\nexit 0\n"
+# What an earlier `make hooks` wrote: ours, so replaced by the current shim.
+LEGACY = '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$@"\n'
 
 
 def hooks_hold() -> list[str]:
@@ -734,6 +763,17 @@ def hooks_hold() -> list[str]:
         r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
         if r.returncode == 0 or any(elsewhere.iterdir()):
             bad.append("foreign core.hooksPath written to")
+        # The old setting in the user's global config is not this checkout's to
+        # unset: no claim that it was removed, and nothing installed.
+        glob = Path(tmp) / "gitconfig"
+        glob.write_text("[core]\n\thooksPath = design-tools/githooks\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(repo), "config", "--unset", "core.hooksPath"], check=True)
+        r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True,
+                           env={**os.environ, "GIT_CONFIG_GLOBAL": str(glob)})
+        if r.returncode == 0 or "removed core.hooksPath" in r.stdout:
+            bad.append("global legacy core.hooksPath reported as removed")
+        subprocess.run(["git", "-C", str(repo), "config", "core.hooksPath", str(elsewhere)],
+                       check=True)
         # The shim does nothing where the tracked hook is absent (an orphan branch).
         subprocess.run(["git", "-C", str(repo), "config", "--unset", "core.hooksPath"], check=True)
         subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, check=True)
@@ -748,7 +788,8 @@ def hooks_hold() -> list[str]:
     for name, before, want_rc, keep in (("fresh", None, 0, False), ("chained", CHAINED, 2, True),
                                         ("chained-not-executable", CHAINED, 2, True),
                                         ("mention-only", MENTION_ONLY, 2, True),
-                                        ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False)):
+                                        ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False),
+                                        ("legacy-shim", LEGACY, 0, False)):
         with tempfile.TemporaryDirectory() as tmp:
             repo = copy_repo(tmp)
             subprocess.run(["git", "init", "-q", str(repo)], check=True)
@@ -766,7 +807,8 @@ def hooks_hold() -> list[str]:
             left = subprocess.run(["git", "-C", str(repo), "config", "--get", "core.hooksPath"],
                                   capture_output=True, text=True).stdout.strip()
             ok = r.returncode == want_rc and not left
-            ok = ok and (after == before if keep else "design-tools/githooks/pre-commit" in after)
+            ok = ok and (after == before if keep else
+                         "design-tools/githooks/pre-commit" in after and after != before)
             if not ok:
                 bad.append(f"{name} (exit {r.returncode}, hooksPath {left!r})")
     return bad
@@ -789,8 +831,18 @@ def git_corpus_holds() -> list[str]:
         nested.mkdir(parents=True)
         subprocess.run(["git", "init", "-q", str(nested)], check=True)
         (nested / "NOTES.md").write_text("[x](missing.md)\n" * 3000, encoding="utf-8")
+        # A tool directory nobody ignored is still the contributor's.
+        (repo / "node_modules" / "pkg").mkdir(parents=True)
+        (repo / "node_modules" / "pkg" / "README.md").write_text("[x](missing.md)\n",
+                                                                 encoding="utf-8")
         if "green" not in run(repo):
             bad.append("contributor-local directories counted")
+        # A name that is not UTF-8 is still a file git would commit.
+        odd = Path(os.fsdecode(os.fsencode(repo) + b"/NOTES-\xff.md"))
+        odd.write_text("[x](missing.md)\n", encoding="utf-8")
+        if "V8: NOTES-" not in run(repo):
+            bad.append("a non-UTF-8 file name dropped out of the corpus")
+        odd.unlink()
         plugin = repo / ".claude-plugin"
         plugin.mkdir()
         (plugin / "README.md").write_text("[x](missing.md)\n", encoding="utf-8")
@@ -864,7 +916,7 @@ def main() -> int:
               {"$ref": "#/x"}, {"type": "object", "additionalProperties": {"type": "number"}},
               {"type": "object", "properties": {"v": {"oneOf": []}}},
               {"properties": {"ok": {"type": "boolean"}}, "required": ["ok"]},   # no type
-              {"type": "objekt"}]
+              {"type": "objekt"}, {"type": ["string", ["null"]]}, {"type": {"a": 1}}]
     wrong += [f"unsupported:{i}" for i, s in enumerate(unread) if engine.unsupported(s) is None]
     if engine.unsupported({"type": "object", "required": ["ok"], "properties":
                            {"ok": {"type": "boolean", "description": "d"}}}) is not None:
@@ -899,28 +951,40 @@ def main() -> int:
         bad_inputs["not-json"].write_text("{bad", encoding="utf-8")
         bad_inputs["not-utf8"].write_bytes(b"\xff\xfe\x00")
         bad_inputs["no-claim"].write_text('[{"id": "x"}]', encoding="utf-8")
+        bad_inputs["too-deep"] = Path(tmp) / "deep.json"
+        bad_inputs["too-deep"].write_text("[" * 100000 + "]" * 100000, encoding="utf-8")
         for name, path in bad_inputs.items():
             r = subprocess.run([sys.executable, str(ROOT / "design-tools" / "refute.py"),
                                 "--running", "claude", str(path)], capture_output=True, text=True)
             if r.returncode != 2 or "Traceback" in r.stderr:
                 off.append(f"input:{name}={r.returncode}")
+        # One engine declared leaves nobody to refute with: refused, exit 2.
+        lone = copy_repo(tmp + "/lone")
+        sub(lone / "design-registry/harness.yaml", "runs_on: [claude, codex, agy]",
+            "runs_on: [claude]")
+        (lone / "c.json").write_text('[{"id": "x", "claim": "y"}]', encoding="utf-8")
+        r = subprocess.run([sys.executable, str(lone / "design-tools" / "refute.py"),
+                            "--running", "claude", str(lone / "c.json")],
+                           capture_output=True, text=True)
+        if r.returncode != 2 or "no engine but" not in r.stderr:
+            off.append(f"empty-pool={r.returncode}")
     if off:
         print(f"refute refused input wrongly: {off}")
         return 1
     print(f"refute's exit status says what happened ({len(exit_cases)} cases, "
-          f"{len(bad_inputs)} refused inputs)")
+          f"{len(bad_inputs)} refused inputs, empty pool)")
 
     git_bad = git_corpus_holds()
     if git_bad:
         print("git-visible corpus wrong: " + ", ".join(git_bad))
         return 1
-    print("in a checkout, the corpus is what git would commit (2 cases)")
+    print("in a checkout, the corpus is what git would commit (3 cases)")
 
     broken_hooks = hooks_hold()
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (8 cases)")
+    print("make hooks leaves every hook but its own shim alone (10 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:

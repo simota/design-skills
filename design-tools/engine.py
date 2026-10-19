@@ -84,7 +84,9 @@ def unsupported(schema, where: str = "$") -> str | None:
     # with `properties` but no `type` would accept any answer at all.
     kinds = schema.get("type")
     kinds = kinds if isinstance(kinds, list) else [kinds]
-    if not kinds or any(k not in _TYPES for k in kinds):
+    # A list or object where a type name belongs is unknown too — not a
+    # TypeError out of the membership test.
+    if not kinds or any(not isinstance(k, str) or k not in _TYPES for k in kinds):
         return f"{where}: type {schema.get('type')!r} is not one this checker understands"
     extra = sorted(set(schema) - _KEYWORDS)
     if extra:
@@ -109,7 +111,7 @@ def mismatch(value, schema: dict, where: str = "$") -> str | None:
     """
     want = schema.get("type")
     wants = want if isinstance(want, list) else [want] if want else []
-    unknown = [w for w in wants if w not in _TYPES]
+    unknown = [w for w in wants if not isinstance(w, str) or w not in _TYPES]
     if unknown:
         return f"{where}: schema type {unknown} is not one this checker understands"
     fits = [w for w in wants if isinstance(value, _TYPES[w])

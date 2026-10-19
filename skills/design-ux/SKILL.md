@@ -1,6 +1,6 @@
 ---
 name: design-ux
-description: "Designing how an interface behaves: information architecture, task flows, screen states, forms, navigation, destructive actions, and cognitive load. Use when behaviour is undecided or wrong."
+description: "How an interface behaves: information architecture, task flows, screen states, loading states, forms, navigation, destructive actions, and cognitive load. Use when behaviour is undecided or wrong."
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 <!-- design:contract -->
