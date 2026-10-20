@@ -111,7 +111,7 @@ def _(r): sub(r / "design-registry/fixtures.yaml",
               '- ask: "give me a UI audit of this screen"\n  expect: design-tokens')
 
 
-@case("V10-empty")
+@case("V10-empty", "holds no list of asks")
 def _(r): (r / "design-registry/fixtures.yaml").write_text("# no asks yet\n", encoding="utf-8")
 
 
@@ -315,7 +315,7 @@ def _(r): sub(r / "design-registry/harness.yaml",
               "  refute.py: all", "  refute.py: all\n  nosuch.py: all")
 
 
-@case("V34-none-declared")
+@case("V34-none-declared", "declares no linked_tools")
 def _(r): sub(r / "design-registry/harness.yaml", "linked_tools:", "unlinked_tools:")
 
 
@@ -342,7 +342,7 @@ def _(r): sub(r / f"{S}design-review/SKILL.md",
               "[visualise](playbooks/visualise.md)", "the visualise guidance")
 
 
-@case("V36-none-declared")
+@case("V36-none-declared", "declares no finding_visuals")
 def _(r): sub(r / "design-registry/harness.yaml", "finding_visuals:", "unused_visuals:")
 
 
@@ -373,7 +373,7 @@ def _(r):
         "Source: none — nothing outside this page can move what it states.", "Source:")
 
 
-@case("V37-none-declared")
+@case("V37-none-declared", "declares no source_authorities")
 def _(r): sub(r / "design-registry/harness.yaml", "source_authorities:", "unused_authorities:")
 
 
@@ -503,6 +503,81 @@ def _(r):
     outside = r.parent / "elsewhere"
     outside.mkdir()
     (r / f"{S}design-ux/stray").symlink_to(outside)
+
+
+@case("V27-deep", "points outside the repo")
+def _(r):
+    # A link below the top level reaches outside just the same.
+    outside = r.parent / "elsewhere.md"
+    outside.write_text("x\n", encoding="utf-8")
+    ref = r / f"{S}design-ux/reference/spec-template.md"
+    ref.unlink()
+    ref.symlink_to(outside)
+
+
+@case("V0-registry", "design-registry could not be read")
+def _(r): (r / "design-registry/harness.yaml").write_text("", encoding="utf-8")
+
+
+@case("V2-case", "contains 'rather than'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "How an interface behaves",
+              "Rather than looks, flow. How an interface behaves")
+
+
+@case("V3-ondisk", "only on disk=['design-ghost']")
+def _(r):
+    (r / f"{S}design-ghost").mkdir()
+    (r / f"{S}design-ghost/SKILL.md").write_text(
+        "---\nname: design-ghost\ndescription: \"ghost work\"\n---\n", encoding="utf-8")
+
+
+@case("V3-key", "only in yaml=['phantom']")
+def _(r):
+    p = r / "design-registry/capabilities.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + "\nphantom:\n  class: doc-write\n"
+                 "  signals: [phantom work]\n", encoding="utf-8")
+
+
+@case("V11-packs", "packs_needed_above")
+def _(r): sub(r / "design-registry/harness.yaml", "packs_needed_above: 20",
+              "packs_needed_above: 5")
+
+
+@case("V13-empty", "chains no stage")
+def _(r):
+    p = r / "design-registry/routes.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + "\nghost:\n  pattern: linear\n",
+                 encoding="utf-8")
+
+
+@case("V14-empty", "has no oracle")
+def _(r): sub(r / "design-registry/routes.yaml", '  oracle: "', '  oracle: ""  # "')
+
+
+@case("V14-cycles", "max_cycles")
+def _(r): sub(r / "design-registry/routes.yaml", "  max_cycles: 4", "  max_cycles:")
+
+
+@case("V14-stops-empty", "has no stops_at")
+def _(r): sub(r / "design-registry/routes.yaml",
+              '  stops_at: "each criterion passed', '  stops_at: ""  # "each criterion passed')
+
+
+@case("V15-writes", "writes")
+def _(r): sub(r / "design-registry/harness.yaml",
+              '    tools: "Read, Grep, Glob, Bash"\n    writes: false',
+              '    tools: "Read, Grep, Glob, Bash"\n    writes: true')
+
+
+@case("V16-fence", "is missing section 'Always / Never'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
+              "## Rules\n\n```text\n## Always / Never\n```\n")
+
+
+@case("V20-mention", "defines 'derived'")
+def _(r): sub(r / f"{S}_design/PROVENANCE.md",
+              "| `derived` | Computed from grounded inputs by a stated rule |",
+              "| derived (see below) | Computed from grounded inputs by a stated rule |")
 
 
 @case("V32-pinned", "pins its checker")
@@ -877,7 +952,9 @@ def main() -> int:
             out = run(copy)
             expect = rule.split("-")[0]
             says = re.escape(MESSAGES.get(rule, ""))
-            if not re.search(rf"^\s*{expect}: .*{says}", out, re.M):
+            # A rule that crashed is not a rule that fired: "could not run" also
+            # carries the rule id, and a deleted guard ends in exactly that.
+            if not re.search(rf"^\s*{expect}: (?!could not run).*{says}", out, re.M):
                 bad.append(rule)
                 print(f"  {rule} did not fire\n{out}")
 
