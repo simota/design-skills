@@ -166,8 +166,9 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
         s.write_text(json.dumps(strict(schema)), encoding="utf-8")
         if engine == "codex":
             out = d / "answer.json"
+            # `--` ends the options: a prompt opening with "-" is the prompt.
             argv = ["codex", "exec", "--output-schema", str(s), "-o", str(out),
-                    "--sandbox", "read-only", "--skip-git-repo-check", prompt]
+                    "--sandbox", "read-only", "--skip-git-repo-check", "--", prompt]
             r = _spawn(engine, argv, d)
             body = out.read_text(encoding="utf-8") if out.exists() else ""
             if not body.strip():
@@ -201,14 +202,18 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
 def _spawn(engine: str, argv: list[str], cwd: pathlib.Path,
            stdin: str | None = None) -> subprocess.CompletedProcess:
     try:
-        return subprocess.run(argv, capture_output=True, text=True, timeout=TIMEOUT,
-                              cwd=cwd, input=stdin)
+        r = subprocess.run(argv, capture_output=True, text=True, timeout=TIMEOUT,
+                           cwd=cwd, input=stdin)
     except FileNotFoundError:
         raise EngineError(f"{engine} is not on PATH") from None
     except subprocess.TimeoutExpired:
         raise EngineError(f"{engine} did not answer within {TIMEOUT}s") from None
     except OSError as e:          # e.g. a prompt on argv longer than ARG_MAX
         raise EngineError(f"{engine} could not be started: {e}") from None
+    # An engine that reports failure has not answered, whatever it left behind.
+    if r.returncode != 0:
+        raise EngineError(f"{engine} exited {r.returncode}.\n{_tail(r)}")
+    return r
 
 
 def _parse(engine: str, body: str) -> dict:
@@ -276,7 +281,9 @@ def main() -> int:
     ap.add_argument("--schema")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
-    if a.selftest or not (a.engine or a.running):
+    # Only a bare call is a selftest. A request for a check that names no
+    # running engine is refused below, not answered with reachability.
+    if a.selftest or not (a.engine or a.running or a.prompt_file or a.schema):
         return selftest()
     if not (a.prompt_file and a.schema):
         print("need --prompt-file and --schema", file=sys.stderr)

@@ -34,20 +34,25 @@ def load(name: str):
         return yaml.safe_load(fh)
 
 
-H = load("harness.yaml")
-CAP = load("capabilities.yaml")
-ROUTES = load("routes.yaml")
-FIX = load("fixtures.yaml")
+# Every rule reads these, so a registry that does not load is reported once,
+# as a failure, rather than as a traceback that names no file.
+try:
+    H = load("harness.yaml")
+    CAP = load("capabilities.yaml")
+    ROUTES = load("routes.yaml")
+    FIX = load("fixtures.yaml")
 
-LIM = H["limits"]
-VOCAB = H["vocabulary"]
-PREFIX = H["prefix"]
-SET = H["set"]
-SHARED = H["shared_dir"]
+    LIM = H["limits"]
+    VOCAB = H["vocabulary"]
+    PREFIX = H["prefix"]
+    SET = H["set"]
+    SHARED = H["shared_dir"]
+    SIGNATURE = H["signature"]
+    PLATFORM_DIRS = set(H["platform_dirs"])
+except (OSError, UnicodeDecodeError, yaml.YAMLError, KeyError, TypeError) as e:
+    sys.exit(f"V0: design-registry could not be read: {type(e).__name__}: {e}")
 CONTRACT_FILE = f"{SHARED}/CONTRACT.md"
 ROUTING_FILE = f"{SHARED}/ROUTING.md"
-SIGNATURE = H["signature"]
-PLATFORM_DIRS = set(H["platform_dirs"])
 
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
 SKILL_DIRS = sorted(p for p in SKILLS_ROOT.glob(f"{PREFIX}*") if (p / "SKILL.md").exists())
@@ -143,6 +148,7 @@ class _Lines:
     def __init__(self) -> None:
         self.code: set[int] = set()
         self.headings: set[int] = set()
+        self.template: set[int] = set()             # inside a ```markdown fence
         self.inline: list[tuple[int, str]] = []     # first line, source of the run
 
 
@@ -159,6 +165,7 @@ def line_map(text: str, offset: int = 0, into: _Lines | None = None) -> _Lines:
             continue
         first, last = offset + tok.map[0] + 1, offset + tok.map[1]
         if tok.type == "fence" and (tok.info.split() or [""])[0].lower() in TEMPLATE_FENCES:
+            out.template.update(range(first, last + 1))
             line_map(tok.content, first, out)
         elif tok.type in ("fence", "code_block"):
             out.code.update(range(first, last + 1))
@@ -275,9 +282,14 @@ def frontmatter(text: str) -> dict:
 
 
 def sections(text: str) -> dict[str, str]:
+    """`## ` sections, by the headings the parser finds: a `## ` line inside a
+    code fence is an example, and one inside a ```markdown template belongs to
+    the template; counting either supplied a section the page does not have."""
+    lines = line_map(text)
+    headings = lines.headings - lines.template
     out, cur, buf = {}, None, []
-    for line in text.splitlines():
-        if line.startswith("## "):
+    for n, line in enumerate(text.splitlines(), 1):
+        if line.startswith("## ") and n in headings:
             if cur:
                 out[cur] = "\n".join(buf)
             cur, buf = line[3:].strip(), []
@@ -311,7 +323,7 @@ def v2_description_terms():
     for d in SKILL_DIRS:
         desc = frontmatter(read(d / "SKILL.md")).get("description", "")
         for term in H["forbidden_description_terms"]:
-            if term in desc:
+            if term.lower() in desc.lower():      # "Rather than" opens a sentence
                 fail("V2", f"{d.name} description contains {term!r}; "
                            "boundaries belong in capabilities.yaml `not:`")
         for name in others - {d.name}:
@@ -328,7 +340,9 @@ def v3_roster():
             fail("V3", f"{d.name}/SKILL.md has no frontmatter a YAML loader accepts")
         elif fm.get("name") != d.name:
             fail("V3", f"{d.name}/SKILL.md is named {fm.get('name')!r}, not {d.name!r}")
-    declared = set(k for k in CAP if k.startswith(PREFIX))
+    # Every key, not only prefixed ones: V9 and V10 route asks to any key, so an
+    # unprefixed one is a skill the engine is taught that does not exist.
+    declared = set(CAP)
     if declared != set(SKILLS):
         fail("V3", f"capabilities.yaml vs disk: only in yaml={sorted(declared - set(SKILLS))} "
                    f"only on disk={sorted(set(SKILLS) - declared)}")
@@ -373,7 +387,7 @@ def v6_budgets():
 
 def v7_routes_real():
     for name, r in ROUTES.items():
-        for s in r.get("chain", []):
+        for s in r.get("chain") or []:
             if s not in SKILLS:
                 fail("V7", f"route {name} chains {s}, which does not exist")
 
@@ -438,6 +452,10 @@ def v11_count():
     if len(SKILLS) > LIM["skills_max"]:
         fail("V11", f"{len(SKILLS)} skills (max {LIM['skills_max']}); "
                     "past the cap an addition must retire one")
+    packs = H["listing"]["packs_needed_above"]
+    if len(SKILLS) > packs:
+        fail("V11", f"{len(SKILLS)} skills is past listing.packs_needed_above ({packs}); "
+                    "split the set into named packs")
 
 
 def v12_prefix():
@@ -452,7 +470,11 @@ def v13_route_budget():
     # A limit the registry declares and nothing reads is a number that only
     # looks enforced.
     for name, r in ROUTES.items():
-        n = len(r.get("chain", []))
+        chain = r.get("chain")
+        if not isinstance(chain, list) or not chain:
+            fail("V13", f"route {name} chains no stage; a route is a chain of skills")
+            continue
+        n = len(chain)
         if n > LIM["route_stages_max"]:
             fail("V13", f"route {name} chains {n} stages (max {LIM['route_stages_max']})")
 
@@ -462,16 +484,33 @@ def v14_patterns():
         p = r.get("pattern")
         if p not in VOCAB["patterns"]:
             fail("V14", f"route {name} uses pattern {p!r}, not in the vocabulary")
+        # Present is not enough: an empty condition is "until it looks right".
         if p == "loop":
-            for key in ("oracle", "checker", "max_cycles"):
+            for key in ("oracle", "checker"):
                 if key not in r:
                     fail("V14", f"loop route {name} is missing {key}")
-        if p == "report-only" and "stops_at" not in r:
-            fail("V14", f"report-only route {name} is missing stops_at")
+                elif not isinstance(r[key], str) or not r[key].strip():
+                    fail("V14", f"loop route {name} has no {key}; the key is empty")
+            n = r.get("max_cycles")
+            if "max_cycles" not in r:
+                fail("V14", f"loop route {name} is missing max_cycles")
+            elif isinstance(n, bool) or not isinstance(n, int) or n < 1:
+                fail("V14", f"loop route {name} has max_cycles {n!r}; the hard stop "
+                            "is a whole number of cycles, at least 1")
+        if p == "report-only":
+            if "stops_at" not in r:
+                fail("V14", f"report-only route {name} is missing stops_at")
+            elif not isinstance(r["stops_at"], str) or not r["stops_at"].strip():
+                fail("V14", f"report-only route {name} has no stops_at; the key is empty")
 
 
 def v15_permission_class():
     classes = H["permission_classes"]
+    for cls, spec in classes.items():
+        grants = any(t.strip() in ("Write", "Edit") for t in spec["tools"].split(","))
+        if spec.get("writes") is not grants:
+            fail("V15", f"permission class {cls} says writes: {spec.get('writes')!r} "
+                        f"and its tools {'do' if grants else 'do not'} grant Write or Edit")
     for d in SKILL_DIRS:
         declared = CAP.get(d.name, {}).get("class")
         if declared not in classes:
@@ -578,7 +617,7 @@ def _check_paths(f: Path, base: Path, label: str) -> None:
 # A definition, as against a mention: a table row or a heading that opens with
 # the word. `patterns` and `checkers` are route vocabulary and live in
 # routes.yaml, so no page is asked to define them.
-DEFINITION_FORMS = ("| `{w}` |", "| `[{w}]` |", "## `{w}`")
+DEFINITION_FORMS = (r"^\|\s*`{w}`\s*\|", r"^\|\s*`\[{w}\]`\s*\|", r"^##+\s+`{w}`")
 ROUTE_VOCAB = {"patterns", "checkers"}
 
 
@@ -595,8 +634,10 @@ def v20_contract_vocabulary():
         if key in ROUTE_VOCAB:
             continue
         for word in words:
-            forms = [f.format(w=word) for f in DEFINITION_FORMS]
-            if not any(f in t for t in pages.values() for f in forms):
+            # The first cell or the heading, not any cell: a row about something
+            # else that mentions the word in a later column defines nothing.
+            forms = [re.compile(f.format(w=re.escape(word)), re.M) for f in DEFINITION_FORMS]
+            if not any(f.search(t) for t in pages.values() for f in forms):
                 fail("V20", f"no page under {SHARED}/ defines {word!r} ({key}) — "
                             "a table row or a heading, not a mention")
 
@@ -684,16 +725,23 @@ def v26_boundaries_real():
 
 
 def v27_symlinks_stay_inside():
-    """What a skill reaches must live in this repo, and must actually be there."""
+    """What a skill reaches must live in this repo, and must actually be there —
+    at any depth, since `reference/x.md` is read as surely as `_design`. The
+    walk does not follow links, so `_design` and `registry` are checked as links
+    and not descended through."""
+    import os
     for d in SKILL_DIRS:
-        for entry in sorted(d.iterdir()):
-            if not entry.is_symlink():
-                continue
-            target = (entry.parent / entry.readlink()).resolve()
-            if not target.exists():
-                fail("V27", f"{d.name}/{entry.name} is a broken symlink")
-            elif ROOT.resolve() not in target.parents and target != ROOT.resolve():
-                fail("V27", f"{d.name}/{entry.name} points outside the repo ({target})")
+        for dirpath, dirnames, filenames in os.walk(d):
+            for name in sorted(dirnames + filenames):
+                entry = Path(dirpath) / name
+                if not entry.is_symlink():
+                    continue
+                rel = entry.relative_to(d).as_posix()
+                target = (entry.parent / entry.readlink()).resolve()
+                if not target.exists():
+                    fail("V27", f"{d.name}/{rel} is a broken symlink")
+                elif ROOT.resolve() not in target.parents and target != ROOT.resolve():
+                    fail("V27", f"{d.name}/{rel} points outside the repo ({target})")
 
 
 def v28_namespace_agrees():
@@ -1102,12 +1150,20 @@ RULES = [v1_sizes, v2_description_terms, v3_roster, v4_playbook_orphans,
          v38_enumerations_declared]
 
 
+# Exactly what `make hooks` writes; make test holds the two together.
+HOOK_SHIM = ('#!/bin/sh\nh="$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"\n'
+             '[ -f "$h" ] || exit 0\nexec "$h" "$@"\n')
+
+
 def hooks_state() -> str:
     """Whether the pre-commit hook is installed, or nothing outside a checkout.
 
-    Asked of git rather than of `.git/hooks`: in a worktree `.git` is a file,
-    and `make hooks` points core.hooksPath at the tracked hook instead.
+    Asked of git rather than of `.git/hooks`: in a worktree `.git` is a file.
+    "on" means the shim `make hooks` writes. Any other file there may or may
+    not run the rules — a stale copy of an old hook checked the working tree,
+    not the commit — and its text cannot say which, so it is not called on.
     """
+    import os
     import subprocess
     if not (ROOT / ".git").exists():
         return ""                      # an exported tree, e.g. inside the hook
@@ -1117,8 +1173,24 @@ def hooks_state() -> str:
                               check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return ""
-    on = (ROOT / path).exists()
-    return f" · hooks {'on' if on else 'off — run: make hooks'}"
+    managed = subprocess.run(["git", "-C", str(ROOT), "config", "--get", "core.hooksPath"],
+                             capture_output=True, text=True).stdout.strip()
+    if managed:
+        # make hooks does not install there, so it cannot be the remedy.
+        return f" · hooks managed by core.hooksPath ({managed})"
+    hook = ROOT / path
+    # A link is never what make hooks writes, and following it would call a
+    # dangling one "off" and one pointing at a copy of the shim "on".
+    if hook.is_symlink():
+        return f" · hooks managed by a symlink ({os.readlink(hook)})"
+    if not hook.exists():
+        return " · hooks off — run: make hooks"
+    try:
+        ours = hook.read_text(encoding="utf-8") == HOOK_SHIM
+    except (OSError, UnicodeDecodeError):
+        ours = False
+    # make hooks replaces its own earlier installs and says what to do with any other.
+    return " · hooks on" if ours else " · hooks unknown — not the make hooks shim; run: make hooks"
 
 
 def main() -> int:

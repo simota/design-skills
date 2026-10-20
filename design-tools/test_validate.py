@@ -9,6 +9,8 @@ Run: make test
 """
 from __future__ import annotations
 
+import errno
+import json
 import os
 import re
 import shutil
@@ -110,7 +112,7 @@ def _(r): sub(r / "design-registry/fixtures.yaml",
               '- ask: "give me a UI audit of this screen"\n  expect: design-tokens')
 
 
-@case("V10-empty")
+@case("V10-empty", "holds no list of asks")
 def _(r): (r / "design-registry/fixtures.yaml").write_text("# no asks yet\n", encoding="utf-8")
 
 
@@ -314,7 +316,7 @@ def _(r): sub(r / "design-registry/harness.yaml",
               "  refute.py: all", "  refute.py: all\n  nosuch.py: all")
 
 
-@case("V34-none-declared")
+@case("V34-none-declared", "declares no linked_tools")
 def _(r): sub(r / "design-registry/harness.yaml", "linked_tools:", "unlinked_tools:")
 
 
@@ -341,7 +343,7 @@ def _(r): sub(r / f"{S}design-review/SKILL.md",
               "[visualise](playbooks/visualise.md)", "the visualise guidance")
 
 
-@case("V36-none-declared")
+@case("V36-none-declared", "declares no finding_visuals")
 def _(r): sub(r / "design-registry/harness.yaml", "finding_visuals:", "unused_visuals:")
 
 
@@ -372,7 +374,7 @@ def _(r):
         "Source: none — nothing outside this page can move what it states.", "Source:")
 
 
-@case("V37-none-declared")
+@case("V37-none-declared", "declares no source_authorities")
 def _(r): sub(r / "design-registry/harness.yaml", "source_authorities:", "unused_authorities:")
 
 
@@ -394,7 +396,30 @@ FIGURE_CASES: dict[str, callable] = {
     "scale-header-gone": lambda r: sub(r / SCALES, "| 16px / 1.20 ratio |", "| Size |"),
     "scale-unparsed": lambda r: sub(r / SCALES, "| `--text-4xl` | 40px |",
                                     "| `--text-4xl` | 52px (hero) |"),
+    # A verdict is pass or fail, not any text that holds "pass" and not "fail".
+    "contrast-verdict-negated": lambda r: sub(r / CONTRAST, "| 17.76:1 | 4.5:1 | pass |",
+                                              "| 17.76:1 | 4.5:1 | does not pass |"),
+    # The first row is read even when the separator line under the header is gone.
+    "scale-no-separator": lambda r: _scale_no_separator(r),
+    # Only the separator under the header is skipped; one standing in for a row
+    # removed that step and the rest still recomputed.
+    "contrast-row-as-separator": lambda r: sub(
+        r / CONTRAST, "| Body on canvas | `#16181d` | `#ffffff` | 17.76:1 | 4.5:1 | pass |",
+        "|---|---|---|---|---|---|"),
+    "scale-row-as-separator": lambda r: sub(r / SCALES, "| `--text-4xl` | 40px | 1.1 | Hero |",
+                                            "|-------|-------|"),
 }
+
+
+def _scale_no_separator(r: Path) -> None:
+    p = r / SCALES
+    lines = p.read_text(encoding="utf-8").split("\n")
+    head = next(i for i, l in enumerate(lines) if "| 16px / 1.20 ratio |" in l)
+    assert set(lines[head + 1].replace("|", "").strip()) <= set("-: "), lines[head + 1]
+    first = lines[head + 2]
+    assert "--text-" in first.split("|")[1]
+    lines[head + 1:head + 3] = [first.replace(first.split("|")[2], " 0.75rem ", 1)]
+    p.write_text("\n".join(lines), encoding="utf-8")
 
 
 def run_figures(root: Path) -> subprocess.CompletedProcess:
@@ -502,6 +527,86 @@ def _(r):
     outside = r.parent / "elsewhere"
     outside.mkdir()
     (r / f"{S}design-ux/stray").symlink_to(outside)
+
+
+@case("V27-deep", "points outside the repo")
+def _(r):
+    # A link below the top level reaches outside just the same.
+    outside = r.parent / "elsewhere.md"
+    outside.write_text("x\n", encoding="utf-8")
+    ref = r / f"{S}design-ux/reference/spec-template.md"
+    ref.unlink()
+    ref.symlink_to(outside)
+
+
+@case("V0-registry", "design-registry could not be read")
+def _(r): (r / "design-registry/harness.yaml").write_text("", encoding="utf-8")
+
+
+@case("V2-case", "contains 'rather than'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "How an interface behaves",
+              "Rather than looks, flow. How an interface behaves")
+
+
+@case("V3-ondisk", "only on disk=['design-ghost']")
+def _(r):
+    (r / f"{S}design-ghost").mkdir()
+    (r / f"{S}design-ghost/SKILL.md").write_text(
+        "---\nname: design-ghost\ndescription: \"ghost work\"\n---\n", encoding="utf-8")
+
+
+@case("V3-key", "only in yaml=['phantom']")
+def _(r):
+    p = r / "design-registry/capabilities.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + "\nphantom:\n  class: doc-write\n"
+                 "  signals: [phantom work]\n", encoding="utf-8")
+
+
+@case("V11-packs", "packs_needed_above")
+def _(r): sub(r / "design-registry/harness.yaml", "packs_needed_above: 20",
+              "packs_needed_above: 5")
+
+
+@case("V13-empty", "chains no stage")
+def _(r):
+    p = r / "design-registry/routes.yaml"
+    p.write_text(p.read_text(encoding="utf-8") + "\nghost:\n  pattern: linear\n",
+                 encoding="utf-8")
+
+
+@case("V14-empty", "has no oracle")
+def _(r): sub(r / "design-registry/routes.yaml", '  oracle: "', '  oracle: ""  # "')
+
+
+@case("V14-cycles", "max_cycles")
+def _(r): sub(r / "design-registry/routes.yaml", "  max_cycles: 4", "  max_cycles:")
+
+
+@case("V14-stops-empty", "has no stops_at")
+def _(r): sub(r / "design-registry/routes.yaml",
+              '  stops_at: "each criterion passed', '  stops_at: ""  # "each criterion passed')
+
+
+@case("V15-writes", "writes")
+def _(r): sub(r / "design-registry/harness.yaml",
+              '    tools: "Read, Grep, Glob, Bash"\n    writes: false',
+              '    tools: "Read, Grep, Glob, Bash"\n    writes: true')
+
+
+@case("V16-fence", "is missing section 'Always / Never'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
+              "## Rules\n\n```text\n## Always / Never\n```\n")
+
+
+@case("V16-template", "is missing section 'Always / Never'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
+              "## Rules\n\n```markdown\n## Always / Never\n```\n")
+
+
+@case("V20-mention", "defines 'derived'")
+def _(r): sub(r / f"{S}_design/PROVENANCE.md",
+              "| `derived` | Computed from grounded inputs by a stated rule |",
+              "| derived (see below) | Computed from grounded inputs by a stated rule |")
 
 
 @case("V32-pinned", "pins its checker")
@@ -747,6 +852,12 @@ FOREIGN = "#!/bin/sh\necho OTHER\n"
 MENTION_ONLY = "#!/bin/sh\n# later: design-tools/githooks/pre-commit\nexit 0\n"
 # What an earlier `make hooks` wrote: ours, so replaced by the current shim.
 LEGACY = '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$@"\n'
+# What the first `make hooks` copied in (013f05b): ours too, and it checks the
+# working tree, so a staged violation passed it.
+COPIED = ('#!/bin/sh\n# Budgets enforced by a mechanism rather than by remembering.\n'
+          '# Install with: make hooks\nset -e\n'
+          'python3 "$(git rev-parse --show-toplevel)/design-tools/validate.py"\n'
+          'python3 "$(git rev-parse --show-toplevel)/design-tools/figures_check.py"\n')
 
 
 def hooks_hold() -> list[str]:
@@ -763,6 +874,9 @@ def hooks_hold() -> list[str]:
         r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
         if r.returncode == 0 or any(elsewhere.iterdir()):
             bad.append("foreign core.hooksPath written to")
+        # ...and validate.py does not send the contributor to make hooks, which refuses.
+        if "managed by core.hooksPath" not in run(repo):
+            bad.append("foreign core.hooksPath status points at make hooks")
         # The old setting in the user's global config is not this checkout's to
         # unset: no claim that it was removed, and nothing installed.
         glob = Path(tmp) / "gitconfig"
@@ -789,7 +903,8 @@ def hooks_hold() -> list[str]:
                                         ("chained-not-executable", CHAINED, 2, True),
                                         ("mention-only", MENTION_ONLY, 2, True),
                                         ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False),
-                                        ("legacy-shim", LEGACY, 0, False)):
+                                        ("legacy-shim", LEGACY, 0, False),
+                                        ("legacy-copy", COPIED, 0, False)):
         with tempfile.TemporaryDirectory() as tmp:
             repo = copy_repo(tmp)
             subprocess.run(["git", "init", "-q", str(repo)], check=True)
@@ -811,14 +926,134 @@ def hooks_hold() -> list[str]:
                          "design-tools/githooks/pre-commit" in after and after != before)
             if not ok:
                 bad.append(f"{name} (exit {r.returncode}, hooksPath {left!r})")
+            # validate.py says "hooks on" for the shim make hooks writes, and for
+            # nothing else: a stale copy reported as on was trusted for months.
+            if ("hooks on" in run(repo)) == keep:
+                bad.append(f"{name} (validate reports hooks {'on' if keep else 'not on'})")
+    # A dangling link in the slot is someone's hook manager whose target is not
+    # there yet; writing through it puts the shim outside .git.
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        hook = repo / ".git" / "hooks" / "pre-commit"
+        hook.parent.mkdir(parents=True, exist_ok=True)
+        target = Path(tmp) / "managed" / "team-hook"
+        target.parent.mkdir()
+        hook.symlink_to(target)
+        r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
+        if r.returncode == 0 or target.exists() or not hook.is_symlink():
+            bad.append(f"dangling-link (exit {r.returncode}, written through {target.exists()})")
+        # The status reads the slot, not what it points at: a link is someone
+        # else's whether its target is missing or holds the shim word for word.
+        if "managed by a symlink" not in run(repo):
+            bad.append("dangling-link status")
+        target.write_text(validate.HOOK_SHIM, encoding="utf-8")
+        if "managed by a symlink" not in run(repo):
+            bad.append("link-to-shim status")
     return bad
 
 
-def git_corpus_holds() -> list[str]:
+def engine_holds() -> list[str]:
+    """engine.py, against a stand-in codex on PATH: a request without
+    --running is refused rather than answered with a selftest, an engine that
+    exits non-zero has not answered, and a prompt is never read as an option."""
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(tmp)
+        log = d / "argv"
+        stub = d / "bin" / "codex"
+        stub.parent.mkdir()
+        # Writes a valid answer to the -o path, logs its argv, exits $CODE.
+        stub.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$LOG"\n'
+                        'while [ $# -gt 0 ]; do [ "$1" = -o ] && out="$2"; shift; done\n'
+                        'printf \'{"ok": true}\' > "$out"\nexit "$CODE"\n', encoding="utf-8")
+        stub.chmod(0o755)
+        (d / "p.txt").write_text("--help me\n", encoding="utf-8")
+        (d / "s.json").write_text(json.dumps(
+            {"type": "object", "properties": {"ok": {"type": "boolean"}},
+             "required": ["ok"]}), encoding="utf-8")
+        # Only the stand-in and the system shell tools: a real engine CLI on the
+        # contributor's PATH is never started, whatever engine.py does.
+        env = {**os.environ, "PATH": os.pathsep.join([str(stub.parent), "/usr/bin", "/bin"]),
+               "LOG": str(log)}
+
+        def ask(code: str, *extra: str) -> subprocess.CompletedProcess:
+            return subprocess.run([sys.executable, str(ROOT / "design-tools" / "engine.py"),
+                                   *extra, "--prompt-file", str(d / "p.txt"),
+                                   "--schema", str(d / "s.json")],
+                                  capture_output=True, text=True, env={**env, "CODE": code})
+
+        r = ask("0")
+        if r.returncode != 2:
+            bad.append(f"no --running (exit {r.returncode})")
+        r = ask("0", "codex", "--running", "claude")
+        if r.returncode != 0:
+            bad.append(f"stand-in answer refused (exit {r.returncode}: {r.stderr[-120:]})")
+        else:
+            argv = log.read_text(encoding="utf-8").split("\n")
+            if "--help me" not in argv:
+                bad.append("prompt never reached codex")
+            elif argv[argv.index("--help me") - 1] != "--":
+                bad.append("prompt passed where codex reads options")
+        r = ask("2", "codex", "--running", "claude")
+        if r.returncode != 1:
+            bad.append(f"engine exited 2 and was taken as answering (exit {r.returncode})")
+    return bad
+
+
+def render_holds() -> list[str]:
+    """render.py leaves a file alone when any of its blocks cannot be delivered.
+    Interleaved markers let the first block swallow the second's opener, and the
+    file was written while the run reported failure — hiding the cause from the
+    next run."""
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        page = repo / f"{S}design-ux/SKILL.md"
+        sub(page, "<!-- /deliver:sizing -->\n<!-- deliver:ground -->",
+            "<!-- deliver:ground -->\n<!-- /deliver:sizing -->")
+        before = page.read_text(encoding="utf-8")
+        r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
+                           capture_output=True, text=True)
+        if r.returncode == 0 or page.read_text(encoding="utf-8") != before:
+            return [f"interleaved markers (exit {r.returncode}, file rewritten "
+                    f"{page.read_text(encoding='utf-8') != before})"]
+    return []
+
+
+def link_holds() -> list[str]:
+    """`make link` and `make unlink` fail when a link could not be made or
+    removed, rather than printing the success line over the error. A read-only
+    directory does not stop root, so as root the case cannot be made."""
+    bad = []
+    if os.geteuid() == 0:
+        print("  not run here: root writes into a read-only directory")
+        return bad
+    with tempfile.TemporaryDirectory() as tmp:
+        dirs = {v: str(Path(tmp) / v.lower() / "skills") for v in
+                ("CLAUDE_DIR", "CODEX_DIR", "AGY_DIR")}
+        args = [f"{k}={v}" for k, v in dirs.items()]
+        locked = Path(dirs["CLAUDE_DIR"])
+        locked.mkdir(parents=True)
+        for target in ("link", "unlink"):
+            if target == "unlink":
+                locked.chmod(0o755)
+                subprocess.run(["make", "-s", "-C", str(ROOT), "link", *args],
+                               capture_output=True, check=True)
+            locked.chmod(0o555)
+            r = subprocess.run(["make", "-s", "-C", str(ROOT), target, *args],
+                               capture_output=True, text=True)
+            locked.chmod(0o755)
+            if r.returncode == 0:
+                bad.append(f"{target} into a read-only directory exited 0")
+    return bad
+
+
+def git_corpus_holds() -> tuple[list[str], int]:
     """In a checkout the corpus is what git would commit: a contributor's empty
     `.cache/`, an ignored `.venv/` or a worktree nested under the checkout stays
-    out, and a dot-directory git would commit stays in."""
-    bad = []
+    out, and a dot-directory git would commit stays in. Returns the failures and
+    how many cases ran."""
+    bad, ran = [], 3
     with tempfile.TemporaryDirectory() as tmp:
         repo = copy_repo(tmp)
         git = ["git", "-C", str(repo)]
@@ -837,19 +1072,28 @@ def git_corpus_holds() -> list[str]:
                                                                  encoding="utf-8")
         if "green" not in run(repo):
             bad.append("contributor-local directories counted")
-        # A name that is not UTF-8 is still a file git would commit.
+        # A name that is not UTF-8 is still a file git would commit. A filesystem
+        # that refuses such a name (APFS: EILSEQ) cannot hold one to drop, so the
+        # case is reported as not run there rather than crashing every case after it.
         odd = Path(os.fsdecode(os.fsencode(repo) + b"/NOTES-\xff.md"))
-        odd.write_text("[x](missing.md)\n", encoding="utf-8")
-        if "V8: NOTES-" not in run(repo):
-            bad.append("a non-UTF-8 file name dropped out of the corpus")
-        odd.unlink()
+        try:
+            odd.write_text("[x](missing.md)\n", encoding="utf-8")
+        except OSError as e:
+            if e.errno != errno.EILSEQ:
+                raise
+            print("  not run here: this filesystem refuses non-UTF-8 file names")
+            ran -= 1
+        else:
+            if "V8: NOTES-" not in run(repo):
+                bad.append("a non-UTF-8 file name dropped out of the corpus")
+            odd.unlink()
         plugin = repo / ".claude-plugin"
         plugin.mkdir()
         (plugin / "README.md").write_text("[x](missing.md)\n", encoding="utf-8")
         out = run(repo)
         if "V28: .claude-plugin/" not in out or "V8: .claude-plugin/README.md" not in out:
             bad.append("a committable dot-directory escaped the checks")
-    return bad
+    return bad, ran
 
 
 def main() -> int:
@@ -866,7 +1110,9 @@ def main() -> int:
             out = run(copy)
             expect = rule.split("-")[0]
             says = re.escape(MESSAGES.get(rule, ""))
-            if not re.search(rf"^\s*{expect}: .*{says}", out, re.M):
+            # A rule that crashed is not a rule that fired: "could not run" also
+            # carries the rule id, and a deleted guard ends in exactly that.
+            if not re.search(rf"^\s*{expect}: (?!could not run).*{says}", out, re.M):
                 bad.append(rule)
                 print(f"  {rule} did not fire\n{out}")
 
@@ -974,17 +1220,35 @@ def main() -> int:
     print(f"refute's exit status says what happened ({len(exit_cases)} cases, "
           f"{len(bad_inputs)} refused inputs, empty pool)")
 
-    git_bad = git_corpus_holds()
+    git_bad, git_ran = git_corpus_holds()
     if git_bad:
         print("git-visible corpus wrong: " + ", ".join(git_bad))
         return 1
-    print("in a checkout, the corpus is what git would commit (3 cases)")
+    print(f"in a checkout, the corpus is what git would commit ({git_ran} cases)")
 
     broken_hooks = hooks_hold()
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (10 cases)")
+    print("make hooks leaves every hook but its own shim alone (12 cases)")
+
+    broken_engine = engine_holds()
+    if broken_engine:
+        print("engine.py mishandled: " + ", ".join(broken_engine))
+        return 1
+    print("engine.py refuses what it cannot check, against a stand-in engine (3 cases)")
+
+    broken_render = render_holds()
+    if broken_render:
+        print("render.py mishandled: " + ", ".join(broken_render))
+        return 1
+    print("render.py writes nothing it could not fully deliver (1 case)")
+
+    broken_link = link_holds()
+    if broken_link:
+        print("make link mishandled: " + ", ".join(broken_link))
+        return 1
+    print("make link and unlink fail when a link cannot be made or removed (2 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:
