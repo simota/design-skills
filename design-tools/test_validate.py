@@ -9,6 +9,7 @@ Run: make test
 """
 from __future__ import annotations
 
+import errno
 import os
 import re
 import shutil
@@ -814,11 +815,12 @@ def hooks_hold() -> list[str]:
     return bad
 
 
-def git_corpus_holds() -> list[str]:
+def git_corpus_holds() -> tuple[list[str], int]:
     """In a checkout the corpus is what git would commit: a contributor's empty
     `.cache/`, an ignored `.venv/` or a worktree nested under the checkout stays
-    out, and a dot-directory git would commit stays in."""
-    bad = []
+    out, and a dot-directory git would commit stays in. Returns the failures and
+    how many cases ran."""
+    bad, ran = [], 3
     with tempfile.TemporaryDirectory() as tmp:
         repo = copy_repo(tmp)
         git = ["git", "-C", str(repo)]
@@ -837,19 +839,28 @@ def git_corpus_holds() -> list[str]:
                                                                  encoding="utf-8")
         if "green" not in run(repo):
             bad.append("contributor-local directories counted")
-        # A name that is not UTF-8 is still a file git would commit.
+        # A name that is not UTF-8 is still a file git would commit. A filesystem
+        # that refuses such a name (APFS: EILSEQ) cannot hold one to drop, so the
+        # case is reported as not run there rather than crashing every case after it.
         odd = Path(os.fsdecode(os.fsencode(repo) + b"/NOTES-\xff.md"))
-        odd.write_text("[x](missing.md)\n", encoding="utf-8")
-        if "V8: NOTES-" not in run(repo):
-            bad.append("a non-UTF-8 file name dropped out of the corpus")
-        odd.unlink()
+        try:
+            odd.write_text("[x](missing.md)\n", encoding="utf-8")
+        except OSError as e:
+            if e.errno != errno.EILSEQ:
+                raise
+            print("  not run here: this filesystem refuses non-UTF-8 file names")
+            ran -= 1
+        else:
+            if "V8: NOTES-" not in run(repo):
+                bad.append("a non-UTF-8 file name dropped out of the corpus")
+            odd.unlink()
         plugin = repo / ".claude-plugin"
         plugin.mkdir()
         (plugin / "README.md").write_text("[x](missing.md)\n", encoding="utf-8")
         out = run(repo)
         if "V28: .claude-plugin/" not in out or "V8: .claude-plugin/README.md" not in out:
             bad.append("a committable dot-directory escaped the checks")
-    return bad
+    return bad, ran
 
 
 def main() -> int:
@@ -974,11 +985,11 @@ def main() -> int:
     print(f"refute's exit status says what happened ({len(exit_cases)} cases, "
           f"{len(bad_inputs)} refused inputs, empty pool)")
 
-    git_bad = git_corpus_holds()
+    git_bad, git_ran = git_corpus_holds()
     if git_bad:
         print("git-visible corpus wrong: " + ", ".join(git_bad))
         return 1
-    print("in a checkout, the corpus is what git would commit (3 cases)")
+    print(f"in a checkout, the corpus is what git would commit ({git_ran} cases)")
 
     broken_hooks = hooks_hold()
     if broken_hooks:
