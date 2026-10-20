@@ -395,7 +395,23 @@ FIGURE_CASES: dict[str, callable] = {
     "scale-header-gone": lambda r: sub(r / SCALES, "| 16px / 1.20 ratio |", "| Size |"),
     "scale-unparsed": lambda r: sub(r / SCALES, "| `--text-4xl` | 40px |",
                                     "| `--text-4xl` | 52px (hero) |"),
+    # A verdict is pass or fail, not any text that holds "pass" and not "fail".
+    "contrast-verdict-negated": lambda r: sub(r / CONTRAST, "| 17.76:1 | 4.5:1 | pass |",
+                                              "| 17.76:1 | 4.5:1 | does not pass |"),
+    # The first row is read even when the separator line under the header is gone.
+    "scale-no-separator": lambda r: _scale_no_separator(r),
 }
+
+
+def _scale_no_separator(r: Path) -> None:
+    p = r / SCALES
+    lines = p.read_text(encoding="utf-8").split("\n")
+    head = next(i for i, l in enumerate(lines) if "| 16px / 1.20 ratio |" in l)
+    assert set(lines[head + 1].replace("|", "").strip()) <= set("-: "), lines[head + 1]
+    first = lines[head + 2]
+    assert "--text-" in first.split("|")[1]
+    lines[head + 1:head + 3] = [first.replace(first.split("|")[2], " 0.75rem ", 1)]
+    p.write_text("\n".join(lines), encoding="utf-8")
 
 
 def run_figures(root: Path) -> subprocess.CompletedProcess:
@@ -914,6 +930,25 @@ def hooks_hold() -> list[str]:
     return bad
 
 
+def render_holds() -> list[str]:
+    """render.py leaves a file alone when any of its blocks cannot be delivered.
+    Interleaved markers let the first block swallow the second's opener, and the
+    file was written while the run reported failure — hiding the cause from the
+    next run."""
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        page = repo / f"{S}design-ux/SKILL.md"
+        sub(page, "<!-- /deliver:sizing -->\n<!-- deliver:ground -->",
+            "<!-- deliver:ground -->\n<!-- /deliver:sizing -->")
+        before = page.read_text(encoding="utf-8")
+        r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
+                           capture_output=True, text=True)
+        if r.returncode == 0 or page.read_text(encoding="utf-8") != before:
+            return [f"interleaved markers (exit {r.returncode}, file rewritten "
+                    f"{page.read_text(encoding='utf-8') != before})"]
+    return []
+
+
 def link_holds() -> list[str]:
     """`make link` and `make unlink` fail when a link could not be made or
     removed, rather than printing the success line over the error."""
@@ -1121,6 +1156,12 @@ def main() -> int:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
     print("make hooks leaves every hook but its own shim alone (12 cases)")
+
+    broken_render = render_holds()
+    if broken_render:
+        print("render.py mishandled: " + ", ".join(broken_render))
+        return 1
+    print("render.py writes nothing it could not fully deliver (1 case)")
 
     broken_link = link_holds()
     if broken_link:

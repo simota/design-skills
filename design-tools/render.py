@@ -36,6 +36,7 @@ def markers(text: str, key: str) -> tuple[list[int], list[int]]:
 def render(path: Path) -> bool:
     text = path.read_text(encoding="utf-8")
     original = text
+    missing_before = len(MISSING)
     for key, spec in H["delivered"].items():
         block = (ROOT / "design-registry" / "delivered" / f"{key}.md").read_text(
             encoding="utf-8").strip("\n")
@@ -63,6 +64,11 @@ def render(path: Path) -> bool:
             nxt = rest.find("\n## ")
             body, tail = (rest[:nxt], rest[nxt:]) if nxt != -1 else (rest, "")
             text = head + heading + body.rstrip("\n") + "\n" + payload + "\n" + tail
+    # Any block left undelivered and the file is not written: interleaved
+    # markers let one block swallow the next one's opener, and writing that
+    # replaced the real cause with a different error on the next run.
+    if len(MISSING) > missing_before:
+        return False
     if text != original:
         path.write_text(text, encoding="utf-8")
         return True

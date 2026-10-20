@@ -107,7 +107,14 @@ def check_contrast() -> int:
             fail(f"contrast.md:{i}",
                  f"{fg} on {bg} states {claimed}:1, computes {actual:.4f}:1")
         passes = actual >= float(required)
-        says_pass = "pass" in verdict.lower() and "fail" not in verdict.lower()
+        # The verdict opens with pass or fail; "does not pass" holds "pass" and
+        # not "fail", and was read as a pass.
+        said = verdict.strip().strip("*").strip().lower()
+        if not said.startswith(("pass", "fail")):
+            fail(f"contrast.md:{i}",
+                 f"result {verdict.strip()!r} is neither pass nor fail")
+            continue
+        says_pass = said.startswith("pass")
         if passes != says_pass:
             fail(f"contrast.md:{i}",
                  f"{actual:.2f}:1 against {required}:1 is a "
@@ -139,10 +146,13 @@ def check_type_scale() -> int:
     # otherwise shift every step index after it.
     lines = text[head.start():].splitlines()
     table = []
-    for l in lines[2:]:
+    # Separator lines are skipped by form, not by position: without one, the
+    # first row sat where the separator was assumed and was never read.
+    for l in lines[1:]:
         if not l.strip().startswith("|"):
             break
-        table.append(l)
+        if not SEP.match(l.strip()):
+            table.append(l)
     # Every row is held to the form, as pair_rows does for contrast: a row
     # rewritten as `52px (hero)` or `2.5rem` used to drop out of the check, and
     # the count of steps recomputed fell by one with nothing failing.
