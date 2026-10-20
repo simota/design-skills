@@ -70,6 +70,11 @@ render:
 # shim written into a global hooks directory would run in every repository on
 # the machine. The shim itself exits 0 where the tracked hook does not exist —
 # an orphan branch, or a checkout from before it was added.
+#
+# Two earlier installs are ours as well and are replaced: the one-line exec
+# shim, and the copy the first `make hooks` made (013f05b), which checks the
+# working tree rather than what is staged. A symlink in the slot is never ours —
+# writing through one, dangling or not, lands outside .git.
 hooks:
 	@chmod +x design-tools/githooks/pre-commit
 	@if [ "$$(git config --get core.hooksPath)" = "design-tools/githooks" ]; then \
@@ -81,8 +86,10 @@ hooks:
 	@hook="$$(git rev-parse --git-path hooks)/pre-commit"; \
 	shim='#!/bin/sh\nh="$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"\n[ -f "$$h" ] || exit 0\nexec "$$h" "$$@"\n'; \
 	old='#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n'; \
-	if [ -e "$$hook" ] && [ "$$(cat "$$hook")" != "$$(printf "$$shim")" ] \
-			&& [ "$$(cat "$$hook")" != "$$(printf "$$old")" ]; then \
+	copied='#!/bin/sh\n# Budgets enforced by a mechanism rather than by remembering.\n# Install with: make hooks\nset -e\npython3 "$$(git rev-parse --show-toplevel)/design-tools/validate.py"\npython3 "$$(git rev-parse --show-toplevel)/design-tools/figures_check.py"\n'; \
+	if [ -L "$$hook" ] || { [ -e "$$hook" ] && [ "$$(cat "$$hook")" != "$$(printf "$$shim")" ] \
+			&& [ "$$(cat "$$hook")" != "$$(printf "$$old")" ] \
+			&& [ "$$(cat "$$hook")" != "$$(printf "$$copied")" ]; }; then \
 		echo "$$hook is not ours, so it is left as it is and nothing was installed."; \
 		echo "Make sure it is executable and runs the rules, e.g.:"; \
 		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
@@ -102,10 +109,10 @@ SKILL_DIRS := $(patsubst %/SKILL.md,%,$(wildcard skills/design-*/SKILL.md))
 # did not make survives even while its target is unmounted.
 
 link:
-	@for dir in $(HOST_DIRS); do \
+	@failed=0; for dir in $(HOST_DIRS); do \
 		case " $(EXPLICIT) " in *" $$dir "*) ;; *) \
 			if [ ! -d "$$(dirname "$$dir")" ]; then echo "skip $$dir (host not installed here)"; continue; fi;; esac; \
-		mkdir -p "$$dir"; \
+		mkdir -p "$$dir" || { failed=1; continue; }; \
 		echo "$$dir"; \
 		for path in $(SKILL_DIRS); do \
 			name=$$(basename "$$path"); target="$$dir/$$name"; \
@@ -114,21 +121,22 @@ link:
 			elif [ -L "$$target" ] && [ -e "$$target" ] && [ "$$(readlink "$$target")" != "$(REPO)/$$path" ]; then \
 				echo "  skip $$name (linked to $$(readlink "$$target"), not this repo)"; \
 			else \
-				ln -sfn "$(REPO)/$$path" "$$target"; echo "  link $$name"; \
+				if ln -sfn "$(REPO)/$$path" "$$target"; then echo "  link $$name"; \
+				else failed=1; fi; \
 			fi; \
 		done; \
-	done
+	done; exit $$failed
 
 unlink:
-	@for dir in $(HOST_DIRS); do \
+	@failed=0; for dir in $(HOST_DIRS); do \
 		[ -d "$$dir" ] || continue; \
 		echo "$$dir"; \
 		for path in $(SKILL_DIRS); do \
 			name=$$(basename "$$path"); target="$$dir/$$name"; \
 			if [ -L "$$target" ] && [ "$$(readlink "$$target")" = "$(REPO)/$$path" ]; then \
-				rm "$$target"; echo "  unlink $$name"; fi; \
+				if rm "$$target"; then echo "  unlink $$name"; else failed=1; fi; fi; \
 		done; \
-	done
+	done; exit $$failed
 
 status:
 	@for dir in $(HOST_DIRS); do \

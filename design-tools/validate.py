@@ -1146,11 +1146,18 @@ RULES = [v1_sizes, v2_description_terms, v3_roster, v4_playbook_orphans,
          v38_enumerations_declared]
 
 
+# Exactly what `make hooks` writes; make test holds the two together.
+HOOK_SHIM = ('#!/bin/sh\nh="$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"\n'
+             '[ -f "$h" ] || exit 0\nexec "$h" "$@"\n')
+
+
 def hooks_state() -> str:
     """Whether the pre-commit hook is installed, or nothing outside a checkout.
 
-    Asked of git rather than of `.git/hooks`: in a worktree `.git` is a file,
-    and `make hooks` points core.hooksPath at the tracked hook instead.
+    Asked of git rather than of `.git/hooks`: in a worktree `.git` is a file.
+    "on" means the shim `make hooks` writes. Any other file there may or may
+    not run the rules — a stale copy of an old hook checked the working tree,
+    not the commit — and its text cannot say which, so it is not called on.
     """
     import subprocess
     if not (ROOT / ".git").exists():
@@ -1161,8 +1168,14 @@ def hooks_state() -> str:
                               check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return ""
-    on = (ROOT / path).exists()
-    return f" · hooks {'on' if on else 'off — run: make hooks'}"
+    hook = ROOT / path
+    if not hook.exists():
+        return " · hooks off — run: make hooks"
+    try:
+        ours = hook.read_text(encoding="utf-8") == HOOK_SHIM
+    except (OSError, UnicodeDecodeError):
+        ours = False
+    return " · hooks on" if ours else " · hooks: not the make hooks shim — run: make hooks"
 
 
 def main() -> int:

@@ -823,6 +823,12 @@ FOREIGN = "#!/bin/sh\necho OTHER\n"
 MENTION_ONLY = "#!/bin/sh\n# later: design-tools/githooks/pre-commit\nexit 0\n"
 # What an earlier `make hooks` wrote: ours, so replaced by the current shim.
 LEGACY = '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$@"\n'
+# What the first `make hooks` copied in (013f05b): ours too, and it checks the
+# working tree, so a staged violation passed it.
+COPIED = ('#!/bin/sh\n# Budgets enforced by a mechanism rather than by remembering.\n'
+          '# Install with: make hooks\nset -e\n'
+          'python3 "$(git rev-parse --show-toplevel)/design-tools/validate.py"\n'
+          'python3 "$(git rev-parse --show-toplevel)/design-tools/figures_check.py"\n')
 
 
 def hooks_hold() -> list[str]:
@@ -865,7 +871,8 @@ def hooks_hold() -> list[str]:
                                         ("chained-not-executable", CHAINED, 2, True),
                                         ("mention-only", MENTION_ONLY, 2, True),
                                         ("foreign", FOREIGN, 2, True), ("hookspath", None, 0, False),
-                                        ("legacy-shim", LEGACY, 0, False)):
+                                        ("legacy-shim", LEGACY, 0, False),
+                                        ("legacy-copy", COPIED, 0, False)):
         with tempfile.TemporaryDirectory() as tmp:
             repo = copy_repo(tmp)
             subprocess.run(["git", "init", "-q", str(repo)], check=True)
@@ -887,6 +894,47 @@ def hooks_hold() -> list[str]:
                          "design-tools/githooks/pre-commit" in after and after != before)
             if not ok:
                 bad.append(f"{name} (exit {r.returncode}, hooksPath {left!r})")
+            # validate.py says "hooks on" for the shim make hooks writes, and for
+            # nothing else: a stale copy reported as on was trusted for months.
+            if ("hooks on" in run(repo)) == keep:
+                bad.append(f"{name} (validate reports hooks {'on' if keep else 'not on'})")
+    # A dangling link in the slot is someone's hook manager whose target is not
+    # there yet; writing through it puts the shim outside .git.
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        hook = repo / ".git" / "hooks" / "pre-commit"
+        hook.parent.mkdir(parents=True, exist_ok=True)
+        target = Path(tmp) / "managed" / "team-hook"
+        target.parent.mkdir()
+        hook.symlink_to(target)
+        r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
+        if r.returncode == 0 or target.exists() or not hook.is_symlink():
+            bad.append(f"dangling-link (exit {r.returncode}, written through {target.exists()})")
+    return bad
+
+
+def link_holds() -> list[str]:
+    """`make link` and `make unlink` fail when a link could not be made or
+    removed, rather than printing the success line over the error."""
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        dirs = {v: str(Path(tmp) / v.lower() / "skills") for v in
+                ("CLAUDE_DIR", "CODEX_DIR", "AGY_DIR")}
+        args = [f"{k}={v}" for k, v in dirs.items()]
+        locked = Path(dirs["CLAUDE_DIR"])
+        locked.mkdir(parents=True)
+        for target in ("link", "unlink"):
+            if target == "unlink":
+                locked.chmod(0o755)
+                subprocess.run(["make", "-s", "-C", str(ROOT), "link", *args],
+                               capture_output=True, check=True)
+            locked.chmod(0o555)
+            r = subprocess.run(["make", "-s", "-C", str(ROOT), target, *args],
+                               capture_output=True, text=True)
+            locked.chmod(0o755)
+            if r.returncode == 0:
+                bad.append(f"{target} into a read-only directory exited 0")
     return bad
 
 
@@ -1072,7 +1120,13 @@ def main() -> int:
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (10 cases)")
+    print("make hooks leaves every hook but its own shim alone (12 cases)")
+
+    broken_link = link_holds()
+    if broken_link:
+        print("make link mishandled: " + ", ".join(broken_link))
+        return 1
+    print("make link and unlink fail when a link cannot be made or removed (2 cases)")
 
     silent_figures = figures_fire()
     if silent_figures:
