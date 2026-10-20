@@ -401,6 +401,13 @@ FIGURE_CASES: dict[str, callable] = {
                                               "| 17.76:1 | 4.5:1 | does not pass |"),
     # The first row is read even when the separator line under the header is gone.
     "scale-no-separator": lambda r: _scale_no_separator(r),
+    # Only the separator under the header is skipped; one standing in for a row
+    # removed that step and the rest still recomputed.
+    "contrast-row-as-separator": lambda r: sub(
+        r / CONTRAST, "| Body on canvas | `#16181d` | `#ffffff` | 17.76:1 | 4.5:1 | pass |",
+        "|---|---|---|---|---|---|"),
+    "scale-row-as-separator": lambda r: sub(r / SCALES, "| `--text-4xl` | 40px | 1.1 | Hero |",
+                                            "|-------|-------|"),
 }
 
 

@@ -72,10 +72,13 @@ def pair_rows(text: str) -> list[tuple[int, str]]:
     if start is None:
         return []
     out = []
-    for i in range(start + 1, len(lines)):
+    first = start + 1
+    # Only the line under the header is a separator; one further down stands
+    # where a recorded pair was, and dropping it silently is the vacuous pass.
+    if first < len(lines) and SEP.match(lines[first].strip()):
+        first += 1
+    for i in range(first, len(lines)):
         s = lines[i].strip()
-        if SEP.match(s):
-            continue
         if not (s.startswith("|") and s.endswith("|")):
             break
         out.append((i + 1, s))
@@ -146,13 +149,16 @@ def check_type_scale() -> int:
     # otherwise shift every step index after it.
     lines = text[head.start():].splitlines()
     table = []
-    # Separator lines are skipped by form, not by position: without one, the
-    # first row sat where the separator was assumed and was never read.
-    for l in lines[1:]:
+    # The separator is optional and only ever the line under the header: assuming
+    # it by position skipped the first row when it was missing, and skipping it
+    # by form anywhere let a separator-shaped line stand in for a removed row.
+    body = lines[1:]
+    if body and SEP.match(body[0].strip()):
+        body = body[1:]
+    for l in body:
         if not l.strip().startswith("|"):
             break
-        if not SEP.match(l.strip()):
-            table.append(l)
+        table.append(l)
     # Every row is held to the form, as pair_rows does for contrast: a row
     # rewritten as `52px (hero)` or `2.5rem` used to drop out of the check, and
     # the count of steps recomputed fell by one with nothing failing.
