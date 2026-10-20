@@ -72,7 +72,7 @@ catch the value edited into a wrong one later. `make figures` recomputes what th
 reference layer states from the reference layer itself — every recorded contrast
 pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, and the type
 scale from its own stated base and ratio. It runs in `make check` and in the
-pre-commit hook, and `make test` introduces eight deliberate errors and fails
+pre-commit hook, and `make test` introduces ten deliberate errors and fails
 unless each one breaks it, including two that make the checks vacuous rather than wrong.
 
 That is also how the type scale's clamp got written down: the ratio applied

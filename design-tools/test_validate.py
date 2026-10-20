@@ -10,6 +10,7 @@ Run: make test
 from __future__ import annotations
 
 import errno
+import json
 import os
 import re
 import shutil
@@ -930,6 +931,52 @@ def hooks_hold() -> list[str]:
     return bad
 
 
+def engine_holds() -> list[str]:
+    """engine.py, against a stand-in codex on PATH: a request without
+    --running is refused rather than answered with a selftest, an engine that
+    exits non-zero has not answered, and a prompt is never read as an option."""
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(tmp)
+        log = d / "argv"
+        stub = d / "bin" / "codex"
+        stub.parent.mkdir()
+        # Writes a valid answer to the -o path, logs its argv, exits $CODE.
+        stub.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$LOG"\n'
+                        'while [ $# -gt 0 ]; do [ "$1" = -o ] && out="$2"; shift; done\n'
+                        'printf \'{"ok": true}\' > "$out"\nexit "$CODE"\n', encoding="utf-8")
+        stub.chmod(0o755)
+        (d / "p.txt").write_text("--help me\n", encoding="utf-8")
+        (d / "s.json").write_text(json.dumps(
+            {"type": "object", "properties": {"ok": {"type": "boolean"}},
+             "required": ["ok"]}), encoding="utf-8")
+        # Only the stand-in and the system shell tools: a real engine CLI on the
+        # contributor's PATH is never started, whatever engine.py does.
+        env = {**os.environ, "PATH": os.pathsep.join([str(stub.parent), "/usr/bin", "/bin"]),
+               "LOG": str(log)}
+
+        def ask(code: str, *extra: str) -> subprocess.CompletedProcess:
+            return subprocess.run([sys.executable, str(ROOT / "design-tools" / "engine.py"),
+                                   *extra, "--prompt-file", str(d / "p.txt"),
+                                   "--schema", str(d / "s.json")],
+                                  capture_output=True, text=True, env={**env, "CODE": code})
+
+        r = ask("0")
+        if r.returncode != 2:
+            bad.append(f"no --running (exit {r.returncode})")
+        r = ask("0", "codex", "--running", "claude")
+        if r.returncode != 0:
+            bad.append(f"stand-in answer refused (exit {r.returncode}: {r.stderr[-120:]})")
+        else:
+            argv = log.read_text(encoding="utf-8").split("\n")
+            if "--help me" in argv and argv[argv.index("--help me") - 1] != "--":
+                bad.append("prompt passed where codex reads options")
+        r = ask("2", "codex", "--running", "claude")
+        if r.returncode != 1:
+            bad.append(f"engine exited 2 and was taken as answering (exit {r.returncode})")
+    return bad
+
+
 def render_holds() -> list[str]:
     """render.py leaves a file alone when any of its blocks cannot be delivered.
     Interleaved markers let the first block swallow the second's opener, and the
@@ -1156,6 +1203,12 @@ def main() -> int:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
     print("make hooks leaves every hook but its own shim alone (12 cases)")
+
+    broken_engine = engine_holds()
+    if broken_engine:
+        print("engine.py mishandled: " + ", ".join(broken_engine))
+        return 1
+    print("engine.py refuses what it cannot check, against a stand-in engine (3 cases)")
 
     broken_render = render_holds()
     if broken_render:
