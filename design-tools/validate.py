@@ -148,6 +148,7 @@ class _Lines:
     def __init__(self) -> None:
         self.code: set[int] = set()
         self.headings: set[int] = set()
+        self.template: set[int] = set()             # inside a ```markdown fence
         self.inline: list[tuple[int, str]] = []     # first line, source of the run
 
 
@@ -164,6 +165,7 @@ def line_map(text: str, offset: int = 0, into: _Lines | None = None) -> _Lines:
             continue
         first, last = offset + tok.map[0] + 1, offset + tok.map[1]
         if tok.type == "fence" and (tok.info.split() or [""])[0].lower() in TEMPLATE_FENCES:
+            out.template.update(range(first, last + 1))
             line_map(tok.content, first, out)
         elif tok.type in ("fence", "code_block"):
             out.code.update(range(first, last + 1))
@@ -281,8 +283,10 @@ def frontmatter(text: str) -> dict:
 
 def sections(text: str) -> dict[str, str]:
     """`## ` sections, by the headings the parser finds: a `## ` line inside a
-    code fence is an example, and counting it supplied a section that is not there."""
-    headings = line_map(text).headings
+    code fence is an example, and one inside a ```markdown template belongs to
+    the template; counting either supplied a section the page does not have."""
+    lines = line_map(text)
+    headings = lines.headings - lines.template
     out, cur, buf = {}, None, []
     for n, line in enumerate(text.splitlines(), 1):
         if line.startswith("## ") and n in headings:
@@ -1168,6 +1172,11 @@ def hooks_state() -> str:
                               check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return ""
+    managed = subprocess.run(["git", "-C", str(ROOT), "config", "--get", "core.hooksPath"],
+                             capture_output=True, text=True).stdout.strip()
+    if managed:
+        # make hooks does not install there, so it cannot be the remedy.
+        return f" · hooks managed by core.hooksPath ({managed})"
     hook = ROOT / path
     if not hook.exists():
         return " · hooks off — run: make hooks"
@@ -1175,7 +1184,8 @@ def hooks_state() -> str:
         ours = hook.read_text(encoding="utf-8") == HOOK_SHIM
     except (OSError, UnicodeDecodeError):
         ours = False
-    return " · hooks on" if ours else " · hooks: not the make hooks shim — run: make hooks"
+    # make hooks replaces its own earlier installs and says what to do with any other.
+    return " · hooks on" if ours else " · hooks unknown — not the make hooks shim; run: make hooks"
 
 
 def main() -> int:

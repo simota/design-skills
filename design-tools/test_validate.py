@@ -591,6 +591,11 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
               "## Rules\n\n```text\n## Always / Never\n```\n")
 
 
+@case("V16-template", "is missing section 'Always / Never'")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
+              "## Rules\n\n```markdown\n## Always / Never\n```\n")
+
+
 @case("V20-mention", "defines 'derived'")
 def _(r): sub(r / f"{S}_design/PROVENANCE.md",
               "| `derived` | Computed from grounded inputs by a stated rule |",
@@ -862,6 +867,9 @@ def hooks_hold() -> list[str]:
         r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
         if r.returncode == 0 or any(elsewhere.iterdir()):
             bad.append("foreign core.hooksPath written to")
+        # ...and validate.py does not send the contributor to make hooks, which refuses.
+        if "managed by core.hooksPath" not in run(repo):
+            bad.append("foreign core.hooksPath status points at make hooks")
         # The old setting in the user's global config is not this checkout's to
         # unset: no claim that it was removed, and nothing installed.
         glob = Path(tmp) / "gitconfig"
@@ -969,7 +977,9 @@ def engine_holds() -> list[str]:
             bad.append(f"stand-in answer refused (exit {r.returncode}: {r.stderr[-120:]})")
         else:
             argv = log.read_text(encoding="utf-8").split("\n")
-            if "--help me" in argv and argv[argv.index("--help me") - 1] != "--":
+            if "--help me" not in argv:
+                bad.append("prompt never reached codex")
+            elif argv[argv.index("--help me") - 1] != "--":
                 bad.append("prompt passed where codex reads options")
         r = ask("2", "codex", "--running", "claude")
         if r.returncode != 1:
@@ -998,8 +1008,12 @@ def render_holds() -> list[str]:
 
 def link_holds() -> list[str]:
     """`make link` and `make unlink` fail when a link could not be made or
-    removed, rather than printing the success line over the error."""
+    removed, rather than printing the success line over the error. A read-only
+    directory does not stop root, so as root the case cannot be made."""
     bad = []
+    if os.geteuid() == 0:
+        print("  not run here: root writes into a read-only directory")
+        return bad
     with tempfile.TemporaryDirectory() as tmp:
         dirs = {v: str(Path(tmp) / v.lower() / "skills") for v in
                 ("CLAUDE_DIR", "CODEX_DIR", "AGY_DIR")}
