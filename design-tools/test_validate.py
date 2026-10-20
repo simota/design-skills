@@ -943,6 +943,13 @@ def hooks_hold() -> list[str]:
         r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
         if r.returncode == 0 or target.exists() or not hook.is_symlink():
             bad.append(f"dangling-link (exit {r.returncode}, written through {target.exists()})")
+        # The status reads the slot, not what it points at: a link is someone
+        # else's whether its target is missing or holds the shim word for word.
+        if "managed by a symlink" not in run(repo):
+            bad.append("dangling-link status")
+        target.write_text(validate.HOOK_SHIM, encoding="utf-8")
+        if "managed by a symlink" not in run(repo):
+            bad.append("link-to-shim status")
     return bad
 
 

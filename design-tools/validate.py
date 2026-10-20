@@ -1163,6 +1163,7 @@ def hooks_state() -> str:
     not run the rules — a stale copy of an old hook checked the working tree,
     not the commit — and its text cannot say which, so it is not called on.
     """
+    import os
     import subprocess
     if not (ROOT / ".git").exists():
         return ""                      # an exported tree, e.g. inside the hook
@@ -1178,6 +1179,10 @@ def hooks_state() -> str:
         # make hooks does not install there, so it cannot be the remedy.
         return f" · hooks managed by core.hooksPath ({managed})"
     hook = ROOT / path
+    # A link is never what make hooks writes, and following it would call a
+    # dangling one "off" and one pointing at a copy of the shim "on".
+    if hook.is_symlink():
+        return f" · hooks managed by a symlink ({os.readlink(hook)})"
     if not hook.exists():
         return " · hooks off — run: make hooks"
     try:
