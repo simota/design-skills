@@ -298,14 +298,21 @@ def main() -> int:
         print(f"need --running, one of {known}: the engine running this is "
               "stated, never assumed", file=sys.stderr)
         return 2
+    # Unreadable input is refused like missing input: exit 2 with one line. A
+    # traceback exited 1, which this tool's caller reads as an engine that did
+    # not answer.
+    try:
+        prompt = pathlib.Path(a.prompt_file).read_text(encoding="utf-8")
+        schema = json.loads(pathlib.Path(a.schema).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError, RecursionError) as e:
+        print(f"cannot read --prompt-file or --schema: {e}", file=sys.stderr)
+        return 2
     try:
         engine = a.engine or other_than(a.running)
         if engine == a.running:
             raise EngineError(f"{engine} is the engine running this; "
                               "a verdict from it is not a check")
-        got = run(engine,
-                  pathlib.Path(a.prompt_file).read_text(encoding="utf-8"),
-                  json.loads(pathlib.Path(a.schema).read_text(encoding="utf-8")))
+        got = run(engine, prompt, schema)
     except EngineError as e:
         print(f"{a.engine or 'checker'}: {e}", file=sys.stderr)
         return 1

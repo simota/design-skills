@@ -44,11 +44,11 @@ Reading a name should tell you its tier without opening the file.
 
 ## Rules
 
-1. **No hue words at the semantic tier.** `--color-accent-bg` survives a rebrand; `--color-purple-bg` does not.
+1. **No hue words at the semantic tier.** `--color-action-bg` survives a rebrand; `--color-purple-bg` does not.
 2. **No numbers at the semantic tier.** A number is a position in a ramp, which is a primitive concern. Exception: spacing and type scales, where the number *is* the semantic (`--space-4`).
 3. **State is always the last segment.** This makes state variants sortable and greppable.
 4. **`default` is never written.** `--color-text-primary` is the default state.
-5. **Foreground on a coloured surface uses `on-`.** `--color-on-accent`, `--color-on-danger`.
+5. **Foreground on a coloured surface uses `on-`.** `--color-on-action`, `--color-on-danger`.
 6. **Never abbreviate below four characters.** `bg`, `fg`, `z` and t-shirt sizes (`xs`–`4xl`) are the accepted exceptions; `clr`, `bdr`, `sz` are not.
 7. **Singular category, plural never.** `--color-*`, not `--colors-*`.
 8. **One grammar per repository.** If a framework imposes its own (Tailwind, MUI), adopt theirs rather than running two.

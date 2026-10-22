@@ -227,11 +227,26 @@ def marker_lines(text: str) -> list[tuple[int, str]]:
     return out
 
 
-def links(text: str) -> list[str]:
+def links(text: str, page: str | None = None) -> list[str]:
     """Every link and image destination, and every reference definition, as
     CommonMark reads the page. Code is not parsed as links, so it never shows
-    up here."""
+    up here.
+
+    `text` may be one section of `page`. A reference link there (`[x][label]`)
+    takes its destination from a definition anywhere on the page, as the
+    renderer does; parsed alone, the section had no definition and the link
+    read as plain text. Only links the section makes are returned, never every
+    definition the page holds, or one section would vouch for another's.
+    """
     env: dict = {}
+    tokens = MD.parse(text, env)
+    own = env.get("references") or {}
+    if page is not None:
+        # The page's definitions, in its own order: the first one wins, and
+        # the section's are among them.
+        page_env: dict = {}
+        MD.parse(page, page_env)
+        tokens = MD.parse(text, {"references": dict(page_env.get("references") or {})})
     out: list[str] = []
 
     def walk(tokens) -> None:
@@ -243,8 +258,8 @@ def links(text: str) -> list[str]:
             if tok.children:
                 walk(tok.children)
 
-    walk(MD.parse(text, env))
-    out += [ref["href"] for ref in (env.get("references") or {}).values()]
+    walk(tokens)
+    out += [ref["href"] for ref in own.values()]
     return [p for p in (local_path(h) for h in out if h) if p]
 
 
@@ -353,8 +368,9 @@ def v4_playbook_orphans():
         pb_dir = d / "playbooks"
         if not pb_dir.exists():
             continue
-        body = sections(read(d / "SKILL.md")).get("Decide first", "")
-        linked = {_resolve(d, m) for m in links(body)}
+        page = read(d / "SKILL.md")
+        body = sections(page).get("Decide first", "")
+        linked = {_resolve(d, m) for m in links(body, page)}
         for pb in sorted(pb_dir.glob("*.md")):
             if pb.resolve() not in linked:
                 fail("V4", f"{d.name}/playbooks/{pb.name} is not linked from Decide first")
@@ -548,6 +564,13 @@ def v17_delivery():
                 fail("V17", f"{d.name}/SKILL.md needs exactly one {key} block, each marker "
                             f"alone on its line; found {len(opens)} open, {len(closes)} close")
                 continue
+            # A marker in a fence is an example of one, and what sits between
+            # two of them is code the reader never takes as the contract.
+            mapped = line_map(text)
+            if {opens[0] + 1, closes[0] + 1} & (mapped.code | mapped.template):
+                fail("V17", f"{d.name}/SKILL.md {key} block sits inside a code fence, "
+                            "where it is an example, not a delivered contract")
+                continue
             got = "\n".join(lines[opens[0] + 1:closes[0]]).strip("\n")
             if got != want:
                 fail("V17", f"{d.name}/SKILL.md {key} block differs from "
@@ -561,7 +584,9 @@ def v18_signals_in_description():
     for d in SKILL_DIRS:
         desc = _norm(frontmatter(read(d / "SKILL.md")).get("description", ""))
         for s in CAP.get(d.name, {}).get("signals", []):
-            if _norm(s) not in desc:
+            # A signal starts a word, as V10 matches it: `forms` inside
+            # "platforms" is not the word the listing has to carry.
+            if not re.search(rf"(?<!\w){re.escape(_norm(s))}", desc):
                 fail("V18", f"{d.name} signal {s!r} is not literal in its description; "
                             "the listing carries nothing else")
 
@@ -793,8 +818,9 @@ def v30_reference_orphans():
         ref_dir = d / "reference"
         if not ref_dir.exists():
             continue
-        body = sections(read(d / "SKILL.md")).get("Decide first", "")
-        linked = {_resolve(d, m) for m in links(body)}
+        page = read(d / "SKILL.md")
+        body = sections(page).get("Decide first", "")
+        linked = {_resolve(d, m) for m in links(body, page)}
         for pb in sorted((d / "playbooks").glob("*.md")) if (d / "playbooks").exists() else []:
             linked |= {_resolve(pb.parent, m) for m in links(read(pb))}
             linked |= {_resolve(d, m) for m in TICK_PATH_RE.findall(read(pb))}
@@ -1189,6 +1215,9 @@ def hooks_state() -> str:
         ours = hook.read_text(encoding="utf-8") == HOOK_SHIM
     except (OSError, UnicodeDecodeError):
         ours = False
+    # git skips a hook it cannot execute, with a hint and a successful commit.
+    if ours and not os.access(hook, os.X_OK):
+        return " · hooks off — the shim is not executable; run: make hooks"
     # make hooks replaces its own earlier installs and says what to do with any other.
     return " · hooks on" if ours else " · hooks unknown — not the make hooks shim; run: make hooks"
 

@@ -49,9 +49,13 @@ def contrast(a: str, b: str) -> float:
     return (hi + 0.05) / (lo + 0.05)
 
 
+# A number is digits with at most one point. `[0-9.]+` also took `17.76.` and
+# then float() raised, ending the run with a traceback that lost every other
+# mismatch it had found; now such a row fails to parse and is reported as one.
+NUM = r"[0-9]+(?:\.[0-9]+)?"
 ROW = re.compile(
     r"^\|[^|]+\|\s*`(#[0-9a-fA-F]{6})`\s*\|\s*`(#[0-9a-fA-F]{6})`\s*\|"
-    r"\s*([0-9.]+):1\s*\|\s*([0-9.]+):1[^|]*\|\s*([^|]+)\|"
+    rf"\s*({NUM}):1\s*\|\s*({NUM}):1[^|]*\|\s*([^|]+)\|"
 )
 
 
@@ -59,30 +63,41 @@ PAIR_HEAD = re.compile(r"^\|\s*Pair\s*\|\s*Foreground\s*\|")
 SEP = re.compile(r"^\|[\s:|-]+\|$")
 
 
-def pair_rows(text: str) -> list[tuple[int, str]]:
-    """Every data row of the recording table, matching or not.
+def table_body(lines: list[str], start: int) -> list[int]:
+    """Indices of the rows under the header at `start`, up to where the table ends.
 
-    Filtering to rows that already parse would enforce the page's own rule —
-    "never state a pass without both source values" — only on the rows that
-    already follow it. A row rewritten to say "grey on white, roughly 2.6"
-    would drop out of the check and the build would stay green.
+    A table runs to the first blank line, as GFM reads it. A row without its
+    outer pipes is still a row there; ending the table on it dropped that row
+    and every one after it from the check, and the count of pairs recomputed
+    fell with nothing failing. Such a row is now returned, and fails to parse
+    like any other row that does not state its values.
     """
-    lines = text.splitlines()
-    start = next((i for i, l in enumerate(lines) if PAIR_HEAD.match(l.strip())), None)
-    if start is None:
-        return []
-    out = []
     first = start + 1
     # Only the line under the header is a separator; one further down stands
     # where a recorded pair was, and dropping it silently is the vacuous pass.
     if first < len(lines) and SEP.match(lines[first].strip()):
         first += 1
+    out = []
     for i in range(first, len(lines)):
-        s = lines[i].strip()
-        if not (s.startswith("|") and s.endswith("|")):
+        if not lines[i].strip():
             break
-        out.append((i + 1, s))
+        out.append(i)
     return out
+
+
+def pair_rows(text: str) -> list[tuple[int, str]]:
+    """Every data row of every recording table, matching or not.
+
+    Filtering to rows that already parse would enforce the page's own rule —
+    "never state a pass without both source values" — only on the rows that
+    already follow it. A row rewritten to say "grey on white, roughly 2.6"
+    would drop out of the check and the build would stay green. So would a
+    second table — the dark theme's pairs — if only the first were read.
+    """
+    lines = text.splitlines()
+    return [(i + 1, lines[i].strip())
+            for start, l in enumerate(lines) if PAIR_HEAD.match(l.strip())
+            for i in table_body(lines, start)]
 
 
 def check_contrast() -> int:
@@ -127,7 +142,7 @@ def check_contrast() -> int:
 
 # --- Type scale ------------------------------------------------------------
 
-SCALE_HEAD = re.compile(r"\|\s*Token\s*\|\s*(\d+)px\s*/\s*([0-9.]+) ratio\s*\|")
+SCALE_HEAD = re.compile(rf"\|\s*Token\s*\|\s*(\d+)px\s*/\s*({NUM}) ratio\s*\|")
 SCALE_ROW = re.compile(r"^\|\s*`(--text-[a-z0-9]+)`\s*\|\s*(\d+)px\s*\|")
 CLAMP = re.compile(r"clamped below `(--text-[a-z0-9]+)`", re.I)
 
@@ -148,17 +163,10 @@ def check_type_scale() -> int:
     # Only the table under the header: a later table repeating a token would
     # otherwise shift every step index after it.
     lines = text[head.start():].splitlines()
-    table = []
     # The separator is optional and only ever the line under the header: assuming
     # it by position skipped the first row when it was missing, and skipping it
     # by form anywhere let a separator-shaped line stand in for a removed row.
-    body = lines[1:]
-    if body and SEP.match(body[0].strip()):
-        body = body[1:]
-    for l in body:
-        if not l.strip().startswith("|"):
-            break
-        table.append(l)
+    table = [lines[i] for i in table_body(lines, 0)]
     # Every row is held to the form, as pair_rows does for contrast: a row
     # rewritten as `52px (hero)` or `2.5rem` used to drop out of the check, and
     # the count of steps recomputed fell by one with nothing failing.
