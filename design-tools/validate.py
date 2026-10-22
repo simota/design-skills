@@ -423,7 +423,12 @@ def v8_links():
             try:
                 exists = (f.parent / target).exists()
                 at = _resolve(f.parent, target)
-                inside = exists and (at == ROOT.resolve() or ROOT.resolve() in at.parents)
+                # Lexically as well as resolved: `../<checkout>/README.md` climbs
+                # out and back in, and lands inside only while the clone keeps
+                # its name. `skills/..` never leaves.
+                lexical = os.path.normpath(f.parent.relative_to(ROOT) / target)
+                inside = exists and not (lexical == ".." or lexical.startswith(".." + os.sep)) \
+                    and (at == ROOT.resolve() or ROOT.resolve() in at.parents)
             except OSError:                      # e.g. a name longer than the FS allows
                 exists = False
             if not exists:

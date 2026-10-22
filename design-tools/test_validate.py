@@ -408,6 +408,13 @@ def _(r):
     sub(r / "README.md", "## Files", "[pages](../agent-toolkit/tools/pages.py)\n\n## Files")
 
 
+@case("V8-reenters", "outside the repository")
+def _(r):
+    """Out through the parent and back in by the checkout's own name: it
+    resolves inside only while the clone keeps that name."""
+    sub(r / "README.md", "## Files", f"[self](../{r.name}/README.md)\n\n## Files")
+
+
 @case("V27-absolute", "is an absolute link")
 def _(r):
     """git commits the link's text: an absolute path into this checkout breaks
