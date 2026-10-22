@@ -378,6 +378,45 @@ def _(r):
 def _(r): sub(r / "design-registry/harness.yaml", "source_authorities:", "unused_authorities:")
 
 
+# --- cycle 6: false passes an independent review reproduced -------------------
+
+@case("V29-bold", "has no line opening with 'Source:'")
+def _(r):
+    """A bolded header satisfied V29's substring test, and V31 and V37, which
+    look for the line that opens with it, found none and stayed quiet: a wrong
+    pin and a bare date passed."""
+    f = r / f"{S}design-a11y/reference/semantics.md"
+    t = f.read_text(encoding="utf-8")
+    t = re.sub(r"^Source: .*$", "**Source:** WCAG 2.9", t, count=1, flags=re.M)
+    f.write_text(re.sub(r"^Verified: .*$", "**Verified:** 2026-08-21", t, count=1, flags=re.M),
+                 encoding="utf-8")
+
+
+@case("V19-link-escapes", "leaves the skill directory")
+def _(r):
+    """The README's own example: a Markdown link, not a backticked path, that
+    climbs out of the skill. It exists in the repo, so V8 is satisfied."""
+    sub(r / f"{S}design-a11y/SKILL.md", "[content](playbooks/content.md)",
+        "[content](playbooks/content.md), see [contract](../_design/CONTRACT.md)")
+
+
+@case("V8-outside", "outside the repository")
+def _(r):
+    """A sibling checkout beside this one resolves here and nowhere else."""
+    (r.parent / "agent-toolkit/tools").mkdir(parents=True)
+    (r.parent / "agent-toolkit/tools/pages.py").write_text("x\n", encoding="utf-8")
+    sub(r / "README.md", "## Files", "[pages](../agent-toolkit/tools/pages.py)\n\n## Files")
+
+
+@case("V27-absolute", "is an absolute link")
+def _(r):
+    """git commits the link's text: an absolute path into this checkout breaks
+    in every other clone, and when this one moves."""
+    link = r / f"{S}design-ux/_design"
+    link.unlink()
+    link.symlink_to((r / f"{S}_design").resolve())
+
+
 # figures_check.py is held to the same standard: each recomputation is shown
 # failing on a deliberately wrong page, or a green run proves nothing about it.
 CONTRAST = f"{S}design-a11y/reference/contrast.md"
@@ -1100,6 +1139,16 @@ def engine_holds() -> list[str]:
         r = ask("0", "codex", "--running", "claude")
         if r.returncode != 2 or "Traceback" in r.stderr:
             bad.append(f"unreadable schema (exit {r.returncode})")
+        # A schema that parses but cannot be checked is refused input too: a
+        # list of properties was a traceback, and an unsupported keyword exit 1.
+        for name, schema in {"properties-list": {"type": "object", "properties": [{"type": "string"}]},
+                             "required-string": {"type": "object", "required": "ok"},
+                             "enum": {"type": "object", "properties":
+                                      {"a": {"type": "string", "enum": ["x"]}}}}.items():
+            (d / "s.json").write_text(json.dumps(schema), encoding="utf-8")
+            r = ask("0", "codex", "--running", "claude")
+            if r.returncode != 2 or "Traceback" in r.stderr:
+                bad.append(f"uncheckable schema {name} (exit {r.returncode})")
     return bad
 
 
@@ -1139,6 +1188,37 @@ def render_holds() -> list[str]:
             if r.returncode != 0 or "green" not in out.splitlines()[-1]:
                 bad.append(f"{name} (exit {r.returncode}): {out.strip().splitlines()[-2:]}")
     return bad
+
+
+def hooks_fail_closed() -> tuple[list[str], int]:
+    """`make hooks` says it installed only what it wrote, where git looks.
+
+    Outside a checkout `--git-path` printed nothing and the hook path became
+    `/pre-commit`: the failed write still printed "installed" and exited 0, and
+    as root it was written. That case writes to `/` if it regresses, so it is
+    run only where a write there is refused."""
+    bad, ran = [], 0
+    with tempfile.TemporaryDirectory() as tmp:
+        # A hooks directory that cannot be made: the write fails, and says so.
+        repo = copy_repo(tmp + "/blocked")
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        hooks = repo / ".git/hooks"
+        shutil.rmtree(hooks, ignore_errors=True)
+        hooks.write_text("", encoding="utf-8")
+        r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
+        ran += 1
+        if r.returncode == 0 or "installed at" in r.stdout:
+            bad.append("an unwritable hook reported as installed")
+        if os.geteuid() == 0:
+            print("  not run here: as root, a regressed make hooks outside a checkout writes /pre-commit")
+            return bad, ran
+        bare = copy_repo(tmp + "/archive")
+        r = subprocess.run(["make", "-s", "-C", str(bare), "hooks"], capture_output=True, text=True,
+                           env={**os.environ, "GIT_CEILING_DIRECTORIES": tmp})
+        ran += 1
+        if r.returncode == 0 or "installed at" in r.stdout:
+            bad.append("make hooks outside a checkout reported success")
+    return bad, ran
 
 
 def link_holds() -> list[str]:
@@ -1353,11 +1433,17 @@ def main() -> int:
         return 1
     print("make hooks leaves every hook but its own shim alone (13 cases)")
 
+    hooks_open, hooks_ran = hooks_fail_closed()
+    if hooks_open:
+        print("make hooks claimed an install: " + ", ".join(hooks_open))
+        return 1
+    print(f"make hooks fails where it wrote nothing ({hooks_ran} cases)")
+
     broken_engine = engine_holds()
     if broken_engine:
         print("engine.py mishandled: " + ", ".join(broken_engine))
         return 1
-    print("engine.py refuses what it cannot check, against a stand-in engine (4 cases)")
+    print("engine.py refuses what it cannot check, against a stand-in engine (7 cases)")
 
     broken_render = render_holds()
     if broken_render:

@@ -75,6 +75,10 @@ render:
 # shim, and the copy the first `make hooks` made (013f05b), which checks the
 # working tree rather than what is staged. A symlink in the slot is never ours —
 # writing through one, dangling or not, lands outside .git.
+#
+# Outside a checkout (a downloaded archive) `--git-path` prints nothing, and the
+# hook path became `/pre-commit`: a failed write still printed "installed", and
+# as root it was written. Neither the path nor the write is taken on trust now.
 hooks:
 	@chmod +x design-tools/githooks/pre-commit
 	@if [ "$$(git config --get core.hooksPath)" = "design-tools/githooks" ]; then \
@@ -83,7 +87,9 @@ hooks:
 	@if [ -n "$$(git config --get core.hooksPath)" ]; then \
 		echo "core.hooksPath is $$(git config --get core.hooksPath); not installing there. Add to its pre-commit:"; \
 		echo '  h="$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"; [ ! -f "$$h" ] || "$$h" || exit 1'; exit 1; fi
-	@hook="$$(git rev-parse --git-path hooks)/pre-commit"; \
+	@dir="$$(git rev-parse --git-path hooks 2>/dev/null)" && [ -n "$$dir" ] || { \
+		echo "not a git checkout, so there is no hooks directory to install into"; exit 1; }; \
+	hook="$$dir/pre-commit"; \
 	shim='#!/bin/sh\nh="$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit"\n[ -f "$$h" ] || exit 0\nexec "$$h" "$$@"\n'; \
 	old='#!/bin/sh\nexec "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" "$$@"\n'; \
 	copied='#!/bin/sh\n# Budgets enforced by a mechanism rather than by remembering.\n# Install with: make hooks\nset -e\npython3 "$$(git rev-parse --show-toplevel)/design-tools/validate.py"\npython3 "$$(git rev-parse --show-toplevel)/design-tools/figures_check.py"\n'; \
@@ -93,9 +99,8 @@ hooks:
 		echo "$$hook is not ours, so it is left as it is and nothing was installed."; \
 		echo "Make sure it is executable and runs the rules, e.g.:"; \
 		echo '  "$$(git rev-parse --show-toplevel)/design-tools/githooks/pre-commit" || exit 1'; exit 1; fi; \
-	mkdir -p "$$(dirname "$$hook")"; \
-	printf "$$shim" > "$$hook"; \
-	chmod +x "$$hook"; \
+	{ mkdir -p "$$(dirname "$$hook")" && printf "$$shim" > "$$hook" && chmod +x "$$hook"; } || { \
+		echo "could not write $$hook; nothing was installed"; exit 1; }; \
 	echo "pre-commit installed at $$hook"
 
 # A skill is a directory holding a SKILL.md, under skills/ where the plugin

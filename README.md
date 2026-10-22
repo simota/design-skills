@@ -180,7 +180,8 @@ make link CLAUDE_DIR=.claude/skills   # a named directory is created if missing
 
 Each `design-*` skill is linked individually, so a skills directory keeps
 whatever else it already carries, and a name already taken by a real directory,
-or by a link into another checkout, is skipped rather than overwritten.
+or by a live link into another checkout, is skipped rather than overwritten; a
+link that resolves nowhere is replaced.
 
 ## What this does not guarantee
 
