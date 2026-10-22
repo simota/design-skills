@@ -408,6 +408,23 @@ FIGURE_CASES: dict[str, callable] = {
         "|---|---|---|---|---|---|"),
     "scale-row-as-separator": lambda r: sub(r / SCALES, "| `--text-4xl` | 40px | 1.1 | Hero |",
                                             "|-------|-------|"),
+    # A row without its outer pipes is still a row: ending the table there
+    # dropped it and every row after it, and a wrong ratio below passed.
+    "contrast-row-without-outer-pipe": lambda r: (
+        sub(r / CONTRAST, "| `#3560d8` | 5.50:1 | 4.5:1 | pass |", "| `#3560d8` | 5.50:1 | 4.5:1 | pass"),
+        sub(r / CONTRAST, "| `#3560d8` | `#ffffff` | 5.50:1 | 3:1 | pass |",
+            "| `#3560d8` | `#ffffff` | 9.50:1 | 3:1 | pass |")),
+    "scale-row-without-leading-pipe": lambda r: (
+        sub(r / SCALES, "| `--text-2xl` | 28px |", "`--text-2xl` | 28px |"),
+        sub(r / SCALES, "| `--text-3xl` | 33px |", "| `--text-3xl` | 35px |")),
+    # Every recording table, not the first: a dark theme's pairs are a second one.
+    "contrast-second-table": lambda r: sub(
+        r / CONTRAST, "That last row is",
+        "| Pair | Foreground | Background | Ratio | Required | Result |\n|---|---|---|---|---|---|\n"
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThat last row is"),
+    # A typo in a number is a row that does not parse, not a traceback that
+    # loses every other mismatch of the run.
+    "contrast-malformed-number": lambda r: sub(r / CONTRAST, "| 17.76:1 |", "| 17.76.:1 |"),
 }
 
 
@@ -442,9 +459,13 @@ def figures_fire() -> list[str]:
         with tempfile.TemporaryDirectory() as tmp:
             copy = copy_repo(tmp)
             mutate(copy)
-            if run_figures(copy).returncode == 0:
+            r = run_figures(copy)
+            if r.returncode == 0:
                 bad.append(name)
                 print(f"  figures/{name} did not fail")
+            elif "Traceback" in r.stderr:
+                bad.append(name)
+                print(f"  figures/{name} crashed rather than reporting\n{r.stderr[-300:]}")
     return bad
 
 
@@ -672,6 +693,12 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 # The other direction: valid Markdown that must stay green. A rule that only
 # ever meets violations can be wrong about every form it was not shown.
 GREEN_CASES: dict[str, callable] = {
+    # A reference link in Decide first takes its definition from anywhere on the
+    # page; the section parsed alone read it as text, and V4 called the playbook
+    # an orphan.
+    "reference-link-in-decide-first": lambda r: (
+        sub(r / f"{S}design-ux/SKILL.md", "[flows](playbooks/flows.md)", "[flows][flows]"),
+        sub(r / f"{S}design-ux/SKILL.md", "## Done when", "[flows]: playbooks/flows.md\n\n## Done when")),
     "heading-with-pipes-is-not-a-value-set": lambda r: sub(
         r / f"{S}design-tokens/reference/export-targets.md", "## ", "## CSS | JSON\n\n## "),
     "indented-heading-with-pipes": lambda r: sub(
@@ -827,6 +854,19 @@ def _(r): sub(r / f"{S}design-tokens/reference/export-targets.md", "## ",
               "```yaml\n# DONE | PARTIAL | STUCK\n```\n\n## ")
 
 
+# A signal starts a word, as V10 matches it; `forms` inside "platforms" is not it.
+@case("V18-word-start", "signal 'forms' is not literal")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "loading states, forms, navigation,",
+              "loading states, navigation on platforms,")
+
+
+# A block inside a code fence is an example of one, not a delivered contract.
+@case("V17-in-fence", "report block sits inside a code fence")
+def _(r):
+    sub(r / f"{S}design-ux/SKILL.md", "<!-- deliver:report -->", "~~~~text\n<!-- deliver:report -->")
+    sub(r / f"{S}design-ux/SKILL.md", "<!-- /deliver:report -->", "<!-- /deliver:report -->\n~~~~")
+
+
 @case("V22-image-title", "README.md:")
 def _(r): sub(r / "README.md", "## Files", '![x](a.png "#' + 'TODO(agent): note")\n\n## Files')
 
@@ -930,6 +970,15 @@ def hooks_hold() -> list[str]:
             # nothing else: a stale copy reported as on was trusted for months.
             if ("hooks on" in run(repo)) == keep:
                 bad.append(f"{name} (validate reports hooks {'on' if keep else 'not on'})")
+    # git skips a shim it cannot execute and lets the commit through, so a
+    # shim without its executable bit is not "on".
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, check=True)
+        (repo / ".git" / "hooks" / "pre-commit").chmod(0o644)
+        if "hooks on" in run(repo):
+            bad.append("non-executable shim reported as on")
     # A dangling link in the slot is someone's hook manager whose target is not
     # there yet; writing through it puts the shim outside .git.
     with tempfile.TemporaryDirectory() as tmp:
@@ -998,6 +1047,12 @@ def engine_holds() -> list[str]:
         r = ask("2", "codex", "--running", "claude")
         if r.returncode != 1:
             bad.append(f"engine exited 2 and was taken as answering (exit {r.returncode})")
+        # Input that cannot be read is refused (2), never reported as an engine
+        # that did not answer (1) by way of a traceback.
+        (d / "s.json").write_text("{not json", encoding="utf-8")
+        r = ask("0", "codex", "--running", "claude")
+        if r.returncode != 2 or "Traceback" in r.stderr:
+            bad.append(f"unreadable schema (exit {r.returncode})")
     return bad
 
 
@@ -1017,7 +1072,26 @@ def render_holds() -> list[str]:
         if r.returncode == 0 or page.read_text(encoding="utf-8") != before:
             return [f"interleaved markers (exit {r.returncode}, file rewritten "
                     f"{page.read_text(encoding='utf-8') != before})"]
-    return []
+    # A new block goes under the section's own `## ` heading, at its end: not
+    # under a `### ` line with the same title, and not into a code fence whose
+    # example holds a `## ` line. Either way the result has to be what
+    # validate accepts, and the block has to be outside the fence.
+    bad = []
+    for name, extra, where in (
+            ("h3-of-the-same-name", "### Verify with\n", "## Owns\n"),
+            ("heading-in-a-fence", "```text\n## Findings\nstatus: DONE\n```\n", "## Verify with\n")):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = copy_repo(tmp)
+            page = repo / f"{S}design-ux/SKILL.md"
+            text = re.sub(r"<!-- deliver:report -->.*?<!-- /deliver:report -->\n", "",
+                          page.read_text(encoding="utf-8"), flags=re.S)
+            page.write_text(text.replace(where, where + "\n" + extra, 1), encoding="utf-8")
+            r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
+                               capture_output=True, text=True)
+            out = run(repo)
+            if r.returncode != 0 or "green" not in out.splitlines()[-1]:
+                bad.append(f"{name} (exit {r.returncode}): {out.strip().splitlines()[-2:]}")
+    return bad
 
 
 def link_holds() -> list[str]:
@@ -1230,19 +1304,19 @@ def main() -> int:
     if broken_hooks:
         print("make hooks mishandled: " + ", ".join(broken_hooks))
         return 1
-    print("make hooks leaves every hook but its own shim alone (12 cases)")
+    print("make hooks leaves every hook but its own shim alone (13 cases)")
 
     broken_engine = engine_holds()
     if broken_engine:
         print("engine.py mishandled: " + ", ".join(broken_engine))
         return 1
-    print("engine.py refuses what it cannot check, against a stand-in engine (3 cases)")
+    print("engine.py refuses what it cannot check, against a stand-in engine (4 cases)")
 
     broken_render = render_holds()
     if broken_render:
         print("render.py mishandled: " + ", ".join(broken_render))
         return 1
-    print("render.py writes nothing it could not fully deliver (1 case)")
+    print("render.py writes nothing it could not fully deliver, and only under the real heading (3 cases)")
 
     broken_link = link_holds()
     if broken_link:

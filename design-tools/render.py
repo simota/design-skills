@@ -13,12 +13,27 @@ import sys
 from pathlib import Path
 
 import yaml
+from markdown_it import MarkdownIt
 
 ROOT = Path(__file__).resolve().parent.parent
 MISSING: list[str] = []
 H = yaml.safe_load((ROOT / "design-registry" / "harness.yaml").read_text(encoding="utf-8"))
 PREFIX = H["prefix"]
 SKILLS_ROOT = ROOT / H["skills_dir"] if H.get("skills_dir") else ROOT
+MD = MarkdownIt("commonmark")
+
+
+def h2_lines(lines: list[str]) -> list[tuple[int, str]]:
+    """Each `## ` heading as the parser finds it: line index and title.
+
+    A substring search for "## Section" also found `### Section`, and a `## `
+    line inside a code fence, so a new block went under the wrong heading or
+    into the middle of an example — where validate read it as delivered.
+    """
+    toks = MD.parse("\n".join(lines))
+    return [(tok.map[0], toks[i + 1].content.strip()) for i, tok in enumerate(toks)
+            if tok.type == "heading_open" and tok.tag == "h2" and tok.map
+            and lines[tok.map[0]].startswith("## ")]
 
 
 def markers(text: str, key: str) -> tuple[list[int], list[int]]:
@@ -52,18 +67,23 @@ def render(path: Path) -> bool:
             lines = text.split("\n")
             text = "\n".join(lines[:opens[0] + 1] + block.split("\n") + lines[closes[0]:])
         else:
-            payload = f"{open_m}\n{block}\n{close_m}"
-            heading = f"## {spec['section']}\n"
-            if heading not in text:
+            lines = text.split("\n")
+            heads = h2_lines(lines)
+            at = next((n for n, (_, title) in enumerate(heads) if title == spec["section"]), None)
+            if at is None:
                 # A block with nowhere to go is not delivered, and saying
                 # "rendered" over it would read as though it were.
                 MISSING.append(f"{path.parent.name}: no section {spec['section']!r} for {key}")
                 continue
-            head, rest = text.split(heading, 1)
             # append at the end of that section, before the next heading
-            nxt = rest.find("\n## ")
-            body, tail = (rest[:nxt], rest[nxt:]) if nxt != -1 else (rest, "")
-            text = head + heading + body.rstrip("\n") + "\n" + payload + "\n" + tail
+            start = heads[at][0]
+            end = heads[at + 1][0] if at + 1 < len(heads) else len(lines)
+            body = lines[start + 1:end]
+            while body and not body[-1].strip():
+                body.pop()
+            rest = [""] + lines[end:] if end < len(lines) else [""]
+            text = "\n".join(lines[:start + 1] + body + [open_m] + block.split("\n")
+                             + [close_m] + rest)
     # Any block left undelivered and the file is not written: interleaved
     # markers let one block swallow the next one's opener, and writing that
     # replaced the real cause with a different error on the next run.

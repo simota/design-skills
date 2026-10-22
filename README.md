@@ -72,8 +72,10 @@ catch the value edited into a wrong one later. `make figures` recomputes what th
 reference layer states from the reference layer itself — every recorded contrast
 pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, and the type
 scale from its own stated base and ratio. It runs in `make check` and in the
-pre-commit hook, and `make test` introduces twelve deliberate errors and fails
-unless each one breaks it, including two that make the checks vacuous rather than wrong.
+pre-commit hook, and `make test` introduces sixteen deliberate errors and fails
+unless each one breaks it, including the ones that make the checks vacuous rather
+than wrong: a table renamed out of reach, or a row or a second table dropped from
+the count.
 
 That is also how the type scale's clamp got written down: the ratio applied
 downward gives 13px and 11px, the table said 14 and 12, and nothing on the page
