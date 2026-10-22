@@ -399,7 +399,8 @@ FIGURE_CASES: dict[str, callable] = {
     # A verdict is pass or fail, not any text that holds "pass" and not "fail".
     "contrast-verdict-negated": lambda r: sub(r / CONTRAST, "| 17.76:1 | 4.5:1 | pass |",
                                               "| 17.76:1 | 4.5:1 | does not pass |"),
-    # The first row is read even when the separator line under the header is gone.
+    # A header whose separator line is gone is no longer a table, and fails
+    # rather than leaving the steps under it unchecked.
     "scale-no-separator": lambda r: _scale_no_separator(r),
     # Only the separator under the header is skipped; one standing in for a row
     # removed that step and the rest still recomputed.
@@ -425,6 +426,39 @@ FIGURE_CASES: dict[str, callable] = {
     # A typo in a number is a row that does not parse, not a traceback that
     # loses every other mismatch of the run.
     "contrast-malformed-number": lambda r: sub(r / CONTRAST, "| 17.76:1 |", "| 17.76.:1 |"),
+    # Tables are found through the parse, and a header Markdown does not read as
+    # a table is not a table that quietly drops out: it fails, with its rows.
+    "contrast-second-table-without-separator": lambda r: sub(
+        r / CONTRAST, "That last row is",
+        "| Pair | Foreground | Background | Ratio | Required | Result |\n"
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThat last row is"),
+    # A line of prose directly under the rows is still a row, as GFM reads it.
+    "contrast-prose-under-table": lambda r: sub(
+        r / CONTRAST, "**fail — needs an offset ring** |\n",
+        "**fail — needs an offset ring** |\nMuted on dark is roughly 2.6\n"),
+}
+
+# The other half: a page that records every figure correctly stays green when
+# what surrounds its tables changes. Reading raw lines took a fenced example
+# for a second recording table, and a heading under the rows for a row.
+FENCED_PAIRS = ("\n```md\n| Pair | Foreground | Background | Ratio | Required | Result |\n"
+                "|---|---|---|---|---|---|\n| Example | `#777777` | `#ffffff` | 9.99:1 | 4.5:1 | pass |\n"
+                "```\n")
+FIGURE_GREEN_CASES: dict[str, callable] = {
+    "contrast-heading-under-table": lambda r: sub(
+        r / CONTRAST, "**fail — needs an offset ring** |\n\n",
+        "**fail — needs an offset ring** |\n### Notes\n\n"),
+    "contrast-example-in-a-fence": lambda r: sub(
+        r / CONTRAST, "That last row is", FENCED_PAIRS + "\nThat last row is"),
+    # The parser counts lines at "\n" alone; a U+2028 in prose above the table
+    # moved every line number read with splitlines().
+    "contrast-line-separator-above": lambda r: sub(
+        r / CONTRAST, "| Pair | Foreground |", "A line\u2028inside it.\n\n| Pair | Foreground |"),
+    "scale-heading-under-table": lambda r: sub(r / SCALES, "| Hero |\n\n", "| Hero |\n### Notes\n\n"),
+    "scale-example-in-a-fence-above": lambda r: sub(
+        r / SCALES, "| Token | 16px / 1.20 ratio |",
+        "```md\n| Token | 18px / 1.25 ratio |\n|---|---|\n| `--text-base` | 18px |\n```\n\n"
+        "| Token | 16px / 1.20 ratio |"),
 }
 
 
@@ -466,6 +500,19 @@ def figures_fire() -> list[str]:
             elif "Traceback" in r.stderr:
                 bad.append(name)
                 print(f"  figures/{name} crashed rather than reporting\n{r.stderr[-300:]}")
+    return bad
+
+
+def figures_green() -> list[str]:
+    bad = []
+    for name, mutate in FIGURE_GREEN_CASES.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = copy_repo(tmp)
+            mutate(copy)
+            r = run_figures(copy)
+            if r.returncode != 0:
+                bad.append(name)
+                print(f"  figures-green/{name} failed\n{r.stdout}{r.stderr[-300:]}")
     return bad
 
 
@@ -1329,6 +1376,13 @@ def main() -> int:
         print("figures_check stayed green on: " + ", ".join(silent_figures))
         return 1
     print(f"every figure check fails when it should ({len(FIGURE_CASES)} cases)")
+
+    red_figures = figures_green()
+    if red_figures:
+        print("figures_check failed a correct page: " + ", ".join(red_figures))
+        return 1
+    print(f"a correct page stays green whatever surrounds its tables "
+          f"({len(FIGURE_GREEN_CASES)} cases)")
     return 0
 
 

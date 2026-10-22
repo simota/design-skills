@@ -16,6 +16,7 @@ import re
 import sys
 
 import yaml
+from markdown_it import MarkdownIt
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 H = yaml.safe_load((ROOT / "design-registry" / "harness.yaml").read_text(encoding="utf-8"))
@@ -60,33 +61,47 @@ ROW = re.compile(
 
 
 PAIR_HEAD = re.compile(r"^\|\s*Pair\s*\|\s*Foreground\s*\|")
-SEP = re.compile(r"^\|[\s:|-]+\|$")
+# validate.py reads the corpus the same way: CommonMark, plus GFM's tables.
+MD = MarkdownIt("commonmark").enable("table")
 
 
-def table_body(lines: list[str], start: int) -> list[int]:
-    """Indices of the rows under the header at `start`, up to where the table ends.
+def tables(text: str, head: re.Pattern) -> list[tuple[int, list[int]]]:
+    """(header line, data row lines) for every table whose header matches `head`.
 
-    A table runs to the first blank line, as GFM reads it. A row without its
-    outer pipes is still a row there; ending the table on it dropped that row
-    and every one after it from the check, and the count of pairs recomputed
-    fell with nothing failing. Such a row is now returned, and fails to parse
-    like any other row that does not state its values.
+    Where a table starts and ends is the parser's call, as it is the reader's:
+    a fenced example is not a recording table, and a heading or a fence under
+    the rows ends one. Raw lines read both as rows and failed correct pages. A
+    line of prose under the rows is still a row, as GFM reads it, and fails to
+    parse like any row that does not state its values.
+
+    A header-shaped line the parser does not open a table on — its separator
+    line gone or malformed — comes back with no rows, so it fails instead of
+    taking its rows out of the check. Lines inside code are examples, not that.
     """
-    first = start + 1
-    # Only the line under the header is a separator; one further down stands
-    # where a recorded pair was, and dropping it silently is the vacuous pass.
-    if first < len(lines) and SEP.match(lines[first].strip()):
-        first += 1
-    out = []
-    for i in range(first, len(lines)):
-        if not lines[i].strip():
-            break
-        out.append(i)
-    return out
+    # The parser's line numbers count "\n" only; splitlines() also breaks at
+    # U+2028 and its kin, and every header after one landed on the wrong line.
+    lines = text.split("\n")
+    found: dict[int, list[int]] = {}
+    code: set[int] = set()
+    table = body = None
+    for tok in MD.parse(text):
+        if tok.type == "table_open":
+            table = found.setdefault(tok.map[0], [])
+        elif tok.type == "tbody_open":
+            body = table
+        elif tok.type == "tr_open" and body is not None:
+            body.append(tok.map[0])
+        elif tok.type == "table_close":
+            table = body = None
+        elif tok.type in ("fence", "code_block", "html_block") and tok.map:
+            code.update(range(*tok.map))
+    return [(i, found.get(i, [])) for i, l in enumerate(lines)
+            if i not in code and head.match(l.strip())]
 
 
-def pair_rows(text: str) -> list[tuple[int, str]]:
-    """Every data row of every recording table, matching or not.
+def pair_rows(text: str) -> tuple[list[tuple[int, str]], list[int]]:
+    """Every data row of every recording table, matching or not, and the
+    header lines that open no table.
 
     Filtering to rows that already parse would enforce the page's own rule —
     "never state a pass without both source values" — only on the rows that
@@ -94,18 +109,22 @@ def pair_rows(text: str) -> list[tuple[int, str]]:
     would drop out of the check and the build would stay green. So would a
     second table — the dark theme's pairs — if only the first were read.
     """
-    lines = text.splitlines()
-    return [(i + 1, lines[i].strip())
-            for start, l in enumerate(lines) if PAIR_HEAD.match(l.strip())
-            for i in table_body(lines, start)]
+    lines = text.split("\n")
+    found = tables(text, PAIR_HEAD)
+    return ([(i + 1, lines[i].strip()) for _, rows in found for i in rows],
+            [h + 1 for h, rows in found if not rows])
 
 
 def check_contrast() -> int:
     """Every recorded pair: does the stated ratio follow from the two colours,
     and does the stated verdict follow from the ratio and the requirement?"""
     page = SKILLS / "design-a11y/reference/contrast.md"
-    rows = pair_rows(page.read_text(encoding="utf-8"))
-    if not rows:
+    rows, headless = pair_rows(page.read_text(encoding="utf-8"))
+    for i in headless:
+        fail(f"contrast.md:{i}", "a recording table's header that opens no table "
+                                 "with rows — is the separator line under it missing? "
+                                 "Nothing under it is being recomputed")
+    if not rows and not headless:
         fail("contrast.md", "no recording table found — "
                             "the checker has stopped checking anything")
         return 0
@@ -152,21 +171,24 @@ def check_type_scale() -> int:
     ratio applied and rounded; steps the page declares clamped are exempt."""
     page = SKILLS / "design-tokens/reference/scales.md"
     text = page.read_text(encoding="utf-8")
-    head = SCALE_HEAD.search(text)
-    if not head:
+    # Only the first table under such a header: a later table repeating a token
+    # would otherwise shift every step index after it. A fenced example is not
+    # the scale, so it is not the first.
+    found = tables(text, SCALE_HEAD)
+    if not found:
         fail("scales.md", "no `<base>px / <ratio> ratio` column header found")
         return 0
+    lines = text.split("\n")
+    start, body = found[0]
+    head = SCALE_HEAD.match(lines[start].strip())
     base, ratio = int(head.group(1)), float(head.group(2))
     clamp = CLAMP.search(text)
     clamp_below = clamp.group(1) if clamp else None
-
-    # Only the table under the header: a later table repeating a token would
-    # otherwise shift every step index after it.
-    lines = text[head.start():].splitlines()
-    # The separator is optional and only ever the line under the header: assuming
-    # it by position skipped the first row when it was missing, and skipping it
-    # by form anywhere let a separator-shaped line stand in for a removed row.
-    table = [lines[i] for i in table_body(lines, 0)]
+    if not body:
+        fail(f"scales.md:{start + 1}", "the scale's header opens no table with rows — "
+                                       "is the separator line under it missing?")
+        return 0
+    table = [lines[i].strip() for i in body]
     # Every row is held to the form, as pair_rows does for contrast: a row
     # rewritten as `52px (hero)` or `2.5rem` used to drop out of the check, and
     # the count of steps recomputed fell by one with nothing failing.
