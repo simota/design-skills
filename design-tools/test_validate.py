@@ -779,6 +779,10 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 # The other direction: valid Markdown that must stay green. A rule that only
 # ever meets violations can be wrong about every form it was not shown.
 GREEN_CASES: dict[str, callable] = {
+    # The repository root is inside the repository: `Path.parents` leaves the
+    # path itself out, and a link to the root read as one leaving it.
+    "link-to-the-root": lambda r: sub(r / "README.md", "## Files",
+                                      "[repository](.) and [up](skills/..)\n\n## Files"),
     # A reference link in Decide first takes its definition from anywhere on the
     # page; the section parsed alone read it as text, and V4 called the playbook
     # an orphan.

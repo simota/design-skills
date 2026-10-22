@@ -422,7 +422,8 @@ def v8_links():
                 continue
             try:
                 exists = (f.parent / target).exists()
-                inside = exists and ROOT.resolve() in _resolve(f.parent, target).parents
+                at = _resolve(f.parent, target)
+                inside = exists and (at == ROOT.resolve() or ROOT.resolve() in at.parents)
             except OSError:                      # e.g. a name longer than the FS allows
                 exists = False
             if not exists:
