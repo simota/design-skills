@@ -93,6 +93,13 @@ def unsupported(schema, where: str = "$") -> str | None:
         return f"{where}: schema keyword {extra} is not one this checker understands"
     if not isinstance(schema.get("additionalProperties", False), bool):
         return f"{where}: only a boolean additionalProperties can be checked"
+    # Shapes mismatch() walks: a list of properties raised out of .items(), and a
+    # string `required` was checked letter by letter.
+    if not isinstance(schema.get("properties", {}), dict):
+        return f"{where}: properties is not a map of name to schema"
+    required = schema.get("required", [])
+    if not isinstance(required, list) or not all(isinstance(k, str) for k in required):
+        return f"{where}: required is not a list of property names"
     for k, sub in (schema.get("properties") or {}).items():
         bad = unsupported(sub, f"{where}.{k}")
         if bad:
@@ -306,6 +313,15 @@ def main() -> int:
         schema = json.loads(pathlib.Path(a.schema).read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, ValueError, RecursionError) as e:
         print(f"cannot read --prompt-file or --schema: {e}", file=sys.stderr)
+        return 2
+    # A schema this checker cannot hold an answer to is refused input as well,
+    # before any engine is asked; run() raising it exited 1, "did not answer".
+    try:
+        bad = unsupported(schema)
+    except RecursionError:
+        bad = "nested deeper than this checker reads"
+    if bad:
+        print(f"cannot check against --schema: {bad}", file=sys.stderr)
         return 2
     try:
         engine = a.engine or other_than(a.running)

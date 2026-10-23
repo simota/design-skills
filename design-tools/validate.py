@@ -10,6 +10,7 @@ belongs in a review, not in this file.
 from __future__ import annotations
 
 import fnmatch
+import os
 import re
 import sys
 import unicodedata
@@ -421,10 +422,22 @@ def v8_links():
                 continue
             try:
                 exists = (f.parent / target).exists()
+                at = _resolve(f.parent, target)
+                # Lexically as well as resolved: `../<checkout>/README.md` climbs
+                # out and back in, and lands inside only while the clone keeps
+                # its name. `skills/..` never leaves.
+                lexical = os.path.normpath(f.parent.relative_to(ROOT) / target)
+                inside = exists and not (lexical == ".." or lexical.startswith(".." + os.sep)) \
+                    and (at == ROOT.resolve() or ROOT.resolve() in at.parents)
             except OSError:                      # e.g. a name longer than the FS allows
                 exists = False
             if not exists:
                 fail("V8", f"{f.relative_to(ROOT)} links to missing {target}")
+            elif not inside:
+                # The absolute path's twin: a sibling checkout resolves here and
+                # nowhere else.
+                fail("V8", f"{f.relative_to(ROOT)} links to {target}, outside the "
+                           "repository; it resolves only where that happens to sit beside it")
 
 
 def _norm(s: str) -> str:
@@ -628,6 +641,25 @@ def _is_own_reference(p: str) -> bool:
 
 
 def _check_paths(f: Path, base: Path, label: str) -> None:
+    # A link is resolved from the page it sits on, lexically, as a backticked
+    # path is from the skill: `../reference/x.md` from a playbook stays inside,
+    # `../_design/X.md` from SKILL.md climbs out of the installed directory.
+    # V8 cannot see this; in the repo the parent is there to be found.
+    here = f.parent.relative_to(base) if base in f.parents else Path(SHARED)
+    for target in links(read(f)):
+        p = os.path.normpath(here / target).replace(os.sep, "/")
+        if p == ".." or p.startswith("../"):
+            fail("V19", f"{label} links to {target!r}, which leaves the skill directory; "
+                        "paths are normalised lexically, so `..` does not traverse "
+                        "the install symlink")
+        else:
+            try:
+                found = (base / p).exists()
+            except OSError:                      # V8 reports the name itself
+                found = False
+            if not found:
+                fail("V19", f"{label} links to {target!r}, which does not resolve from a "
+                            "skill directory")
     for p in TICK_PATH_RE.findall(read(f)):
         if p.startswith(("http", "~", "/")) or " " in p or not _is_own_reference(p):
             continue
@@ -767,6 +799,10 @@ def v27_symlinks_stay_inside():
                     fail("V27", f"{d.name}/{rel} is a broken symlink")
                 elif ROOT.resolve() not in target.parents and target != ROOT.resolve():
                     fail("V27", f"{d.name}/{rel} points outside the repo ({target})")
+                elif os.path.isabs(os.readlink(entry)):
+                    # git stores the link's text: it breaks in every other clone.
+                    fail("V27", f"{d.name}/{rel} is an absolute link "
+                                f"({os.readlink(entry)}); make it relative")
 
 
 def v28_namespace_agrees():
@@ -804,12 +840,15 @@ def v29_reference_headers():
     want = H["reference_headers"]
     for d in SKILL_DIRS:
         for f in sorted((d / "reference").glob("*.md")) if (d / "reference").exists() else []:
-            head = "\n".join(read(f).splitlines()[:12])
+            head = read(f).splitlines()[:12]
             for header in want:
-                if header not in head:
-                    fail("V29", f"{f.relative_to(ROOT)} has no {header!r} in its first "
-                                "12 lines; the deferred layer states what it claims "
-                                "and when anyone last checked")
+                # The line opens with the header, as V31 and V37 read it. A
+                # substring test passed `**Source:**`, which they then could not
+                # find, and both stayed quiet about a page they never read.
+                if not any(l.startswith(header) for l in head):
+                    fail("V29", f"{f.relative_to(ROOT)} has no line opening with "
+                                f"{header!r} in its first 12 lines; the deferred layer "
+                                "states what it claims and when anyone last checked")
 
 
 def v30_reference_orphans():

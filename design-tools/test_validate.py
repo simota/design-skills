@@ -378,6 +378,52 @@ def _(r):
 def _(r): sub(r / "design-registry/harness.yaml", "source_authorities:", "unused_authorities:")
 
 
+# --- cycle 6: false passes an independent review reproduced -------------------
+
+@case("V29-bold", "has no line opening with 'Source:'")
+def _(r):
+    """A bolded header satisfied V29's substring test, and V31 and V37, which
+    look for the line that opens with it, found none and stayed quiet: a wrong
+    pin and a bare date passed."""
+    f = r / f"{S}design-a11y/reference/semantics.md"
+    t = f.read_text(encoding="utf-8")
+    t = re.sub(r"^Source: .*$", "**Source:** WCAG 2.9", t, count=1, flags=re.M)
+    f.write_text(re.sub(r"^Verified: .*$", "**Verified:** 2026-08-21", t, count=1, flags=re.M),
+                 encoding="utf-8")
+
+
+@case("V19-link-escapes", "leaves the skill directory")
+def _(r):
+    """The README's own example: a Markdown link, not a backticked path, that
+    climbs out of the skill. It exists in the repo, so V8 is satisfied."""
+    sub(r / f"{S}design-a11y/SKILL.md", "[content](playbooks/content.md)",
+        "[content](playbooks/content.md), see [contract](../_design/CONTRACT.md)")
+
+
+@case("V8-outside", "outside the repository")
+def _(r):
+    """A sibling checkout beside this one resolves here and nowhere else."""
+    (r.parent / "agent-toolkit/tools").mkdir(parents=True)
+    (r.parent / "agent-toolkit/tools/pages.py").write_text("x\n", encoding="utf-8")
+    sub(r / "README.md", "## Files", "[pages](../agent-toolkit/tools/pages.py)\n\n## Files")
+
+
+@case("V8-reenters", "outside the repository")
+def _(r):
+    """Out through the parent and back in by the checkout's own name: it
+    resolves inside only while the clone keeps that name."""
+    sub(r / "README.md", "## Files", f"[self](../{r.name}/README.md)\n\n## Files")
+
+
+@case("V27-absolute", "is an absolute link")
+def _(r):
+    """git commits the link's text: an absolute path into this checkout breaks
+    in every other clone, and when this one moves."""
+    link = r / f"{S}design-ux/_design"
+    link.unlink()
+    link.symlink_to((r / f"{S}_design").resolve())
+
+
 # figures_check.py is held to the same standard: each recomputation is shown
 # failing on a deliberately wrong page, or a green run proves nothing about it.
 CONTRAST = f"{S}design-a11y/reference/contrast.md"
@@ -399,7 +445,8 @@ FIGURE_CASES: dict[str, callable] = {
     # A verdict is pass or fail, not any text that holds "pass" and not "fail".
     "contrast-verdict-negated": lambda r: sub(r / CONTRAST, "| 17.76:1 | 4.5:1 | pass |",
                                               "| 17.76:1 | 4.5:1 | does not pass |"),
-    # The first row is read even when the separator line under the header is gone.
+    # A header whose separator line is gone is no longer a table, and fails
+    # rather than leaving the steps under it unchecked.
     "scale-no-separator": lambda r: _scale_no_separator(r),
     # Only the separator under the header is skipped; one standing in for a row
     # removed that step and the rest still recomputed.
@@ -425,6 +472,45 @@ FIGURE_CASES: dict[str, callable] = {
     # A typo in a number is a row that does not parse, not a traceback that
     # loses every other mismatch of the run.
     "contrast-malformed-number": lambda r: sub(r / CONTRAST, "| 17.76:1 |", "| 17.76.:1 |"),
+    # Tables are found through the parse, and a header Markdown does not read as
+    # a table is not a table that quietly drops out: it fails, with its rows.
+    "contrast-second-table-without-separator": lambda r: sub(
+        r / CONTRAST, "That last row is",
+        "| Pair | Foreground | Background | Ratio | Required | Result |\n"
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThat last row is"),
+    # A fence left open runs to the end of the page: a table after it is code,
+    # and with the first table still read, its pairs left the count unnoticed.
+    "contrast-table-in-unclosed-fence": lambda r: (r / CONTRAST).write_text(
+        (r / CONTRAST).read_text(encoding="utf-8")
+        + "\n```\n\n| Pair | Foreground | Background | Ratio | Required | Result |\n|---|---|---|---|---|---|\n"
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n", encoding="utf-8"),
+    # A line of prose directly under the rows is still a row, as GFM reads it.
+    "contrast-prose-under-table": lambda r: sub(
+        r / CONTRAST, "**fail — needs an offset ring** |\n",
+        "**fail — needs an offset ring** |\nMuted on dark is roughly 2.6\n"),
+}
+
+# The other half: a page that records every figure correctly stays green when
+# what surrounds its tables changes. Reading raw lines took a fenced example
+# for a second recording table, and a heading under the rows for a row.
+FENCED_PAIRS = ("\n```md\n| Pair | Foreground | Background | Ratio | Required | Result |\n"
+                "|---|---|---|---|---|---|\n| Example | `#777777` | `#ffffff` | 9.99:1 | 4.5:1 | pass |\n"
+                "```\n")
+FIGURE_GREEN_CASES: dict[str, callable] = {
+    "contrast-heading-under-table": lambda r: sub(
+        r / CONTRAST, "**fail — needs an offset ring** |\n\n",
+        "**fail — needs an offset ring** |\n### Notes\n\n"),
+    "contrast-example-in-a-fence": lambda r: sub(
+        r / CONTRAST, "That last row is", FENCED_PAIRS + "\nThat last row is"),
+    # The parser counts lines at "\n" alone; a U+2028 in prose above the table
+    # moved every line number read with splitlines().
+    "contrast-line-separator-above": lambda r: sub(
+        r / CONTRAST, "| Pair | Foreground |", "A line\u2028inside it.\n\n| Pair | Foreground |"),
+    "scale-heading-under-table": lambda r: sub(r / SCALES, "| Hero |\n\n", "| Hero |\n### Notes\n\n"),
+    "scale-example-in-a-fence-above": lambda r: sub(
+        r / SCALES, "| Token | 16px / 1.20 ratio |",
+        "```md\n| Token | 18px / 1.25 ratio |\n|---|---|\n| `--text-base` | 18px |\n```\n\n"
+        "| Token | 16px / 1.20 ratio |"),
 }
 
 
@@ -466,6 +552,19 @@ def figures_fire() -> list[str]:
             elif "Traceback" in r.stderr:
                 bad.append(name)
                 print(f"  figures/{name} crashed rather than reporting\n{r.stderr[-300:]}")
+    return bad
+
+
+def figures_green() -> list[str]:
+    bad = []
+    for name, mutate in FIGURE_GREEN_CASES.items():
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = copy_repo(tmp)
+            mutate(copy)
+            r = run_figures(copy)
+            if r.returncode != 0:
+                bad.append(name)
+                print(f"  figures-green/{name} failed\n{r.stdout}{r.stderr[-300:]}")
     return bad
 
 
@@ -693,6 +792,10 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 # The other direction: valid Markdown that must stay green. A rule that only
 # ever meets violations can be wrong about every form it was not shown.
 GREEN_CASES: dict[str, callable] = {
+    # The repository root is inside the repository: `Path.parents` leaves the
+    # path itself out, and a link to the root read as one leaving it.
+    "link-to-the-root": lambda r: sub(r / "README.md", "## Files",
+                                      "[repository](.) and [up](skills/..)\n\n## Files"),
     # A reference link in Decide first takes its definition from anywhere on the
     # page; the section parsed alone read it as text, and V4 called the playbook
     # an orphan.
@@ -1053,6 +1156,16 @@ def engine_holds() -> list[str]:
         r = ask("0", "codex", "--running", "claude")
         if r.returncode != 2 or "Traceback" in r.stderr:
             bad.append(f"unreadable schema (exit {r.returncode})")
+        # A schema that parses but cannot be checked is refused input too: a
+        # list of properties was a traceback, and an unsupported keyword exit 1.
+        for name, schema in {"properties-list": {"type": "object", "properties": [{"type": "string"}]},
+                             "required-string": {"type": "object", "required": "ok"},
+                             "enum": {"type": "object", "properties":
+                                      {"a": {"type": "string", "enum": ["x"]}}}}.items():
+            (d / "s.json").write_text(json.dumps(schema), encoding="utf-8")
+            r = ask("0", "codex", "--running", "claude")
+            if r.returncode != 2 or "Traceback" in r.stderr:
+                bad.append(f"uncheckable schema {name} (exit {r.returncode})")
     return bad
 
 
@@ -1092,6 +1205,37 @@ def render_holds() -> list[str]:
             if r.returncode != 0 or "green" not in out.splitlines()[-1]:
                 bad.append(f"{name} (exit {r.returncode}): {out.strip().splitlines()[-2:]}")
     return bad
+
+
+def hooks_fail_closed() -> tuple[list[str], int]:
+    """`make hooks` says it installed only what it wrote, where git looks.
+
+    Outside a checkout `--git-path` printed nothing and the hook path became
+    `/pre-commit`: the failed write still printed "installed" and exited 0, and
+    as root it was written. That case writes to `/` if it regresses, so it is
+    run only where a write there is refused."""
+    bad, ran = [], 0
+    with tempfile.TemporaryDirectory() as tmp:
+        # A hooks directory that cannot be made: the write fails, and says so.
+        repo = copy_repo(tmp + "/blocked")
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        hooks = repo / ".git/hooks"
+        shutil.rmtree(hooks, ignore_errors=True)
+        hooks.write_text("", encoding="utf-8")
+        r = subprocess.run(["make", "-s", "-C", str(repo), "hooks"], capture_output=True, text=True)
+        ran += 1
+        if r.returncode == 0 or "installed at" in r.stdout:
+            bad.append("an unwritable hook reported as installed")
+        if os.geteuid() == 0:
+            print("  not run here: as root, a regressed make hooks outside a checkout writes /pre-commit")
+            return bad, ran
+        bare = copy_repo(tmp + "/archive")
+        r = subprocess.run(["make", "-s", "-C", str(bare), "hooks"], capture_output=True, text=True,
+                           env={**os.environ, "GIT_CEILING_DIRECTORIES": tmp})
+        ran += 1
+        if r.returncode == 0 or "installed at" in r.stdout:
+            bad.append("make hooks outside a checkout reported success")
+    return bad, ran
 
 
 def link_holds() -> list[str]:
@@ -1306,11 +1450,17 @@ def main() -> int:
         return 1
     print("make hooks leaves every hook but its own shim alone (13 cases)")
 
+    hooks_open, hooks_ran = hooks_fail_closed()
+    if hooks_open:
+        print("make hooks claimed an install: " + ", ".join(hooks_open))
+        return 1
+    print(f"make hooks fails where it wrote nothing ({hooks_ran} cases)")
+
     broken_engine = engine_holds()
     if broken_engine:
         print("engine.py mishandled: " + ", ".join(broken_engine))
         return 1
-    print("engine.py refuses what it cannot check, against a stand-in engine (4 cases)")
+    print("engine.py refuses what it cannot check, against a stand-in engine (7 cases)")
 
     broken_render = render_holds()
     if broken_render:
@@ -1329,6 +1479,13 @@ def main() -> int:
         print("figures_check stayed green on: " + ", ".join(silent_figures))
         return 1
     print(f"every figure check fails when it should ({len(FIGURE_CASES)} cases)")
+
+    red_figures = figures_green()
+    if red_figures:
+        print("figures_check failed a correct page: " + ", ".join(red_figures))
+        return 1
+    print(f"a correct page stays green whatever surrounds its tables "
+          f"({len(FIGURE_GREEN_CASES)} cases)")
     return 0
 
 
