@@ -57,8 +57,9 @@ Group the five properties as a composite token where the export format supports 
 
 The interchange format for tool-agnostic token files, in the 2025.10 stable form: a `color` value
 is an object with its colour space and components, as a `dimension` is one with its value and
-unit. The bare hex string is the earlier draft's form; `hex` keeps it alongside for tools that
-still read only that, and is the value the contrast ratios are computed from.
+unit. The bare hex string is the earlier draft's form. `hex` is an optional fallback inside the
+object, not a bridge to that form: a tool that reads only the draft expects `$value` itself to be
+a string, and needs the value converted on export. Contrast ratios are computed from `hex`.
 
 ```json
 {
