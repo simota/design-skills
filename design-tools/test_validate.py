@@ -503,6 +503,15 @@ FIGURE_CASES: dict[str, callable] = {
         '"#0d0f13"'),
     # An example that no longer parses drops every colour in it from the count.
     "dtcg-example-not-json": lambda r: sub(r / SCHEMA, '"hex": "#f7f8fa" } }', '"hex": "#f7f8fa" } },'),
+    # NaN is a float no difference ever exceeds; a component is a number from 0 to 1.
+    "dtcg-components-nan": lambda r: sub(r / SCHEMA, "[0.051, 0.0588, 0.0745]", "[NaN, NaN, NaN]"),
+    # A token whose type resolves to nothing is not a token with nothing wrong in it.
+    "dtcg-type-removed": lambda r: sub(
+        r / SCHEMA, '"950": { "$type": "color",\n               "$value": { "colorSpace": "srgb", '
+                    '"components": [0.051, 0.0588, 0.0745]',
+        '"950": {\n               "$value": { "colorSpace": "srgb", "components": [0.9, 0.9, 0.9]'),
+    # An alias is checked where it points, so a target that is gone fails.
+    "dtcg-alias-dangling": lambda r: sub(r / SCHEMA, '"{color.gray.950}"', '"{color.gray.951}"'),
     # An example relabelled out of reach is not an example with nothing wrong in it.
     "dtcg-example-gone": lambda r: sub(r / SCHEMA, "```json\n{\n  \"color\"", "```jsonc\n{\n  \"color\""),
     # The colour type set on the group, not the token, is still a colour.
@@ -1245,7 +1254,7 @@ def _engine_in_process() -> list[str]:
         bad.append("output nested past the decoder raised RecursionError")
     with tempfile.TemporaryDirectory() as tmp:
         pidfile = Path(tmp) / "pid"
-        engine.TIMEOUT = 2
+        engine.TIMEOUT = 5         # room for a loaded runner to start the stand-in
         try:
             engine._spawn("claude", ["sh", "-c", f'sleep 60 & echo $! > "{pidfile}"; sleep 60'],
                           Path(tmp))

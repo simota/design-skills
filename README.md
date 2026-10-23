@@ -72,7 +72,7 @@ catch the value edited into a wrong one later. `make figures` recomputes what th
 reference layer states from the reference layer itself — every recorded contrast
 pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, the type
 scale from its own stated base and ratio, and every colour in the DTCG example from its own hex. It runs in `make check` and in the
-pre-commit hook, and `make test` introduces twenty-five deliberate errors and fails
+pre-commit hook, and `make test` introduces twenty-eight deliberate errors and fails
 unless each one breaks it, including the ones that make the checks vacuous rather
 than wrong: a table renamed out of reach, or a row or a second table dropped from
 the count. It also holds five correct pages green — a fenced example table, a
