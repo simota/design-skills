@@ -37,8 +37,8 @@ not assessable at design time, rather than passing them from the specification a
 | 2.1.4 Character Key Shortcuts | A | Single-character shortcuts can be turned off, remapped, or are focus-scoped |
 | 2.2.1 Timing Adjustable | A | Time limits can be extended or turned off |
 | 2.2.2 Pause, Stop, Hide | A | Auto-starting moving content over 5s, or auto-updating content, shown alongside other content can be paused, stopped or hidden |
-| 2.3.1 Three Flashes | A | Nothing flashes more than 3×/second |
-| 2.3.3 Animation from Interactions | AAA | Non-essential motion can be disabled |
+| 2.3.1 Three Flashes or Below Threshold | A | Nothing flashes more than three times in any one second, unless the flashes are below the general and red flash thresholds |
+| 2.3.3 Animation from Interactions | AAA | Non-essential motion triggered by interaction can be disabled; motion that starts on its own is 2.2.2 |
 | 2.4.3 Focus Order | A | Focus follows a meaningful sequence |
 | 2.4.6 Headings and Labels | AA | Headings and labels describe topic or purpose |
 | 2.4.7 Focus Visible | AA | Keyboard focus is always visible |

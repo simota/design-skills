@@ -10,6 +10,7 @@ into a wrong one breaks the build instead of ageing quietly.
 Add a checker here whenever a reference page states a number that follows from
 another number on the same page.
 """
+import json
 import math
 import pathlib
 import re
@@ -245,15 +246,85 @@ def check_type_scale() -> int:
     return n
 
 
+# --- DTCG colour values ------------------------------------------------------
+
+def _colours(node, path: str):
+    """(path, $value) for every token in a DTCG tree whose $type is `color`,
+    stated on the token or inherited from the nearest group."""
+    def walk(n, p, inherited):
+        if not isinstance(n, dict):
+            return
+        kind = n.get("$type", inherited)
+        if "$value" in n:
+            if kind == "color":
+                yield p, n["$value"]
+            return
+        for k, v in n.items():
+            if not k.startswith("$"):
+                yield from walk(v, f"{p}.{k}" if p else k, kind)
+    yield from walk(node, path, None)
+
+
+def check_dtcg_colours() -> int:
+    """Every sRGB colour in the page's DTCG examples: do its components follow
+    from its hex? The object form states the colour twice, and the two drift
+    apart the first time someone edits one of them."""
+    page = SKILLS / "design-tokens/reference/token-schema.md"
+    text = page.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    fences = [t for t in MD.parse(text) if t.type == "fence" and t.info.strip() == "json"]
+    if not fences:
+        fail("token-schema.md", "no ```json example found — the checker has stopped checking")
+        return 0
+    before, n = len(failures), 0
+    for fence in fences:
+        where = f"token-schema.md:{fence.map[0] + 1}"
+        if not _closes(fence, lines):
+            fail(where, "the json fence is never closed, so the example runs to the end of the page")
+            continue
+        try:
+            tree = json.loads(fence.content)
+        except json.JSONDecodeError as e:
+            fail(where, f"the example is not JSON, so none of it can be recomputed — {e}")
+            continue
+        for path, value in _colours(tree, ""):
+            if isinstance(value, str) and value.startswith("{"):
+                continue                          # an alias; its target is checked
+            if not isinstance(value, dict):
+                fail(where, f"{path} states {value!r}; a colour value is an object with "
+                            "its colour space and components")
+                continue
+            hex_colour, comps = value.get("hex"), value.get("components")
+            if (value.get("colorSpace") != "srgb" or not isinstance(hex_colour, str)
+                    or not re.fullmatch(r"#[0-9a-fA-F]{6}", hex_colour)
+                    or not isinstance(comps, list) or len(comps) != 3
+                    or not all(isinstance(c, (int, float)) for c in comps)):
+                fail(where, f"{path} does not state an srgb colour space, three components "
+                            "and a six-digit hex, so nothing about it can be recomputed")
+                continue
+            n += 1
+            want = [int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+            # Components are written to four decimals; anything further off than
+            # that rounding is a different colour from the hex beside it.
+            if any(abs(c - w) > 0.00005 for c, w in zip(comps, want)):
+                fail(where, f"{path} states components {comps}; {hex_colour} is "
+                            f"{[round(w, 4) for w in want]}")
+    if not n and len(failures) == before:
+        fail("token-schema.md", "no srgb colour token found in the json examples — "
+                                "the checker has stopped checking")
+    return n
+
+
 def main() -> int:
     pairs = check_contrast()
     steps = check_type_scale()
+    colours = check_dtcg_colours()
     if failures:
         print(f"{len(failures)} mismatch(es):")
         print("\n".join(failures))
         return 1
     print(f"figures green - {pairs} contrast pairs recomputed, "
-          f"{steps} type-scale steps recomputed")
+          f"{steps} type-scale steps recomputed, {colours} DTCG colours recomputed")
     return 0
 
 

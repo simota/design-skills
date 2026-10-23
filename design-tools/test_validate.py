@@ -428,6 +428,7 @@ def _(r):
 # failing on a deliberately wrong page, or a green run proves nothing about it.
 CONTRAST = f"{S}design-a11y/reference/contrast.md"
 SCALES = f"{S}design-tokens/reference/scales.md"
+SCHEMA = f"{S}design-tokens/reference/token-schema.md"
 FIGURE_CASES: dict[str, callable] = {
     "contrast-ratio": lambda r: sub(r / CONTRAST, "| 17.76:1 |", "| 17.10:1 |"),
     "contrast-verdict": lambda r: sub(r / CONTRAST, "| 2.64:1 | 4.5:1 | **fail** |",
@@ -492,6 +493,23 @@ FIGURE_CASES: dict[str, callable] = {
     "contrast-prose-under-table": lambda r: sub(
         r / CONTRAST, "**fail — needs an offset ring** |\n",
         "**fail — needs an offset ring** |\nMuted on dark is roughly 2.6\n"),
+    # A DTCG colour states its hex and its components; edit one and not the other.
+    "dtcg-components-drift": lambda r: sub(r / SCHEMA, "[0.051, 0.0588, 0.0745]",
+                                           "[0.051, 0.0588, 0.0845]"),
+    # The draft's bare hex string carries no components to hold against anything.
+    "dtcg-colour-as-string": lambda r: sub(
+        r / SCHEMA, '{ "colorSpace": "srgb", "components": [0.051, 0.0588, 0.0745], "hex": "#0d0f13" }',
+        '"#0d0f13"'),
+    # An example that no longer parses drops every colour in it from the count.
+    "dtcg-example-not-json": lambda r: sub(r / SCHEMA, '"hex": "#f7f8fa" } }', '"hex": "#f7f8fa" } },'),
+    # An example relabelled out of reach is not an example with nothing wrong in it.
+    "dtcg-example-gone": lambda r: sub(r / SCHEMA, "```json\n{\n  \"color\"", "```jsonc\n{\n  \"color\""),
+    # The colour type set on the group, not the token, is still a colour.
+    "dtcg-type-on-group": lambda r: sub(
+        r / SCHEMA, '"950": { "$type": "color",\n               "$value": { "colorSpace": "srgb", '
+                    '"components": [0.051, 0.0588, 0.0745]',
+        '"$type": "color",\n      "950": {\n               "$value": { "colorSpace": "srgb", '
+        '"components": [0.051, 0.0588, 0.0999]'),
 }
 
 # The other half: a page that records every figure correctly stays green when
