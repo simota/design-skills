@@ -478,6 +478,12 @@ FIGURE_CASES: dict[str, callable] = {
         r / CONTRAST, "That last row is",
         "| Pair | Foreground | Background | Ratio | Required | Result |\n"
         "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThat last row is"),
+    # A fence left open runs to the end of the page: a table after it is code,
+    # and with the first table still read, its pairs left the count unnoticed.
+    "contrast-table-in-unclosed-fence": lambda r: (r / CONTRAST).write_text(
+        (r / CONTRAST).read_text(encoding="utf-8")
+        + "\n```\n\n| Pair | Foreground | Background | Ratio | Required | Result |\n|---|---|---|---|---|---|\n"
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n", encoding="utf-8"),
     # A line of prose directly under the rows is still a row, as GFM reads it.
     "contrast-prose-under-table": lambda r: sub(
         r / CONTRAST, "**fail — needs an offset ring** |\n",

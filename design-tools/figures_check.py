@@ -65,6 +65,15 @@ PAIR_HEAD = re.compile(r"^\|\s*Pair\s*\|\s*Foreground\s*\|")
 MD = MarkdownIt("commonmark").enable("table")
 
 
+def _closes(fence, lines: list[str]) -> bool:
+    """Whether the fence's last line is its closing marker."""
+    first, end = fence.map
+    if end - first < 2:
+        return False
+    last = re.sub(r"^[\s>]*", "", lines[end - 1]).rstrip()
+    return len(last) >= len(fence.markup) and set(last) == {fence.markup[0]}
+
+
 def tables(text: str, head: re.Pattern) -> list[tuple[int, list[int]]]:
     """(header line, data row lines) for every table whose header matches `head`.
 
@@ -75,8 +84,9 @@ def tables(text: str, head: re.Pattern) -> list[tuple[int, list[int]]]:
     parse like any row that does not state its values.
 
     A header-shaped line the parser does not open a table on — its separator
-    line gone or malformed — comes back with no rows, so it fails instead of
-    taking its rows out of the check. Lines inside code are examples, not that.
+    line gone or malformed, or a fence above it left open — comes back with no
+    rows, so it fails instead of taking its rows out of the check. Lines inside
+    a closed fence or other code are examples, not that.
     """
     # The parser's line numbers count "\n" only; splitlines() also breaks at
     # U+2028 and its kin, and every header after one landed on the wrong line.
@@ -94,6 +104,11 @@ def tables(text: str, head: re.Pattern) -> list[tuple[int, list[int]]]:
         elif tok.type == "table_close":
             table = body = None
         elif tok.type in ("fence", "code_block", "html_block") and tok.map:
+            # A fence never closed runs to the end of the page and swallows any
+            # table after it; with another table still read, those pairs left
+            # the count unnoticed. Only a closed fence is an example.
+            if tok.type == "fence" and not _closes(tok, lines):
+                continue
             code.update(range(*tok.map))
     return [(i, found.get(i, [])) for i, l in enumerate(lines)
             if i not in code and head.match(l.strip())]
@@ -122,8 +137,9 @@ def check_contrast() -> int:
     rows, headless = pair_rows(page.read_text(encoding="utf-8"))
     for i in headless:
         fail(f"contrast.md:{i}", "a recording table's header that opens no table "
-                                 "with rows — is the separator line under it missing? "
-                                 "Nothing under it is being recomputed")
+                                 "with rows — is the separator line under it missing, "
+                                 "or a code fence above it left open? Nothing under it "
+                                 "is being recomputed")
     if not rows and not headless:
         fail("contrast.md", "no recording table found — "
                             "the checker has stopped checking anything")
@@ -186,7 +202,8 @@ def check_type_scale() -> int:
     clamp_below = clamp.group(1) if clamp else None
     if not body:
         fail(f"scales.md:{start + 1}", "the scale's header opens no table with rows — "
-                                       "is the separator line under it missing?")
+                                       "is the separator line under it missing, or a "
+                                       "code fence above it left open?")
         return 0
     table = [lines[i].strip() for i in body]
     # Every row is held to the form, as pair_rows does for contrast: a row
