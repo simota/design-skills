@@ -7,6 +7,8 @@ Source: WCAG 2.2 SC 1.4.3, 1.4.11 — the ratios below are that version's; the l
 Verified: 2026-08-21 — and re-verified by `make figures` on every run. Each recorded pair below is
 recomputed from its two hex values against the WCAG relative-luminance formula, and its pass/fail is
 recomputed from the ratio and the requirement. A wrong number here fails the build; it does not age.
+The verdict is decided on the unrounded ratio, as the Understanding text for SC 1.4.3 says
+(checked 2026-10-23); `make figures` decides it the same way.
 
 Measure, record, repair. Never estimate.
 
@@ -33,9 +35,14 @@ Never state a pass without both source values.
 | On-accent on accent | `#ffffff` | `#3560d8` | 5.50:1 | 4.5:1 | pass |
 | Border on canvas | `#d4d7dd` | `#ffffff` | 1.44:1 | 3:1 (control) | **fail if it is a control boundary** |
 | Focus ring on canvas | `#3560d8` | `#ffffff` | 5.50:1 | 3:1 | pass |
+| Control border at the threshold | `#959595` | `#ffffff` | 3.00:1 | 3:1 | **fail — computes 2.995:1** |
 | Focus ring on accent button | `#3560d8` | `#3560d8` | 1:1 | 3:1 | **fail — needs an offset ring** |
 
-That last row is the most-missed case: a focus ring the same colour as the element it surrounds. Use an offset ring plus a contrasting outer ring, or invert the ring on coloured surfaces.
+The border at the threshold is recorded to two decimals as 3.00:1 and still fails: the verdict is
+decided on the unrounded ratio, never on the recorded one. WCAG treats the ratios as thresholds
+and does not round to meet them — 4.499:1 does not meet 4.5:1.
+
+The focus ring on the accent button is the most-missed case: a focus ring the same colour as the element it surrounds. Use an offset ring plus a contrasting outer ring, or invert the ring on coloured surfaces.
 
 ## Repairing a failing pair
 
@@ -118,14 +125,18 @@ def ratio(fg, bg):
         a, b = b, a
     return (a + 0.05) / (b + 0.05)
 
-for fg, bg in [("#16181d", "#ffffff"), ("#9aa0a6", "#ffffff")]:
-    print(f"{fg} on {bg}: {ratio(fg, bg):.2f}:1")
+# The verdict compares the unrounded ratio: #959595 prints 3.00:1 and fails 3:1.
+for fg, bg, required in [("#16181d", "#ffffff", 4.5), ("#959595", "#ffffff", 3)]:
+    r = ratio(fg, bg)
+    print(f"{fg} on {bg}: {r:.2f}:1, {'pass' if r >= required else 'fail'} against {required}:1")
 ```
 
 Notes:
 - Semi-transparent foregrounds must be composited against the actual backdrop first; the formula takes opaque values only.
 - Text over a gradient or image is measured against the pixel behind the text closest in luminance to it (the lightest for light text, the darkest for dark text), not the average.
-- Round to two decimals and record the two source values beside the result. A ratio without its inputs cannot be re-checked.
+- Record the ratio to two decimals with the two source values beside it. A ratio without its inputs cannot be re-checked.
+- Decide pass or fail on the unrounded ratio. Rounding is for the record only: a ratio that rounds up to
+  the requirement has not reached it.
 
 Every example ratio in this package was produced by the snippet above, not typed by hand.
 

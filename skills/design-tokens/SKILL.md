@@ -81,7 +81,8 @@ Phases: `AUDIT → GRAMMAR → PRIMITIVES → SEMANTICS → THEMES → EXPORT`.
   semantics and never reach past them to primitives**
 - Always: name semantics for the job, not the look. A name that has to change
   when the value changes was never semantic
-- Always: record a computed contrast ratio next to every text-bearing semantic pair
+- Always: record a computed contrast ratio next to every text-bearing semantic pair,
+  and judge it unrounded: 2.995:1 shows as 3.00:1 and fails 3:1
 - Always: give a replaced token a deprecation path, not a silent rename
 - Always: get permission first when a token system with a different grammar
   already exists, when multi-brand theming is implied but unstated, or when

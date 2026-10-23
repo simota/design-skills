@@ -466,24 +466,28 @@ FIGURE_CASES: dict[str, callable] = {
         sub(r / SCALES, "| `--text-3xl` | 33px |", "| `--text-3xl` | 35px |")),
     # Every recording table, not the first: a dark theme's pairs are a second one.
     "contrast-second-table": lambda r: sub(
-        r / CONTRAST, "That last row is",
+        r / CONTRAST, "The focus ring on the accent button is",
         "| Pair | Foreground | Background | Ratio | Required | Result |\n|---|---|---|---|---|---|\n"
-        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThat last row is"),
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThe focus ring on the accent button is"),
     # A typo in a number is a row that does not parse, not a traceback that
     # loses every other mismatch of the run.
     "contrast-malformed-number": lambda r: sub(r / CONTRAST, "| 17.76:1 |", "| 17.76.:1 |"),
     # Tables are found through the parse, and a header Markdown does not read as
     # a table is not a table that quietly drops out: it fails, with its rows.
     "contrast-second-table-without-separator": lambda r: sub(
-        r / CONTRAST, "That last row is",
+        r / CONTRAST, "The focus ring on the accent button is",
         "| Pair | Foreground | Background | Ratio | Required | Result |\n"
-        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThat last row is"),
+        "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThe focus ring on the accent button is"),
     # A fence left open runs to the end of the page: a table after it is code,
     # and with the first table still read, its pairs left the count unnoticed.
     "contrast-table-in-unclosed-fence": lambda r: (r / CONTRAST).write_text(
         (r / CONTRAST).read_text(encoding="utf-8")
         + "\n```\n\n| Pair | Foreground | Background | Ratio | Required | Result |\n|---|---|---|---|---|---|\n"
         "| Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n", encoding="utf-8"),
+    # The verdict is decided on the unrounded ratio. 2.995:1 is recorded as
+    # 3.00:1 and still fails 3:1; deciding on the recorded figure passed it.
+    "contrast-verdict-rounded-up": lambda r: sub(
+        r / CONTRAST, "| 3.00:1 | 3:1 | **fail — computes 2.995:1** |", "| 3.00:1 | 3:1 | pass |"),
     # A line of prose directly under the rows is still a row, as GFM reads it.
     "contrast-prose-under-table": lambda r: sub(
         r / CONTRAST, "**fail — needs an offset ring** |\n",
@@ -501,7 +505,7 @@ FIGURE_GREEN_CASES: dict[str, callable] = {
         r / CONTRAST, "**fail — needs an offset ring** |\n\n",
         "**fail — needs an offset ring** |\n### Notes\n\n"),
     "contrast-example-in-a-fence": lambda r: sub(
-        r / CONTRAST, "That last row is", FENCED_PAIRS + "\nThat last row is"),
+        r / CONTRAST, "The focus ring on the accent button is", FENCED_PAIRS + "\nThe focus ring on the accent button is"),
     # The parser counts lines at "\n" alone; a U+2028 in prose above the table
     # moved every line number read with splitlines().
     "contrast-line-separator-above": lambda r: sub(

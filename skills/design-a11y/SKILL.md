@@ -75,7 +75,8 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
 ## Always / Never
 
 - Always: cite the exact success criterion and level for every finding
-- Always: compute the ratio and record **both source values** beside it
+- Always: compute the ratio and record **both source values** beside it; decide
+  pass or fail on the unrounded ratio, since 2.995:1 shows as 3.00:1 and still fails
 - Always: give every non-decorative image, icon, and control its intended
   accessible name — the name is a design decision, not a build detail
 - Always: specify the focus order; check the destinations `design-ux` specified
