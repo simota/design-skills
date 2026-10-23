@@ -8,6 +8,13 @@
 set -e
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-git checkout-index -a --prefix="$tmp/"
+# Sparse checkouts mark entries skip-worktree, and `-a` alone leaves them out:
+# the exported tree lost files that are committed, and the rules failed on that.
+# A git older than the flag refuses it, so it is asked for only where it exists.
+skip=
+if git checkout-index -h 2>&1 | grep -q ignore-skip-worktree-bits; then
+  skip=--ignore-skip-worktree-bits
+fi
+git checkout-index -a $skip --prefix="$tmp/"
 python3 "$tmp/design-tools/validate.py"
 python3 "$tmp/design-tools/figures_check.py"

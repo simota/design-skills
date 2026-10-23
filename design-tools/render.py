@@ -48,6 +48,19 @@ def markers(text: str, key: str) -> tuple[list[int], list[int]]:
             [i for i, l in enumerate(lines) if l == f"<!-- /deliver:{key} -->"])
 
 
+def code_lines(lines: list[str]) -> set[int]:
+    """Line indices the parser reads as code: a marker there is an example."""
+    return {i for tok in MD.parse("\n".join(lines))
+            if tok.type in ("fence", "code_block") and tok.map
+            for i in range(*tok.map)}
+
+
+def section_of(lines: list[str], at: int) -> str | None:
+    """The title of the `## ` section holding line `at`."""
+    titles = [title for start, title in h2_lines(lines) if start < at]
+    return titles[-1] if titles else None
+
+
 def render(path: Path) -> bool:
     text = path.read_text(encoding="utf-8")
     original = text
@@ -65,6 +78,18 @@ def render(path: Path) -> bool:
                                f"{len(opens)} and {len(closes)}")
                 continue
             lines = text.split("\n")
+            # Rewriting between markers that are an example, or that sit under
+            # the wrong heading, reported "rendered" over a block validate then
+            # rejected, and no later run could fix it.
+            if {opens[0], closes[0]} & code_lines(lines):
+                MISSING.append(f"{path.parent.name}: the {key} markers sit inside a code "
+                               "fence, where they are an example, not a delivered block")
+                continue
+            if section_of(lines, opens[0]) != spec["section"]:
+                MISSING.append(f"{path.parent.name}: the {key} block is under "
+                               f"{section_of(lines, opens[0])!r}, not {spec['section']!r}; "
+                               "move it there, since render never moves a block")
+                continue
             text = "\n".join(lines[:opens[0] + 1] + block.split("\n") + lines[closes[0]:])
         else:
             lines = text.split("\n")

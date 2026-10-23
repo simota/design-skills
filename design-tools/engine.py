@@ -33,7 +33,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
+import signal
 import subprocess
 import sys
 import tempfile
@@ -208,15 +210,28 @@ def _ask(engine: str, prompt: str, schema: dict) -> dict:
 
 def _spawn(engine: str, argv: list[str], cwd: pathlib.Path,
            stdin: str | None = None) -> subprocess.CompletedProcess:
+    # Its own session, so a timeout ends everything the engine started. Killing
+    # the direct child alone left its children running, holding the output pipe.
     try:
-        r = subprocess.run(argv, capture_output=True, text=True, timeout=TIMEOUT,
-                           cwd=cwd, input=stdin)
+        p = subprocess.Popen(argv, stdin=subprocess.PIPE if stdin is not None else None,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             cwd=cwd, start_new_session=True)
     except FileNotFoundError:
         raise EngineError(f"{engine} is not on PATH") from None
-    except subprocess.TimeoutExpired:
-        raise EngineError(f"{engine} did not answer within {TIMEOUT}s") from None
     except OSError as e:          # e.g. a prompt on argv longer than ARG_MAX
         raise EngineError(f"{engine} could not be started: {e}") from None
+    try:
+        out, err = p.communicate(stdin, timeout=TIMEOUT)
+    except BaseException as e:    # the timeout, or an interrupt: end the whole group
+        try:
+            os.killpg(p.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        p.wait()                  # not communicate(): a pipe held elsewhere would hang it
+        if isinstance(e, subprocess.TimeoutExpired):
+            raise EngineError(f"{engine} did not answer within {TIMEOUT}s") from None
+        raise
+    r = subprocess.CompletedProcess(argv, p.returncode, out, err)
     # An engine that reports failure has not answered, whatever it left behind.
     if r.returncode != 0:
         raise EngineError(f"{engine} exited {r.returncode}.\n{_tail(r)}")
@@ -229,12 +244,12 @@ def _parse(engine: str, body: str) -> dict:
         got = json.loads(stripped)
         if isinstance(got, dict):
             return got
-    except ValueError:
+    except (ValueError, RecursionError):  # nested past the decoder: not an answer
         pass
     for line in reversed(stripped.splitlines()):
         try:
             got = json.loads(line)
-        except ValueError:
+        except (ValueError, RecursionError):
             continue
         if isinstance(got, dict):
             return got
@@ -304,6 +319,11 @@ def main() -> int:
         # that is in fact the producer would then mark its own work.
         print(f"need --running, one of {known}: the engine running this is "
               "stated, never assumed", file=sys.stderr)
+        return 2
+    # A checker name that is not an engine is refused input too; exiting 1
+    # read as an engine that was asked and did not answer.
+    if a.engine and a.engine not in known:
+        print(f"{a.engine} is not one of {known}", file=sys.stderr)
         return 2
     # Unreadable input is refused like missing input: exit 2 with one line. A
     # traceback exited 1, which this tool's caller reads as an engine that did

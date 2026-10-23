@@ -10,6 +10,7 @@ into a wrong one breaks the build instead of ageing quietly.
 Add a checker here whenever a reference page states a number that follows from
 another number on the same page.
 """
+import json
 import math
 import pathlib
 import re
@@ -245,15 +246,124 @@ def check_type_scale() -> int:
     return n
 
 
+# --- DTCG colour values ------------------------------------------------------
+
+def _tokens(node) -> dict[str, tuple[str | None, object]]:
+    """Every token in a DTCG tree by its dot path: the $type stated on it or on
+    the nearest group (None when neither states one), and its $value."""
+    found: dict[str, tuple[str | None, object]] = {}
+
+    def walk(n, p, inherited):
+        if not isinstance(n, dict):
+            return
+        kind = n.get("$type", inherited)
+        if "$value" in n:
+            found[p] = (kind, n["$value"])
+            return
+        for k, v in n.items():
+            if not k.startswith("$"):
+                walk(v, f"{p}.{k}" if p else k, kind)
+    walk(node, "", None)
+    return found
+
+
+def _resolve_type(tokens: dict, path: str) -> str | None:
+    """$type from the token, else its alias target, else the nearest group —
+    the order the page states. The group is already folded into the token's
+    own entry, so an alias is followed only where neither stated one."""
+    seen = set()
+    while path in tokens and path not in seen:
+        seen.add(path)
+        kind, value = tokens[path]
+        if kind:
+            return kind
+        if not (isinstance(value, str) and value.startswith("{") and value.endswith("}")):
+            return None
+        path = value[1:-1]
+    return None
+
+
+def check_dtcg_colours() -> int:
+    """Every sRGB colour in the page's DTCG examples: do its components follow
+    from its hex? The object form states the colour twice, and the two drift
+    apart the first time someone edits one of them."""
+    page = SKILLS / "design-tokens/reference/token-schema.md"
+    text = page.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    fences = [t for t in MD.parse(text) if t.type == "fence" and t.info.strip() == "json"]
+    if not fences:
+        fail("token-schema.md", "no ```json example found — the checker has stopped checking")
+        return 0
+    before, n = len(failures), 0
+    for fence in fences:
+        where = f"token-schema.md:{fence.map[0] + 1}"
+        if not _closes(fence, lines):
+            fail(where, "the json fence is never closed, so the example runs to the end of the page")
+            continue
+        try:
+            tree = json.loads(fence.content)
+        except json.JSONDecodeError as e:
+            fail(where, f"the example is not JSON, so none of it can be recomputed — {e}")
+            continue
+        tokens = _tokens(tree)
+        for path, (_, value) in tokens.items():
+            kind = _resolve_type(tokens, path)
+            if isinstance(value, str) and value.startswith("{") and value.endswith("}"):
+                # An alias is checked where it points; a target that is gone, or
+                # of another type, leaves nothing there to check.
+                target = value[1:-1]
+                if target not in tokens:
+                    fail(where, f"{path} aliases {value}, which is not a token in the example")
+                elif _resolve_type(tokens, target) != kind:
+                    fail(where, f"{path} is {kind!r} and aliases {value}, which is "
+                                f"{_resolve_type(tokens, target)!r}")
+                continue
+            if kind is None:
+                # A token whose type resolves to nothing left the count unnoticed
+                # while any other colour was still read.
+                fail(where, f"{path} has no $type on itself, its alias target or a "
+                            "group, so nothing says what its value is")
+                continue
+            if kind != "color":
+                continue
+            if not isinstance(value, dict):
+                fail(where, f"{path} states {value!r}; a colour value is an object with "
+                            "its colour space and components")
+                continue
+            hex_colour, comps = value.get("hex"), value.get("components")
+            # bool is an int, and NaN a float that no difference ever exceeds.
+            if (value.get("colorSpace") != "srgb" or not isinstance(hex_colour, str)
+                    or not re.fullmatch(r"#[0-9a-fA-F]{6}", hex_colour)
+                    or not isinstance(comps, list) or len(comps) != 3
+                    or not all(isinstance(c, (int, float)) and not isinstance(c, bool)
+                               and math.isfinite(c) and 0 <= c <= 1 for c in comps)):
+                fail(where, f"{path} does not state an srgb colour space, three components "
+                            "from 0 to 1 and a six-digit hex, so nothing about it can be "
+                            "recomputed")
+                continue
+            n += 1
+            want = [int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+            # Components are written to four decimals; anything further off than
+            # that rounding is a different colour from the hex beside it.
+            if any(abs(c - w) > 0.00005 for c, w in zip(comps, want)):
+                fail(where, f"{path} states components {comps}; {hex_colour} is "
+                            f"{[round(w, 4) for w in want]}")
+    if not n and len(failures) == before:
+        fail("token-schema.md", "no srgb colour token found in the json examples — "
+                                "the checker has stopped checking")
+    return n
+
+
 def main() -> int:
     pairs = check_contrast()
     steps = check_type_scale()
+    colours = check_dtcg_colours()
     if failures:
         print(f"{len(failures)} mismatch(es):")
         print("\n".join(failures))
         return 1
     print(f"figures green - {pairs} contrast pairs recomputed, "
-          f"{steps} type-scale steps recomputed")
+          f"{steps} type-scale steps recomputed, {colours} DTCG colours recomputed")
     return 0
 
 

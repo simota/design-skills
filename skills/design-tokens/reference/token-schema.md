@@ -4,7 +4,8 @@
 Purpose: The semantic role catalogue and the interchange format.
 Read when: deciding which roles exist, or emitting structured token data.
 Source: DTCG, Tailwind, WCAG 2.2 — the format and the contrast exemption both move without this page.
-Verified: 2026-08-21 — no automated check.
+Verified: 2026-08-21 — no automated check of the catalogue or the format's rules. `make figures`
+re-derives each colour's components in the DTCG example from its `hex` on every run.
 
 The semantic catalogue, plus the interchange format.
 
@@ -54,15 +55,20 @@ Group the five properties as a composite token where the export format supports 
 
 ## W3C DTCG format
 
-The interchange format for tool-agnostic token files.
+The interchange format for tool-agnostic token files, in the 2025.10 stable form: a `color` value
+is an object with its colour space and components, as a `dimension` is one with its value and
+unit. The bare hex string is the earlier draft's form. `hex` is an optional fallback inside the
+object, not a bridge to that form: a tool that reads only the draft expects `$value` itself to be
+a string, and needs the value converted on export. Contrast ratios are computed from `hex`.
 
 ```json
 {
-  "$schema": "https://tr.designtokens.org/format/",
   "color": {
     "gray": {
-      "950": { "$type": "color", "$value": "#0d0f13" },
-      "50":  { "$type": "color", "$value": "#f7f8fa" }
+      "950": { "$type": "color",
+               "$value": { "colorSpace": "srgb", "components": [0.051, 0.0588, 0.0745], "hex": "#0d0f13" } },
+      "50":  { "$type": "color",
+               "$value": { "colorSpace": "srgb", "components": [0.9686, 0.9725, 0.9804], "hex": "#f7f8fa" } }
     },
     "text": {
       "primary": {
