@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -1188,6 +1189,75 @@ def engine_holds() -> list[str]:
             r = ask("0", "codex", "--running", "claude")
             if r.returncode != 2 or "Traceback" in r.stderr:
                 bad.append(f"uncheckable schema {name} (exit {r.returncode})")
+        # A checker that is not an engine is refused input, not one that failed to
+        # answer. The schema is a checkable one again, or the refusal is the schema's.
+        (d / "s.json").write_text(json.dumps(
+            {"type": "object", "properties": {"ok": {"type": "boolean"}},
+             "required": ["ok"]}), encoding="utf-8")
+        r = ask("0", "nosuch", "--running", "claude")
+        if r.returncode != 2 or "Traceback" in r.stderr:
+            bad.append(f"unknown checker (exit {r.returncode})")
+    bad += _engine_in_process()
+    return bad
+
+
+def _alive(pid: int) -> bool:
+    """Running, not merely a zombie no init has reaped yet."""
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text()
+    except OSError:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True
+    return stat.rsplit(")", 1)[1].split()[0] != "Z"
+
+
+def _outlives(pid: int) -> bool:
+    """Still running three seconds on: SIGKILL lands asynchronously."""
+    for _ in range(30):
+        if not _alive(pid):
+            return False
+        time.sleep(0.1)
+    return True
+
+
+def _engine_in_process() -> list[str]:
+    """What only the module can show: output nested past the decoder is an
+    engine that did not answer, never a traceback that loses the rest of a
+    refute run; and a timeout ends what the engine started, not only the
+    engine, so a child holding its output cannot outlive the run."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("engine", ROOT / "design-tools" / "engine.py")
+    engine = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(engine)
+    bad = []
+    deep = '{"structured_output": ' + "[" * 200000 + "]" * 200000 + "}"
+    try:
+        engine._parse("claude", deep)
+        bad.append("output nested past the decoder parsed")
+    except engine.EngineError:
+        pass
+    except RecursionError:
+        bad.append("output nested past the decoder raised RecursionError")
+    with tempfile.TemporaryDirectory() as tmp:
+        pidfile = Path(tmp) / "pid"
+        engine.TIMEOUT = 2
+        try:
+            engine._spawn("claude", ["sh", "-c", f'sleep 60 & echo $! > "{pidfile}"; sleep 60'],
+                          Path(tmp))
+            bad.append("a run past its timeout returned")
+        except engine.EngineError:
+            pass
+        pid = int(pidfile.read_text().strip()) if pidfile.exists() else None
+        if pid is None:
+            bad.append("the timeout stand-in never started its child")
+        elif _outlives(pid):
+            os.kill(pid, 9)
+            bad.append("a timed-out engine's child kept running")
     return bad
 
 
@@ -1207,11 +1277,33 @@ def render_holds() -> list[str]:
         if r.returncode == 0 or page.read_text(encoding="utf-8") != before:
             return [f"interleaved markers (exit {r.returncode}, file rewritten "
                     f"{page.read_text(encoding='utf-8') != before})"]
+    bad = []
+    # An existing pair is rewritten in place only where validate accepts it:
+    # markers inside a fence are an example, and a block under another heading
+    # is not delivered. Both printed "rendered" and exited 0 over a file validate
+    # then failed, and no later run could change that.
+    for name, mutate in (
+            ("markers-in-a-fence", lambda text: re.sub(
+                r"<!-- deliver:surface -->.*?<!-- /deliver:surface -->\n", "", text, flags=re.S
+            ).replace("## Done when\n", "## Done when\n\n```md\n<!-- deliver:surface -->\n"
+                      "old words\n<!-- /deliver:surface -->\n```\n", 1)),
+            ("block-under-another-heading", lambda text: (lambda m: text.replace(m, "").replace(
+                "## Verify with\n", "## Verify with\n" + m, 1))(
+                re.search(r"<!-- deliver:surface -->.*?<!-- /deliver:surface -->\n", text, re.S).group(0)))):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = copy_repo(tmp)
+            page = repo / f"{S}design-ux/SKILL.md"
+            page.write_text(mutate(page.read_text(encoding="utf-8")), encoding="utf-8")
+            before = page.read_text(encoding="utf-8")
+            r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
+                               capture_output=True, text=True)
+            if r.returncode == 0 or page.read_text(encoding="utf-8") != before:
+                bad.append(f"{name} (exit {r.returncode}, file rewritten "
+                           f"{page.read_text(encoding='utf-8') != before})")
     # A new block goes under the section's own `## ` heading, at its end: not
     # under a `### ` line with the same title, and not into a code fence whose
     # example holds a `## ` line. Either way the result has to be what
     # validate accepts, and the block has to be outside the fence.
-    bad = []
     for name, extra, where in (
             ("h3-of-the-same-name", "### Verify with\n", "## Owns\n"),
             ("heading-in-a-fence", "```text\n## Findings\nstatus: DONE\n```\n", "## Verify with\n")):
@@ -1227,6 +1319,27 @@ def render_holds() -> list[str]:
             if r.returncode != 0 or "green" not in out.splitlines()[-1]:
                 bad.append(f"{name} (exit {r.returncode}): {out.strip().splitlines()[-2:]}")
     return bad
+
+
+def hook_reads_the_index() -> list[str]:
+    """The pre-commit hook checks every staged file, including the ones a sparse
+    checkout marks skip-worktree and leaves out of the working tree. Exporting
+    the index without them failed every commit on files nobody had touched."""
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        git = lambda *a: subprocess.run(["git", "-C", str(repo), *a], check=True,
+                                         capture_output=True, text=True)
+        git("init", "-q")
+        git("add", "-A")
+        page = f"{S}design-ux/SKILL.md"
+        git("update-index", "--skip-worktree", page)
+        (repo / page).unlink()
+        r = subprocess.run(["sh", str(repo / "design-tools/githooks/pre-commit")],
+                           cwd=repo, capture_output=True, text=True)
+        if r.returncode != 0:
+            return [f"a skip-worktree file left out (exit {r.returncode}): "
+                    f"{(r.stdout + r.stderr).strip().splitlines()[-1:]}"]
+    return []
 
 
 def hooks_fail_closed() -> tuple[list[str], int]:
@@ -1478,17 +1591,23 @@ def main() -> int:
         return 1
     print(f"make hooks fails where it wrote nothing ({hooks_ran} cases)")
 
+    broken_hook = hook_reads_the_index()
+    if broken_hook:
+        print("the pre-commit hook mishandled: " + ", ".join(broken_hook))
+        return 1
+    print("the pre-commit hook checks every staged file, sparse or not (1 case)")
+
     broken_engine = engine_holds()
     if broken_engine:
         print("engine.py mishandled: " + ", ".join(broken_engine))
         return 1
-    print("engine.py refuses what it cannot check, against a stand-in engine (7 cases)")
+    print("engine.py refuses what it cannot check, against a stand-in engine (10 cases)")
 
     broken_render = render_holds()
     if broken_render:
         print("render.py mishandled: " + ", ".join(broken_render))
         return 1
-    print("render.py writes nothing it could not fully deliver, and only under the real heading (3 cases)")
+    print("render.py writes nothing it could not fully deliver, and only under the real heading (5 cases)")
 
     broken_link = link_holds()
     if broken_link:
