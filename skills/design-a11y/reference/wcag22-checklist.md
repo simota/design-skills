@@ -50,7 +50,7 @@ not assessable at design time, rather than passing them from the specification a
 | 2.5.3 Label in Name | A | The visible label is contained in the accessible name |
 | 2.5.4 Motion Actuation | A | Device-motion actions have a UI alternative |
 | 2.5.7 Dragging Movements | AA | Drag operations have a non-drag alternative |
-| 2.5.8 Target Size (Minimum) | AA | 24×24 CSS px, or equivalent spacing |
+| 2.5.8 Target Size (Minimum) | AA | 24×24 CSS px, or one of its exceptions: spacing, equivalent, inline, user agent control, essential |
 
 ## Understandable
 
