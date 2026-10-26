@@ -75,6 +75,19 @@ def _closes(fence, lines: list[str]) -> bool:
     return len(last) >= len(fence.markup) and set(last) == {fence.markup[0]}
 
 
+def table_line(line: str) -> str:
+    """A table line in the one form the patterns read: no blockquote prefix, and
+    a pipe at each end. GFM opens a table inside `> ` and without outer pipes
+    too; matching the raw line let such a table drop out of the check while
+    another one kept the count above zero."""
+    line = re.sub(r"^[\s>]*", "", line).rstrip()
+    if not line.startswith("|"):
+        line = "|" + line
+    if not line.endswith("|") or line.endswith("\\|"):
+        line += "|"
+    return line
+
+
 def tables(text: str, head: re.Pattern) -> list[tuple[int, list[int]]]:
     """(header line, data row lines) for every table whose header matches `head`.
 
@@ -112,7 +125,7 @@ def tables(text: str, head: re.Pattern) -> list[tuple[int, list[int]]]:
                 continue
             code.update(range(*tok.map))
     return [(i, found.get(i, [])) for i, l in enumerate(lines)
-            if i not in code and head.match(l.strip())]
+            if i not in code and head.match(table_line(l))]
 
 
 def pair_rows(text: str) -> tuple[list[tuple[int, str]], list[int]]:
@@ -127,7 +140,7 @@ def pair_rows(text: str) -> tuple[list[tuple[int, str]], list[int]]:
     """
     lines = text.split("\n")
     found = tables(text, PAIR_HEAD)
-    return ([(i + 1, lines[i].strip()) for _, rows in found for i in rows],
+    return ([(i + 1, table_line(lines[i])) for _, rows in found for i in rows],
             [h + 1 for h, rows in found if not rows])
 
 
@@ -197,7 +210,7 @@ def check_type_scale() -> int:
         return 0
     lines = text.split("\n")
     start, body = found[0]
-    head = SCALE_HEAD.match(lines[start].strip())
+    head = SCALE_HEAD.match(table_line(lines[start]))
     base, ratio = int(head.group(1)), float(head.group(2))
     clamp = CLAMP.search(text)
     clamp_below = clamp.group(1) if clamp else None
@@ -206,7 +219,7 @@ def check_type_scale() -> int:
                                        "is the separator line under it missing, or a "
                                        "code fence above it left open?")
         return 0
-    table = [lines[i].strip() for i in body]
+    table = [table_line(lines[i]) for i in body]
     # Every row is held to the form, as pair_rows does for contrast: a row
     # rewritten as `52px (hero)` or `2.5rem` used to drop out of the check, and
     # the count of steps recomputed fell by one with nothing failing.

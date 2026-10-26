@@ -494,6 +494,17 @@ FIGURE_CASES: dict[str, callable] = {
     "contrast-prose-under-table": lambda r: sub(
         r / CONTRAST, "**fail — needs an offset ring** |\n",
         "**fail — needs an offset ring** |\nMuted on dark is roughly 2.6\n"),
+    # GFM opens a table inside a blockquote and without outer pipes as well;
+    # matching the raw header let either drop out while the first table kept
+    # the count above zero.
+    "contrast-table-in-blockquote": lambda r: sub(
+        r / CONTRAST, "The focus ring on the accent button is",
+        "> | Pair | Foreground | Background | Ratio | Required | Result |\n> |---|---|---|---|---|---|\n"
+        "> | Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass |\n\nThe focus ring on the accent button is"),
+    "contrast-table-without-outer-pipes": lambda r: sub(
+        r / CONTRAST, "The focus ring on the accent button is",
+        "Pair | Foreground | Background | Ratio | Required | Result\n---|---|---|---|---|---\n"
+        "Muted on dark | `#9aa0a6` | `#16181d` | 12.00:1 | 4.5:1 | pass\n\nThe focus ring on the accent button is"),
     # A DTCG colour states its hex and its components; edit one and not the other.
     "dtcg-components-drift": lambda r: sub(r / SCHEMA, "[0.051, 0.0588, 0.0745]",
                                            "[0.051, 0.0588, 0.0845]"),
@@ -544,6 +555,9 @@ FIGURE_GREEN_CASES: dict[str, callable] = {
     # moved every line number read with splitlines().
     "contrast-line-separator-above": lambda r: sub(
         r / CONTRAST, "| Pair | Foreground |", "A line\u2028inside it.\n\n| Pair | Foreground |"),
+    # A row that drops only its trailing pipe is the same row to GFM.
+    "contrast-row-without-trailing-pipe": lambda r: sub(
+        r / CONTRAST, "| 17.76:1 | 4.5:1 | pass |", "| 17.76:1 | 4.5:1 | pass"),
     "scale-heading-under-table": lambda r: sub(r / SCALES, "| Hero |\n\n", "| Hero |\n### Notes\n\n"),
     "scale-example-in-a-fence-above": lambda r: sub(
         r / SCALES, "| Token | 16px / 1.20 ratio |",
@@ -838,6 +852,16 @@ def _(r): sub(r / "README.md", "## Files", "[r]: <skills/_design/GONE.md>\n\n## 
 # The other direction: valid Markdown that must stay green. A rule that only
 # ever meets violations can be wrong about every form it was not shown.
 GREEN_CASES: dict[str, callable] = {
+    # A marker with a trailing space is still the comment it was.
+    "delivery-marker-trailing-space": lambda r: sub(
+        r / f"{S}design-ux/SKILL.md", "<!-- deliver:values -->\n", "<!-- deliver:values --> \n"),
+    # An example of a block, fenced, is not a second copy of the real one.
+    "delivery-marker-example-in-a-fence": lambda r: sub(
+        r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
+        "## Always / Never\n\n```md\n<!-- deliver:values -->\nan example\n<!-- /deliver:values -->\n```\n"),
+    # An ATX heading may close with `#`s; the section is still `Done when`.
+    "heading-with-closing-sequence": lambda r: sub(
+        r / f"{S}design-ux/SKILL.md", "## Done when\n", "## Done when ##\n"),
     # The repository root is inside the repository: `Path.parents` leaves the
     # path itself out, and a link to the root read as one leaving it.
     "link-to-the-root": lambda r: sub(r / "README.md", "## Files",
@@ -1019,6 +1043,11 @@ def _(r): sub(r / f"{S}design-ux/SKILL.md", "loading states, forms, navigation,"
 def _(r):
     sub(r / f"{S}design-ux/SKILL.md", "<!-- deliver:report -->", "~~~~text\n<!-- deliver:report -->")
     sub(r / f"{S}design-ux/SKILL.md", "<!-- /deliver:report -->", "<!-- /deliver:report -->\n~~~~")
+
+
+# A marker sharing its line with anything else is neither the block nor absent.
+@case("V17-marker-not-alone", "holds a values marker that is not alone on its line")
+def _(r): sub(r / f"{S}design-ux/SKILL.md", "<!-- deliver:values -->", "<!-- deliver:values --> see VALUES")
 
 
 @case("V22-image-title", "README.md:")
@@ -1225,6 +1254,10 @@ def engine_holds() -> list[str]:
         r = ask("0", "nosuch", "--running", "claude")
         if r.returncode != 2 or "Traceback" in r.stderr:
             bad.append(f"unknown checker (exit {r.returncode})")
+        # So is naming the running engine as its own checker: nothing was asked.
+        r = ask("0", "codex", "--running", "codex")
+        if r.returncode != 2 or "Traceback" in r.stderr:
+            bad.append(f"checker is the running engine (exit {r.returncode})")
     bad += _engine_in_process()
     return bad
 
@@ -1326,6 +1359,37 @@ def render_holds() -> list[str]:
             r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
                                capture_output=True, text=True)
             if r.returncode == 0 or page.read_text(encoding="utf-8") != before:
+                bad.append(f"{name} (exit {r.returncode}, file rewritten "
+                           f"{page.read_text(encoding='utf-8') != before})")
+    # A trailing space leaves a marker the comment it was: reading it as absent
+    # appended a second block and left the first, stale, where nothing looked.
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = copy_repo(tmp)
+        page = repo / f"{S}design-ux/SKILL.md"
+        clean = page.read_text(encoding="utf-8")
+        page.write_text(clean.replace("<!-- deliver:values -->\n", "<!-- deliver:values --> \n", 1)
+                        .replace("<!-- /deliver:values -->\n", "<!-- /deliver:values -->\t\n", 1),
+                        encoding="utf-8")
+        r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
+                           capture_output=True, text=True)
+        if r.returncode != 0 or page.read_text(encoding="utf-8") != clean:
+            bad.append(f"marker-with-trailing-space (exit {r.returncode}, "
+                       f"{page.read_text(encoding='utf-8').count('<!-- deliver:values')} blocks)")
+    # A marker sharing its line is refused, and one fenced beside the real block
+    # is an example the real block does not clash with.
+    for name, old, new, refused in (
+            ("marker-not-alone", "<!-- deliver:values -->\n", "<!-- deliver:values --> see VALUES\n", True),
+            ("example-beside-the-block", "## Always / Never\n",
+             "## Always / Never\n\n```md\n<!-- deliver:values -->\nan example\n<!-- /deliver:values -->\n```\n",
+             False)):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = copy_repo(tmp)
+            page = repo / f"{S}design-ux/SKILL.md"
+            sub(page, old, new)
+            before = page.read_text(encoding="utf-8")
+            r = subprocess.run([sys.executable, str(repo / "design-tools" / "render.py")],
+                               capture_output=True, text=True)
+            if (r.returncode == 0) == refused or page.read_text(encoding="utf-8") != before:
                 bad.append(f"{name} (exit {r.returncode}, file rewritten "
                            f"{page.read_text(encoding='utf-8') != before})")
     # A new block goes under the section's own `## ` heading, at its end: not
@@ -1629,13 +1693,13 @@ def main() -> int:
     if broken_engine:
         print("engine.py mishandled: " + ", ".join(broken_engine))
         return 1
-    print("engine.py refuses what it cannot check, against a stand-in engine (10 cases)")
+    print("engine.py refuses what it cannot check, against a stand-in engine (11 cases)")
 
     broken_render = render_holds()
     if broken_render:
         print("render.py mishandled: " + ", ".join(broken_render))
         return 1
-    print("render.py writes nothing it could not fully deliver, and only under the real heading (5 cases)")
+    print("render.py writes nothing it could not fully deliver, and only under the real heading (8 cases)")
 
     broken_link = link_holds()
     if broken_link:
