@@ -582,9 +582,22 @@ def v17_delivery():
             live = [(i, l.strip()) for i, l in enumerate(lines) if i + 1 not in code]
             opens = [i for i, l in live if l == open_m]
             closes = [i for i, l in live if l == close_m]
+            # The parser says what is a comment: a marker quoted in a code span,
+            # even one that crosses a line, is text about a marker.
             near = re.compile(rf"<!--\s*/?deliver:{re.escape(key)}(?![\w-])")
-            stray = [i for i, l in live if l not in (open_m, close_m)
-                     and near.search(re.sub(r"`[^`]*`", "", l))]
+            stray = []
+            for tok in MD.parse(text):
+                if tok.type == "html_block" and tok.map:
+                    stray += [i for i in range(*tok.map) if near.search(lines[i])
+                              and lines[i].strip() not in (open_m, close_m)]
+                elif tok.type == "inline" and tok.map:
+                    row = tok.map[0]
+                    for c in tok.children or []:
+                        if c.type in ("softbreak", "hardbreak"):
+                            row += 1
+                        elif c.type == "html_inline" and near.search(c.content):
+                            stray.append(row)
+            stray.sort()
             if stray:
                 fail("V17", f"{d.name}/SKILL.md:{stray[0] + 1} holds a {key} marker that is "
                             "not alone on its line")

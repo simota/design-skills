@@ -859,6 +859,11 @@ GREEN_CASES: dict[str, callable] = {
     "delivery-marker-example-in-a-fence": lambda r: sub(
         r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
         "## Always / Never\n\n```md\n<!-- deliver:values -->\nan example\n<!-- /deliver:values -->\n```\n"),
+    # A marker quoted in a code span that crosses a line is text, not a marker
+    # sharing its line; the parser says so, a per-line backtick strip did not.
+    "delivery-marker-in-a-span-across-lines": lambda r: sub(
+        r / f"{S}design-ux/SKILL.md", "## Always / Never\n",
+        "## Always / Never\n\nA block opens with `the line <!-- deliver:values -->\nalone`, as render writes it.\n"),
     # An ATX heading may close with `#`s; the section is still `Done when`.
     "heading-with-closing-sequence": lambda r: sub(
         r / f"{S}design-ux/SKILL.md", "## Done when\n", "## Done when ##\n"),
@@ -1381,6 +1386,9 @@ def render_holds() -> list[str]:
             ("marker-not-alone", "<!-- deliver:values -->\n", "<!-- deliver:values --> see VALUES\n", True),
             ("example-beside-the-block", "## Always / Never\n",
              "## Always / Never\n\n```md\n<!-- deliver:values -->\nan example\n<!-- /deliver:values -->\n```\n",
+             False),
+            ("marker-in-a-span-across-lines", "## Always / Never\n",
+             "## Always / Never\n\nA block opens with `the line <!-- deliver:values -->\nalone`, as render writes it.\n",
              False)):
         with tempfile.TemporaryDirectory() as tmp:
             repo = copy_repo(tmp)
@@ -1699,7 +1707,7 @@ def main() -> int:
     if broken_render:
         print("render.py mishandled: " + ", ".join(broken_render))
         return 1
-    print("render.py writes nothing it could not fully deliver, and only under the real heading (8 cases)")
+    print("render.py writes nothing it could not fully deliver, and only under the real heading (9 cases)")
 
     broken_link = link_holds()
     if broken_link:

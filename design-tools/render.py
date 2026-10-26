@@ -47,14 +47,33 @@ def markers(lines: list[str], key: str, code: set[int]) -> tuple[list[int], list
     space is still the comment it was: reading it as absent appended a second
     block and left the first one, stale, where validate no longer looked. And
     one in a fence is an example, which a real block beside it does not clash
-    with.
+    with. A marker comment sharing its line is returned third, to be refused.
     """
     open_m, close_m = f"<!-- deliver:{key} -->", f"<!-- /deliver:{key} -->"
-    near = re.compile(rf"<!--\s*/?deliver:{re.escape(key)}(?![\w-])")
     live = [(i, l.strip()) for i, l in enumerate(lines) if i not in code]
     return ([i for i, l in live if l == open_m], [i for i, l in live if l == close_m],
-            [i for i, l in live if l not in (open_m, close_m)
-             and near.search(re.sub(r"`[^`]*`", "", l))])
+            stray_markers(lines, key))
+
+
+def stray_markers(lines: list[str], key: str) -> list[int]:
+    """Lines where the parser finds a `key` marker comment that is not alone on
+    its line. The parser decides what is a comment: one quoted in a code span,
+    even a span that crosses a line, is text about a marker."""
+    near = re.compile(rf"<!--\s*/?deliver:{re.escape(key)}(?![\w-])")
+    exact = {f"<!-- deliver:{key} -->", f"<!-- /deliver:{key} -->"}
+    out = []
+    for tok in MD.parse("\n".join(lines)):
+        if tok.type == "html_block" and tok.map:
+            out += [i for i in range(*tok.map)
+                    if near.search(lines[i]) and lines[i].strip() not in exact]
+        elif tok.type == "inline" and tok.map:
+            row = tok.map[0]
+            for c in tok.children or []:
+                if c.type in ("softbreak", "hardbreak"):
+                    row += 1
+                elif c.type == "html_inline" and near.search(c.content):
+                    out.append(row)
+    return sorted(set(out))
 
 
 def code_lines(lines: list[str]) -> set[int]:
