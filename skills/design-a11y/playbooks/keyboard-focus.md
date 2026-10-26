@@ -74,7 +74,7 @@ Rules:
 
 ## Focus traps
 
-Legitimate in exactly one place: a modal dialog, which must be escapable via Escape and via a visible close control. Everything else that traps focus is a defect (SC 2.1.2).
+Legitimate in exactly one place: a modal dialog — a modal drawer or sheet is one — which must be escapable via Escape and via a visible close control. Everything else that traps focus is a defect (SC 2.1.2).
 
 Check specifically: embedded media players, third-party widgets, iframes, and custom editors.
 

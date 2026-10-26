@@ -50,14 +50,19 @@ Rules: `rem` for anything that should respond to the user's font size (type, spa
 ```css
 @import "tailwindcss";
 
-@theme {
-  --color-canvas: var(--gray-0);
-  --color-surface: var(--gray-0);
-  --color-primary: var(--gray-950);
+@theme inline {
+  --color-canvas: var(--color-bg-canvas);
+  --color-surface: var(--color-bg-surface);
+  --color-primary: var(--color-text-primary);
   --spacing-4: 1rem;
   --radius-md: 0.5rem;
 }
 ```
+
+Each colour points at the semantic token, never at a primitive: a theme remaps the semantic
+layer (`reference/theming.md`), and a utility bound to `--gray-0` stays light in dark mode. `inline` is
+Tailwind's own rule for a theme variable that references another — the utility then carries
+the semantic variable itself, so the remap reaches it wherever it is applied.
 
 Tailwind derives utility names from the token names, so the grammar here *is* the class API. Decide it deliberately: `--color-text-primary` yields `text-text-primary`, which stutters — prefer `--color-primary` under Tailwind's own namespace rules. This is the rule-8 exception to `playbooks/naming.md`'s anti-pattern list: the framework's grammar wins when the project adopts it.
 
