@@ -7,7 +7,7 @@ Rank by user impact, never by how obvious the finding was.
 
 | Level | Definition | Test |
 |-------|-----------|------|
-| Blocker | The user cannot complete the task | Would a real user get stuck? |
+| Blocker | The user cannot complete the task, or completing it costs what cannot be recovered | Would a real user get stuck, or lose data or money with no way back? |
 | Serious | Completable, but materially harder or riskier | Does it cost time, cause errors, or risk data? |
 | Moderate | Confusion or friction | Would a user pause, or ask a question? |
 | Minor | Craft gap with no functional barrier | Would a designer notice, but a user not? |

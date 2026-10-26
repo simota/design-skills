@@ -12,7 +12,7 @@ The grammar is decided once, before any token exists. Repairing a grammar later 
 | Slot | Required | Examples |
 |------|----------|----------|
 | category | yes | `color`, `space`, `text`, `radius`, `shadow`, `z`, `duration`, `ease` |
-| role | yes | `text`, `bg`, `border`, `icon`, `action`, `danger`, `on-<surface>` |
+| role | yes | `text`, `bg`, `border`, `icon`, `on-<surface>`; an intent takes the element it paints: `action-bg`, `danger-text` |
 | variant | no | `primary`, `muted`, `subtle`, `inverse` |
 | state | no | `hover`, `active`, `focus`, `disabled`, `visited` |
 

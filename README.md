@@ -72,11 +72,12 @@ catch the value edited into a wrong one later. `make figures` recomputes what th
 reference layer states from the reference layer itself — every recorded contrast
 pair in `design-a11y`'s contrast reference from its two hex values and its verdict from the requirement, the type
 scale from its own stated base and ratio, and every colour in the DTCG example from its own hex. It runs in `make check` and in the
-pre-commit hook, and `make test` introduces twenty-nine deliberate errors and fails
+pre-commit hook, and `make test` introduces thirty-one deliberate errors and fails
 unless each one breaks it, including the ones that make the checks vacuous rather
 than wrong: a table renamed out of reach, or a row or a second table dropped from
-the count. It also holds six correct pages green — a fenced example table, a
-heading under the rows, an alias typed by its target rather than its group — since
+the count, or a table that drops out because it sits in a blockquote. It also holds
+seven correct pages green — a fenced example table, a heading under the rows, a row
+without its trailing pipe, an alias typed by its target rather than its group — since
 a check that fails what is right gets switched off.
 
 That is also how the type scale's clamp got written down: the ratio applied

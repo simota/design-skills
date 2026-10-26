@@ -325,6 +325,11 @@ def main() -> int:
     if a.engine and a.engine not in known:
         print(f"{a.engine} is not one of {known}", file=sys.stderr)
         return 2
+    # So is naming the running engine as its own checker: nothing was asked.
+    if a.engine and a.engine == a.running:
+        print(f"{a.engine} is the engine running this; a verdict from it is not a check",
+              file=sys.stderr)
+        return 2
     # Unreadable input is refused like missing input: exit 2 with one line. A
     # traceback exited 1, which this tool's caller reads as an engine that did
     # not answer.

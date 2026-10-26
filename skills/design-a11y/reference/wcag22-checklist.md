@@ -4,7 +4,8 @@
 Purpose: Design-relevant checks, separated from build-time conformance.
 Read when: running conformance against the standard, or citing a criterion in a finding.
 Source: WCAG 2.2 — summaries, not verbatim criteria; check applicability and exceptions.
-Verified: 2026-09-17 — report-example applicability inspected against SC 2.5.8 and 2.4.11;
+Verified: 2026-10-26 — SC 2.2.2 row compared with its normative text. 2026-09-17 — report-example
+applicability inspected against SC 2.5.8 and 2.4.11;
 no automated check of conformance decisions. Other checklist summaries were not revalidated.
 
 A specification can settle design intent, not prove that the built interface implements it.
@@ -36,7 +37,7 @@ not assessable at design time, rather than passing them from the specification a
 | 2.1.2 No Keyboard Trap | A | Focus can always leave |
 | 2.1.4 Character Key Shortcuts | A | Single-character shortcuts can be turned off, remapped, or are focus-scoped |
 | 2.2.1 Timing Adjustable | A | Time limits can be extended or turned off |
-| 2.2.2 Pause, Stop, Hide | A | Auto-starting moving content over 5s, or auto-updating content, shown alongside other content can be paused, stopped or hidden |
+| 2.2.2 Pause, Stop, Hide | A | Auto-starting moving content over 5s, or auto-updating content, shown alongside other content can be paused, stopped or hidden — or, for auto-updating, its update frequency controlled — unless essential |
 | 2.3.1 Three Flashes or Below Threshold | A | Nothing flashes more than three times in any one second, unless the flashes are below the general and red flash thresholds |
 | 2.3.3 Animation from Interactions | AAA | Non-essential motion triggered by interaction can be disabled; motion that starts on its own is 2.2.2 |
 | 2.4.3 Focus Order | A | Focus follows a meaningful sequence |

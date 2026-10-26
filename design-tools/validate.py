@@ -312,7 +312,9 @@ def sections(text: str) -> dict[str, str]:
         if line.startswith("## ") and n in headings:
             if cur:
                 out[cur] = "\n".join(buf)
-            cur, buf = line[3:].strip(), []
+            # An ATX heading may close with a run of `#`: `## Done when ##` is
+            # the section `Done when`, as the parser and render.py read it.
+            cur, buf = re.sub(r"(?:^|[ \t]+)#+[ \t]*$", "", line[3:].strip()), []
         elif cur:
             buf.append(line)
     if cur:
@@ -570,23 +572,48 @@ def v17_delivery():
         for d in SKILL_DIRS:
             text = read(d / "SKILL.md")
             lines = text.split("\n")
-            opens = [i for i, l in enumerate(lines) if l == open_m]
-            closes = [i for i, l in enumerate(lines) if l == close_m]
+            # A marker in a fence is an example of one, and what sits between
+            # two of them is code the reader never takes as the contract; an
+            # example beside the real block is not a second block. A trailing
+            # space leaves a marker the comment it was, and reading it as absent
+            # let render append a fresh copy while the stale one stayed unread.
+            mapped = line_map(text)
+            code = mapped.code | mapped.template
+            live = [(i, l.strip()) for i, l in enumerate(lines) if i + 1 not in code]
+            opens = [i for i, l in live if l == open_m]
+            closes = [i for i, l in live if l == close_m]
+            # The parser says what is a comment: a marker quoted in a code span,
+            # even one that crosses a line, is text about a marker.
+            near = re.compile(rf"<!--\s*/?deliver:{re.escape(key)}(?![\w-])")
+            stray = []
+            for tok in MD.parse(text):
+                if tok.type == "html_block" and tok.map:
+                    stray += [i for i in range(*tok.map) if near.search(lines[i])
+                              and lines[i].strip() not in (open_m, close_m)]
+                elif tok.type == "inline" and tok.map:
+                    row = tok.map[0]
+                    for c in tok.children or []:
+                        if c.type in ("softbreak", "hardbreak"):
+                            row += 1
+                        elif c.type == "html_inline" and near.search(c.content):
+                            stray.append(row)
+            stray.sort()
+            if stray:
+                fail("V17", f"{d.name}/SKILL.md:{stray[0] + 1} holds a {key} marker that is "
+                            "not alone on its line")
+                continue
             if not opens and not closes:
-                fail("V17", f"{d.name}/SKILL.md is missing the {key} delivery block")
+                if any(f"deliver:{key} -->" in lines[n - 1] for n in code if n <= len(lines)):
+                    fail("V17", f"{d.name}/SKILL.md {key} block sits inside a code fence, "
+                                "where it is an example, not a delivered contract")
+                else:
+                    fail("V17", f"{d.name}/SKILL.md is missing the {key} delivery block")
                 continue
             # Only the first copy was ever compared, so a stale second one
             # passed; and render cannot safely act on more than one pair.
             if len(opens) != 1 or len(closes) != 1 or closes[0] < opens[0]:
                 fail("V17", f"{d.name}/SKILL.md needs exactly one {key} block, each marker "
                             f"alone on its line; found {len(opens)} open, {len(closes)} close")
-                continue
-            # A marker in a fence is an example of one, and what sits between
-            # two of them is code the reader never takes as the contract.
-            mapped = line_map(text)
-            if {opens[0] + 1, closes[0] + 1} & (mapped.code | mapped.template):
-                fail("V17", f"{d.name}/SKILL.md {key} block sits inside a code fence, "
-                            "where it is an example, not a delivered contract")
                 continue
             got = "\n".join(lines[opens[0] + 1:closes[0]]).strip("\n")
             if got != want:

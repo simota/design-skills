@@ -82,13 +82,13 @@ a string, and needs the value converted on export. Contrast ratios are computed 
     "4": { "$type": "dimension", "$value": { "value": 16, "unit": "px" } }
   },
   "font": {
-    "ui": { "$type": "fontFamily", "$value": ["Inter", "system-ui", "sans-serif"] }
+    "sans": { "$type": "fontFamily", "$value": ["Inter", "system-ui", "sans-serif"] }
   },
   "text": {
     "body": {
       "$type": "typography",
       "$value": {
-        "fontFamily": "{font.ui}",
+        "fontFamily": "{font.sans}",
         "fontSize":   { "value": 16, "unit": "px" },
         "fontWeight": 400,
         "lineHeight": 1.55,
