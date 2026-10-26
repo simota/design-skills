@@ -520,6 +520,12 @@ FIGURE_CASES: dict[str, callable] = {
                     '"components": [0.051, 0.0588, 0.0745]',
         '"$type": "color",\n      "950": {\n               "$value": { "colorSpace": "srgb", '
         '"components": [0.051, 0.0588, 0.0999]'),
+    # Aliases that only point at each other resolve to no value at all; each
+    # side read the other's type and found nothing wrong.
+    "dtcg-alias-cycle": lambda r: (
+        sub(r / SCHEMA, '"$value": "{color.gray.950}",', '"$value": "{color.text.loop}",'),
+        sub(r / SCHEMA, '"text": {\n      "primary": {',
+            '"text": {\n      "loop": { "$value": "{color.text.primary}" },\n      "primary": {')),
 }
 
 # The other half: a page that records every figure correctly stays green when
@@ -543,6 +549,14 @@ FIGURE_GREEN_CASES: dict[str, callable] = {
         r / SCALES, "| Token | 16px / 1.20 ratio |",
         "```md\n| Token | 18px / 1.25 ratio |\n|---|---|\n| `--text-base` | 18px |\n```\n\n"
         "| Token | 16px / 1.20 ratio |"),
+    # An alias with no $type of its own takes its target's type before its
+    # group's, as the page and the format say: a colour aliased from a focus
+    # group typed `dimension` is a colour, not a dimension with a wrong alias.
+    "dtcg-alias-typed-before-group": lambda r: sub(
+        r / SCHEMA, '  "space": {',
+        '  "focus": {\n    "$type": "dimension",\n'
+        '    "width": { "$value": { "value": 2, "unit": "px" } },\n'
+        '    "colour": { "$value": "{color.gray.950}" }\n  },\n  "space": {'),
 }
 
 

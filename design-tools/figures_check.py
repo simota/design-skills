@@ -248,18 +248,26 @@ def check_type_scale() -> int:
 
 # --- DTCG colour values ------------------------------------------------------
 
-def _tokens(node) -> dict[str, tuple[str | None, object]]:
-    """Every token in a DTCG tree by its dot path: the $type stated on it or on
-    the nearest group (None when neither states one), and its $value."""
-    found: dict[str, tuple[str | None, object]] = {}
+def _alias(value) -> str | None:
+    """The dot path a `{dot.path}` value refers to, or None for a literal."""
+    if isinstance(value, str) and value.startswith("{") and value.endswith("}"):
+        return value[1:-1]
+    return None
+
+
+def _tokens(node) -> dict[str, tuple[str | None, str | None, object]]:
+    """Every token in a DTCG tree by its dot path: the $type stated on the token
+    itself, the one on its nearest group (None where nothing states one), and
+    its $value."""
+    found: dict[str, tuple[str | None, str | None, object]] = {}
 
     def walk(n, p, inherited):
         if not isinstance(n, dict):
             return
-        kind = n.get("$type", inherited)
         if "$value" in n:
-            found[p] = (kind, n["$value"])
+            found[p] = (n.get("$type"), inherited, n["$value"])
             return
+        kind = n.get("$type", inherited)
         for k, v in n.items():
             if not k.startswith("$"):
                 walk(v, f"{p}.{k}" if p else k, kind)
@@ -269,18 +277,34 @@ def _tokens(node) -> dict[str, tuple[str | None, object]]:
 
 def _resolve_type(tokens: dict, path: str) -> str | None:
     """$type from the token, else its alias target, else the nearest group —
-    the order the page states. The group is already folded into the token's
-    own entry, so an alias is followed only where neither stated one."""
+    the order the page states and the format sets. A reference takes its
+    target's type and never its group's: folding the group in first read a
+    colour aliased from a `dimension` group as a dimension. None where the
+    chain ends at nothing or comes back on itself."""
     seen = set()
     while path in tokens and path not in seen:
         seen.add(path)
-        kind, value = tokens[path]
-        if kind:
-            return kind
-        if not (isinstance(value, str) and value.startswith("{") and value.endswith("}")):
-            return None
-        path = value[1:-1]
+        own, group, value = tokens[path]
+        if own:
+            return own
+        target = _alias(value)
+        if target is None:
+            return group
+        path = target
     return None
+
+
+def _cycles(tokens: dict, path: str) -> bool:
+    """Whether following the token's aliases comes back to one already passed."""
+    seen = set()
+    while path in tokens:
+        if path in seen:
+            return True
+        seen.add(path)
+        path = _alias(tokens[path][2])
+        if path is None:
+            return False
+    return False
 
 
 def check_dtcg_colours() -> int:
@@ -306,14 +330,17 @@ def check_dtcg_colours() -> int:
             fail(where, f"the example is not JSON, so none of it can be recomputed — {e}")
             continue
         tokens = _tokens(tree)
-        for path, (_, value) in tokens.items():
+        for path, (_, _, value) in tokens.items():
             kind = _resolve_type(tokens, path)
-            if isinstance(value, str) and value.startswith("{") and value.endswith("}"):
-                # An alias is checked where it points; a target that is gone, or
-                # of another type, leaves nothing there to check.
-                target = value[1:-1]
+            target = _alias(value)
+            if target is not None:
+                # An alias is checked where it points; a target that is gone, of
+                # another type, or that leads back here, leaves nothing to check.
                 if target not in tokens:
                     fail(where, f"{path} aliases {value}, which is not a token in the example")
+                elif _cycles(tokens, path):
+                    fail(where, f"{path} aliases {value}, and the aliases from there "
+                                "come back round without reaching a value")
                 elif _resolve_type(tokens, target) != kind:
                     fail(where, f"{path} is {kind!r} and aliases {value}, which is "
                                 f"{_resolve_type(tokens, target)!r}")
