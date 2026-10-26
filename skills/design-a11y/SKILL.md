@@ -81,7 +81,8 @@ Phases: `SCOPE → MEASURE → SPECIFY → REPORT`.
   accessible name — the name is a design decision, not a build detail
 - Always: specify the focus order; check the destinations `design-ux` specified
   (record any it left open in `open` as `UNSPECIFIED`, owner `design-ux`), and a
-  visible indicator never entirely obscured by sticky chrome (2.4.11; 2.4.12 at AAA)
+  visible indicator (2.4.7); the focused control never entirely hidden by sticky
+  chrome (2.4.11; not hidden at all, 2.4.12 at AAA)
 - Always: check target size and spacing for every interactive element, and
   verify each in-scope theme independently
 - Always: get permission first when the required level is unstated on a

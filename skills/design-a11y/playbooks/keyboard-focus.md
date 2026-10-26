@@ -29,7 +29,8 @@ Check each destination `design-ux` specified against this table; one it left ope
 Requirements:
 - Always visible on keyboard focus. Never `outline: none` without a replacement.
 - At least 3:1 against adjacent colours (SC 1.4.11).
-- Not entirely obscured by sticky headers, footers, or overlays (SC 2.4.11 AA).
+- The focused component is not entirely hidden by sticky headers, footers, or overlays
+  (SC 2.4.11 AA). This is about the component, not its indicator: a hidden indicator is 2.4.7.
 - AAA target (SC 2.4.13): at least a 2px perimeter and 3:1 against the unfocused state.
 
 Design shape that works on any surface:
@@ -58,7 +59,7 @@ Specify keys per component. Follow the WAI-ARIA Authoring Practices Guide rather
 | Checkbox | Space |
 | Radio group | Arrows move and select; Tab enters/leaves the group as one stop |
 | Select / listbox | Arrows, Home/End, type-ahead, Enter, Escape |
-| Combobox | Arrows open and move, Enter selects, Escape closes then clears |
+| Combobox | Arrows open and move, Enter selects, Escape closes the popup (optionally clears the field if it was already closed) |
 | Tabs | Arrows move between tabs; Tab moves into the panel |
 | Menu / menubar | Arrows, Home/End, Escape, type-ahead |
 | Dialog | Escape closes; focus trapped inside while open |
@@ -92,7 +93,7 @@ Minimum 24×24 CSS px, **or** the spacing exception below.
 
 Practical guidance beyond AA: 44×44 CSS px for touch (the iOS HIG's 44×44 pt; also SC 2.5.5 at AAA); Material recommends 48×48 dp. The *visual* control may be smaller — enlarge the hit area with padding or a pseudo-element instead of growing the icon.
 
-Adjacent targets must not overlap. Abutting 20px row action icons (no gap) are the most common 2.5.8 failure; at 4px gaps a single horizontal row can pass on the spacing exception — check every neighbouring target, including adjacent rows.
+Overlap alone is not the failure: a target with a full 24×24 area passes even where it clips a neighbour; an undersized one fails when its 24px circle meets another target or circle. Abutting 20px row action icons (no gap) are the most common 2.5.8 failure; at 4px gaps a single horizontal row can pass on the spacing exception — check every neighbouring target, including adjacent rows.
 
 ## Pointer and gesture (SC 2.5.1, 2.5.2, 2.5.7)
 

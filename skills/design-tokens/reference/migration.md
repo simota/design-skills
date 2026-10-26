@@ -73,7 +73,8 @@ Migrate in this order — each stage is independently shippable and revertible.
 3. **Spacing** — riskier; layout shifts are visible. Migrate one surface at a time.
 4. **Type** — riskiest; changes line breaks and content height. Do it last and check dense screens.
 5. **Radius, elevation, z-index** — cleanup pass.
-6. **Enforce** — add lint rules so new hardcoded values fail.
+6. **Enforce** — each stage above already shipped its own lint rule (see Enforcement). This
+   stage covers what no stage did, and turns any rule still at warning into an error.
 7. **Retire** — remove deprecated aliases after one release.
 
 ## Enforcement
