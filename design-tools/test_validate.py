@@ -889,6 +889,11 @@ GREEN_CASES: dict[str, callable] = {
         r / "README.md", "## Files",
         "[routing](skills/_design/ROUTING.md 'routing') [r2](skills/_design/ROUTING.md (r))"
         "\n\n## Files"),
+    # The parser numbers lines at "\n" alone; a U+2028 in prose above the
+    # sections moved every line splitlines() read past it off its heading, and
+    # the skill lost Decide first, Verify with and the rest.
+    "line-separator-above-the-sections": lambda r: sub(
+        r / f"{S}design-motion/SKILL.md", "## Owns", "A line\u2028inside it.\n\n## Owns"),
 }
 
 

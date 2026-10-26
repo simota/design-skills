@@ -300,11 +300,15 @@ def frontmatter(text: str) -> dict:
 def sections(text: str) -> dict[str, str]:
     """`## ` sections, by the headings the parser finds: a `## ` line inside a
     code fence is an example, and one inside a ```markdown template belongs to
-    the template; counting either supplied a section the page does not have."""
+    the template; counting either supplied a section the page does not have.
+
+    Lines are counted at "\\n" alone, as the parser counts them: splitlines()
+    also breaks at U+2028 and its kin, and every heading after one was looked
+    up at the wrong line and lost, with its section."""
     lines = line_map(text)
     headings = lines.headings - lines.template
     out, cur, buf = {}, None, []
-    for n, line in enumerate(text.splitlines(), 1):
+    for n, line in enumerate(text.split("\n"), 1):
         if line.startswith("## ") and n in headings:
             if cur:
                 out[cur] = "\n".join(buf)
